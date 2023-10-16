@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">MonitorWebView</string>
+    <string name="Storage1">Storage 1</string>
+    <string name="Storage2">Storage 2</string>
+    <string name="Storage3">Storage 3</string>
+    <string name="PC1_1">PC1 - 1</string>
+    <string name="PC1_2">PC1 - 2</string>
+    <string name="PC1_3">PC1 - 3</string>
+    <string name="PC1_4">PC1 - 4</string>
+    <string name="PC1_5">PC1 - 5</string>
+    <string name="PC1_6">PC1 - 6</string>
+    <string name="PC1_7">PC1 - 7</string>
+    <string name="PC1_8">PC1 - 8</string>
+    <string name="PC2_1">PC2 - 1</string>
+    <string name="PC2_2">PC2 - 2</string>
+    <string name="PC2_3">PC2 - 3</string>
+    <string name="reboot">Reboot</string>
+    <string name="shutdown">Shut Down</string>
+    <string name="node_miner">Shut Down</string>
+    <string name="switch_40">Switch_40</string>
+    <string name="post_worker">Post Worker</string>
+    <string name="rack_info">Rack Info</string>
+    <string name="node_info">Node Info</string>
+    <string name="onboarding">Onboarding</string>
+    <string name="upscontroller">upscontroller</string>
+    <string name="logo_zetacube">ZetaCube Logo</string>
+
+</resources>
