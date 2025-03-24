@@ -144,7 +144,7 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:contentDescription="@string/switch_40"
-               android:src="@drawable/switch_40"></ImageView>
+               android:src="@drawable/switch_100g"></ImageView>
            <LinearLayout
                android:id="@+id/operations4"
                android:layout_width="wrap_content"
@@ -172,271 +172,6 @@
                android:layout_height="wrap_content"
                app:layout_constraintTop_toTopOf="parent"></WebView>
 
-           <ImageView
-               android:id="@+id/Pc1_1"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_1"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations5"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot5"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown5"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down"/>
-           </LinearLayout>
-
-           <WebView
-               android:id="@+id/Pc1_1_web"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_2"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_2"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations6"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot6"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown6"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-           <WebView
-               android:id="@+id/Pc1_2_web"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_3"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_3"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations7"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot7"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown7"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-           <WebView
-               android:id="@+id/Pc1_3_web"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_4"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_4"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations8"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot8"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot"/>
-
-              <ImageView
-                  android:id="@+id/shutdown8"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-               <WebView
-                   android:id="@+id/Pc1_4_web"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_5"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_5"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations9"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot9"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown9"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-
-               <WebView
-                   android:id="@+id/Pc1_5_web"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   app:layout_constraintTop_toTopOf="parent"></WebView>
-
-
-           <ImageView
-               android:id="@+id/Pc1_6"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_6"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations10"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot10"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown10"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down"/>
-           </LinearLayout>
-
-               <WebView
-                   android:id="@+id/Pc1_6_web"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_7"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_7"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations11"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot11"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown11"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-               <WebView
-                   android:id="@+id/Pc1_7_web"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   app:layout_constraintTop_toTopOf="parent"></WebView>
-
-           <ImageView
-               android:id="@+id/Pc1_8"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:contentDescription="@string/PC1_8"
-               android:src="@drawable/pc1"></ImageView>
-           <LinearLayout
-               android:id="@+id/operations12"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:orientation="horizontal"
-               android:background="#09162A">
-              <ImageView
-                  android:id="@+id/reboot12"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/reboot"
-                  android:src="@drawable/reboot" />
-
-              <ImageView
-                  android:id="@+id/shutdown12"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:contentDescription="@string/shutdown"
-                  android:src="@drawable/shut_down" />
-           </LinearLayout>
-
-               <WebView
-                   android:id="@+id/Pc1_8_web"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   app:layout_constraintTop_toTopOf="parent"></WebView>
 
 
            <ImageView
@@ -508,7 +243,7 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:contentDescription="@string/PC2_1"
-               android:src="@drawable/pc2"/>
+               android:src="@drawable/supra"/>
 
            <LinearLayout
                android:id="@+id/operations15"
@@ -542,7 +277,7 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:contentDescription="@string/PC2_2"
-               android:src="@drawable/pc2" />
+               android:src="@drawable/not_storage" />
            <LinearLayout
                android:id="@+id/operations16"
                android:layout_width="wrap_content"
@@ -575,7 +310,7 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:contentDescription="@string/PC2_3"
-               android:src="@drawable/pc2" />
+               android:src="@drawable/not_storage" />
            <LinearLayout
                android:id="@+id/operations17"
                android:layout_width="wrap_content"
@@ -602,7 +337,39 @@
                    android:layout_width="wrap_content"
                    android:layout_height="wrap_content"
                    app:layout_constraintTop_toTopOf="parent"></WebView>
+            <ImageView
+                android:id="@+id/storage_6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/Storage6"
+                android:src="@drawable/not_storage" />
 
+            <LinearLayout
+                android:id="@+id/operations25"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#09162A">
+                <ImageView
+                    android:id="@+id/reboot25"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/reboot"
+                    android:src="@drawable/reboot" />
+
+                <ImageView
+                    android:id="@+id/shutdown25"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/shutdown"
+                    android:src="@drawable/shut_down" />
+            </LinearLayout>
+
+            <WebView
+                android:id="@+id/storage_6_web"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"></WebView>
            <ImageView
                android:id="@+id/upscontroller"
                android:layout_width="wrap_content"
@@ -636,6 +403,13 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                app:layout_constraintTop_toTopOf="parent"></WebView>
+
+            <ImageView
+                android:id="@+id/blank_small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/Storage3"
+                android:src="@drawable/blank_small" />
 
            <ImageView
                android:id="@+id/storage_1"
@@ -712,7 +486,7 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:contentDescription="@string/Storage3"
-               android:src="@drawable/storage" />
+               android:src="@drawable/not_storage" />
 
            <LinearLayout
                android:id="@+id/operations21"
@@ -741,7 +515,75 @@
                    android:layout_height="wrap_content"
                    app:layout_constraintTop_toTopOf="parent"></WebView>
 
-           <ImageView
+            <ImageView
+                android:id="@+id/storage_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/Storage4"
+                android:src="@drawable/not_storage" />
+
+            <LinearLayout
+                android:id="@+id/operations23"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#09162A">
+                <ImageView
+                    android:id="@+id/reboot23"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/reboot"
+                    android:src="@drawable/reboot" />
+
+                <ImageView
+                    android:id="@+id/shutdown23"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/shutdown"
+                    android:src="@drawable/shut_down" />
+            </LinearLayout>
+
+            <WebView
+                android:id="@+id/storage_4_web"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"></WebView>
+
+            <ImageView
+                android:id="@+id/storage_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/Storage5"
+                android:src="@drawable/not_storage" />
+
+            <LinearLayout
+                android:id="@+id/operations24"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#09162A">
+                <ImageView
+                    android:id="@+id/reboot24"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/reboot"
+                    android:src="@drawable/reboot" />
+
+                <ImageView
+                    android:id="@+id/shutdown24"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/shutdown"
+                    android:src="@drawable/shut_down" />
+            </LinearLayout>
+
+            <WebView
+                android:id="@+id/storage_5_web"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"></WebView>
+
+            <ImageView
                android:id="@+id/logo_zetacube"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
@@ -774,6 +616,7 @@
                android:layout_height="wrap_content"
                app:layout_constraintTop_toTopOf="parent"></WebView>
        </LinearLayout>
+
    </androidx.core.widget.NestedScrollView>
 
 </RelativeLayout>

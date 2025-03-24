@@ -32,98 +32,84 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     List<Integer> imageViewIds = Arrays.asList(
             R.id.rack_info, //0
-            R.id.node_info,
-            R.id.onboarding,
-            R.id.switch_40,
-            R.id.Pc1_1,
-            R.id.Pc1_2,       //5
-            R.id.Pc1_3,
-            R.id.Pc1_4,
-            R.id.Pc1_5,
-            R.id.Pc1_6,
-            R.id.Pc1_7,   //10
-            R.id.Pc1_8,
-            R.id.node_miner,
-            R.id.post_worker,
-            R.id.pc2_1,
-            R.id.pc2_2,   //15
-            R.id.pc2_3,
-            R.id.upscontroller,
-            R.id.storage_1,
-            R.id.storage_2,
-            R.id.storage_3, //20
-            R.id.logo_zetacube
+            R.id.node_info, //1
+            R.id.onboarding, //2
+            R.id.switch_40,  //3
+            R.id.node_miner, //4
+            R.id.post_worker, //5
+            R.id.pc2_1, //6
+            R.id.pc2_2,  //7
+            R.id.pc2_3, //8
+            R.id.storage_6, //9
+            R.id.upscontroller, //10
+            R.id.storage_1, //11
+            R.id.storage_2, //12
+            R.id.storage_3, //13
+            R.id.storage_4, //14
+            R.id.storage_5,//15
+            R.id.logo_zetacube //16
     );
     List<Integer> webViewIds = Arrays.asList(
             R.id.rack_info_web, //0
             R.id.node_info_web,
             R.id.onboarding_web,
             R.id.switch_40_web,
-            R.id.Pc1_1_web,
-            R.id.Pc1_2_web,   //5
-            R.id.Pc1_3_web,
-            R.id.Pc1_4_web,
-            R.id.Pc1_5_web,
-            R.id.Pc1_6_web,
-            R.id.Pc1_7_web,  //10
-            R.id.Pc1_8_web,
             R.id.node_miner_web,
             R.id.post_worker_web,
             R.id.pc2_1_web,
             R.id.pc2_2_web,  //15
             R.id.pc2_3_web,
+            R.id.storage_6_web,
             R.id.upscontroller_web,
             R.id.storage_1_web,
             R.id.storage_2_web,
-            R.id.storage_3_web, //20
+            R.id.storage_3_web,
+            R.id.storage_4_web,
+            R.id.storage_5_web,//20
             R.id.logo_zetacube_web
     );
+    String domain = "121.172.116.208";
     List<String> webViewLinks = Arrays.asList(
-            "http://121.138.145.75/monitor_rackInfo", //RackStatus
-            "http://121.138.145.75/monitor_nodeInfo?minerId=f01695888",//Node INFO
-            "http://121.138.145.75/monitor_boostInfo?minerId=f01695888", //Boost
-            "http://121.138.145.75/monitor_switchInfo", //Switch
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.231:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.232:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.236:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.237:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.248:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.249:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.231:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.232:9100/metrics",//PC1
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.230:9100/metrics",//Miner
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.236:9100/metrics",// PostWorker
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.237:9100/metrics",// pc2
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.248:9100/metrics",// pc2
-            "http://121.138.145.75/monitor_hardwareInfo?minerId=f01695888&source_link=121.178.82.249:9100/metrics",// pc2
-            "http://121.138.145.75/monitor_upsController", // ups
-            "http://121.138.145.75/monitor_storageInfo", // storage
-            "http://121.138.145.75/monitor_storageInfo", // storage
-            "http://121.138.145.75/monitor_storageInfo", // storage
-            "http://121.138.145.75/monitor_homepage"   // homepage
-    );
+            "http://"+domain+":8070/monitor_rackInfo", //RackStatus
+            "http://"+domain+":8070/monitor_nodeInfo?minerId=f03091958",//Node INFO
+            "http://"+domain+":8070/monitor_boostInfo?minerId=f03091958", //Boost
+            "http://"+domain+":8070/monitor_switchInfo", //Switch
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f01695888&source_link=112.160.8.138:9100/metrics",//PC1
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f01695888&source_link=112.160.8.138:9100/metrics",//PC2
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f01695888&source_link=112.160.8.138:9100/metrics",//PC3
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f01695888&source_link=112.160.8.138:9100/metrics",//PC4
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f01695888&source_link=112.160.8.138:9100/metrics",//PC5
+            "http://"+domain+"+:8070/monitor_upsController",
+            "http://"+domain+":8070/monitor_upsController",// ups
+            "http://"+domain+":8070/monitor_storageInfo", // storage// homepage
+            "http://"+domain+":8070/monitor_hardwareInfo?minerId=f03091958&source_link=112.160.8.138:9100/metrics",//Miner
+            "http://"+domain+":8070/monitor_homepage",// PostWorker
+            "http://"+domain+":8070/monitor_homepage",
+            "http://"+domain+":8070/monitor_homepage",
+            "http://"+domain+":8070/monitor_homepage",// pc2
+            "http://"+domain+":8070/monitor_upsController", // ups
+            "http://"+domain+":8070/monitor_storageInfo", // storage
+            "http://"+domain+":8070/monitor_storageInfo", // storage
+            "http://"+domain+":8070/monitor_storageInfo", // storage
+            "http://"+domain+":8070/monitor_homepage"   // homepage
+            );
     List<Integer> buttonLayouts = Arrays.asList(
             R.id.operations1,
             R.id.operations2,
             R.id.operations3,
             R.id.operations4,
-            R.id.operations5,
-            R.id.operations6,
-            R.id.operations7,
-            R.id.operations8,
-            R.id.operations9,
-            R.id.operations10,
-            R.id.operations11,
-            R.id.operations12,
             R.id.operations13,
             R.id.operations14,
             R.id.operations15,
             R.id.operations16,
             R.id.operations17,
+            R.id.operations25,
             R.id.operations18,
             R.id.operations19,
             R.id.operations20,
             R.id.operations21,
+            R.id.operations23,
+            R.id.operations24,
             R.id.operations22
     );
     List<Boolean> existHardWareButton = Arrays.asList(
@@ -143,11 +129,6 @@ public class MainActivity extends AppCompatActivity {
             true,
             true,
             true,
-            true,
-            true,
-            true,
-            true,
-            true,
             false
     );
     List<Integer> rebootButtonsIds = Arrays.asList(
@@ -155,14 +136,6 @@ public class MainActivity extends AppCompatActivity {
             R.id.reboot2,
             R.id.reboot3,
             R.id.reboot4,
-            R.id.reboot5,
-            R.id.reboot6,
-            R.id.reboot7,
-            R.id.reboot8,
-            R.id.reboot9,
-            R.id.reboot10,
-            R.id.reboot11,
-            R.id.reboot12,
             R.id.reboot13,
             R.id.reboot14,
             R.id.reboot15,
@@ -179,14 +152,6 @@ public class MainActivity extends AppCompatActivity {
             R.id.shutdown2,
             R.id.shutdown3,
             R.id.shutdown4,
-            R.id.shutdown5,
-            R.id.shutdown6,
-            R.id.shutdown7,
-            R.id.shutdown8,
-            R.id.shutdown9,
-            R.id.shutdown10,
-            R.id.shutdown11,
-            R.id.shutdown12,
             R.id.shutdown13,
             R.id.shutdown14,
             R.id.shutdown15,
@@ -204,8 +169,9 @@ public class MainActivity extends AppCompatActivity {
     List<WebView> webViews;
 
     private final Handler mHandler = new Handler();
-    private final Runnable mRunnable =  this::close_down_all;
-    int webLoadCnt =0;
+    private final Runnable mRunnable = this::close_down_all;
+    int webLoadCnt = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -231,8 +197,10 @@ public class MainActivity extends AppCompatActivity {
         imageViewsScrollLocation = new ArrayList<>();
         serverButtonsInitializing();
         webViewInitializing();
+
         imageViewInitializing();
     }
+
     public void playSound(int soundResId) {
         if (mediaPlayer != null) {
             mediaPlayer.release();
@@ -240,55 +208,64 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer = MediaPlayer.create(this, soundResId);
         mediaPlayer.start();
     }
-    public void webViewInitializing(){
-        for(int i =0;i<webViewIds.size();i++){
+
+    public void webViewInitializing() {
+        for (int i = 0; i < webViewIds.size(); i++) {
             WebView webView = findViewById(webViewIds.get(i));
             WebSettings settings = webView.getSettings();
+            webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             settings.setDomStorageEnabled(true);
             settings.setJavaScriptEnabled(true);
+            settings.setUseWideViewPort(true);
             TextView textView = findViewById(R.id.text_box);
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     webLoadCnt++;
-                    if(webLoadCnt >= existHardWareButton.size()){
+                    if (webLoadCnt >= existHardWareButton.size()) {
                         close_down_all();
                         progressBar.setVisibility(View.GONE);
                         scrollView.setVisibility(View.VISIBLE);
 
                         //mHandler.postDelayed(mRunnable, 60000); // 60 초있음 자동 닫히는 기능
-                    }else{
-                        textView.setText("App is Loading... \n" + webLoadCnt+ " out of "+existHardWareButton.size() +" loaded complete");
+                    } else {
+                        textView.setText("App is Loading... \n" + webLoadCnt + " out of " + existHardWareButton.size() + " loaded complete");
                     }
                 }
             });
             webView.loadUrl(webViewLinks.get(i));
-                webViews.add(webView);
+            webViews.add(webView);
         }
     }
+
     @SuppressLint("ClickableViewAccessibility")
     public void imageViewInitializing() {
-        for(int i =0;i < imageViewIds.size();i++) {
+        for (int i = 0; i < imageViewIds.size(); i++) {
             ImageView imageView = findViewById(imageViewIds.get(i));
             imageViewsScrollLocation.add(imageView.getTop());
             int index = i;
+            // 7번, 8번, 11번, 12번 버튼에 대한 이벤트 리스너 설정을 건너뜁니다.
+            if (index == 7 || index == 8 ||index == 9  || index == 13 || index == 14 || index == 15) {
+                continue;
+            }
             imageView.setOnTouchListener(new View.OnTouchListener() {
                 private final Handler handler = new Handler();
                 private boolean longPressDetected = false;
+
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    /*mHandler.removeCallbacks(mRunnable);
-                    mHandler.postDelayed(mRunnable, 60000);*/ // 60 초있음 자동 닫히는 기능
+                /*mHandler.removeCallbacks(mRunnable);
+                mHandler.postDelayed(mRunnable, 60000);*/ // 60 초있음 자동 닫히는 기능
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             imageView.setAlpha(0.5f);
-                            handler.postDelayed(longPressRunnable,1000);
+                            handler.postDelayed(longPressRunnable, 1000);
                             break;
                         case MotionEvent.ACTION_UP:
                             handler.removeCallbacks(longPressRunnable);
                             imageView.setAlpha(1.0f);
                             if (!longPressDetected) {
-                                button_up(imageView,false);
+                                button_up(imageView, false);
                                 playSound(mainOpening);
                             }
                             applyElasticEffect(v);
@@ -301,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     return true;
                 }
+
                 private final Runnable longPressRunnable = () -> {
                     longPressDetected = true;
                     if (existHardWareButton.get(index)) {
@@ -314,8 +292,10 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
+
     public void applyElasticEffect(View view) {
-        ImageView imageView = (ImageView)view;
+        ImageView imageView = (ImageView) view;
 
         ObjectAnimator scaleXAnimator = ObjectAnimator.ofFloat(imageView, View.SCALE_X, 1.2f, 1.0f);
         ObjectAnimator scaleYAnimator = ObjectAnimator.ofFloat(imageView, View.SCALE_Y, 0.8f, 1.0f);
@@ -330,9 +310,10 @@ public class MainActivity extends AppCompatActivity {
 
         animatorSet.start();
     }
+
     @SuppressLint("ClickableViewAccessibility")
     public void serverButtonsInitializing() {
-        for(int i=0 ;i<rebootButtonsIds.size();i++){
+        for (int i = 0; i < rebootButtonsIds.size(); i++) {
             ImageView rebootButton = findViewById(rebootButtonsIds.get(i));
             ImageView shutdownButton = findViewById(shutdownButtonsIds.get(i));
             rebootButton.setOnTouchListener((v, event) -> {
@@ -368,17 +349,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleLongPress(ImageView picked_imageView, boolean isLong,int index) {
+    private void handleLongPress(ImageView picked_imageView, boolean isLong, int index) {
         ImageView imageView = findViewById(imageViewIds.get(index));
         LinearLayout buttonLayout = findViewById(buttonLayouts.get(index));
-            if (isLong&&buttonLayout.getVisibility()==View.GONE && imageView == picked_imageView) {
-                buttonLayout.setVisibility(View.VISIBLE);
-            } else {
-                buttonLayout.setVisibility(View.GONE);
-            }
+        if (isLong && buttonLayout.getVisibility() == View.GONE && imageView == picked_imageView) {
+            buttonLayout.setVisibility(View.VISIBLE);
+        } else {
+            buttonLayout.setVisibility(View.GONE);
+        }
     }
-    public void close_down_all(){
-        for(int i =0;i < webViewIds.size();i++) {
+
+    public void close_down_all() {
+        for (int i = 0; i < webViewIds.size(); i++) {
             WebView webView = webViews.get(i);
             ViewGroup.LayoutParams layoutParams = webView.getLayoutParams();
             layoutParams.height = 0;
@@ -388,14 +370,14 @@ public class MainActivity extends AppCompatActivity {
             buttonLayout.setVisibility(View.GONE);
         }
     }
+
     public void button_up(ImageView picked_imageView, boolean isLong) {
-        for (int i = 0; i < imageViewIds.size(); i++) {
+        for (int i = 0; i < webViews.size(); i++) {
             ImageView imageView = findViewById(imageViewIds.get(i));
             WebView webView = webViews.get(i);
             handleLongPress(picked_imageView, isLong, i);
             ViewGroup.LayoutParams layoutParams = webView.getLayoutParams();
             int targetHeight;
-
             if (!isLong && webView.getVisibility() == View.GONE && imageView == picked_imageView) {
                 webView.setVisibility(View.VISIBLE);
                 targetHeight = webView.getContentHeight();
@@ -410,9 +392,14 @@ public class MainActivity extends AppCompatActivity {
                 webView.setLayoutParams(layoutParams);
             });
 
-            ValueAnimator scrollViewAnimator = ValueAnimator.ofInt(scrollView.getScrollY(), picked_imageView.getTop());
+            ValueAnimator scrollViewAnimator;
+            if (picked_imageView == imageView) {
+                scrollViewAnimator = ValueAnimator.ofInt(scrollView.getScrollY(), picked_imageView.getTop());
+            } else {
+                scrollViewAnimator = ValueAnimator.ofInt(scrollView.getScrollY(), picked_imageView.getTop() - 500); // 예시로 500만큼 위로 스크롤
+            }
             scrollViewAnimator.addUpdateListener(animation ->
-                    scrollView.scrollTo(0, picked_imageView.getTop())
+                    scrollView.scrollTo(0, (int) animation.getAnimatedValue())
             );
 
             AnimatorSet animatorSet = new AnimatorSet();
@@ -422,4 +409,5 @@ public class MainActivity extends AppCompatActivity {
             animatorSet.start();
         }
     }
+
 }
