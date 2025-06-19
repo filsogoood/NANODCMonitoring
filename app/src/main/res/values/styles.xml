@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
+        <item name="colorPrimary">#1976D2</item>
+        <item name="colorPrimaryDark">#0D47A1</item>
+        <item name="colorAccent">#2196F3</item>
+        <!-- Material 테마를 위한 추가 색상 -->
+        <item name="colorSecondary">#2196F3</item>
+        <item name="colorSurface">#0D2C54</item>
+        <item name="colorOnSurface">#FFFFFF</item>
     </style>
 </resources>

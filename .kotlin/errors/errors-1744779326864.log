@@ -1,0 +1,367 @@
+kotlin version: 2.1.10
+error message: org.jetbrains.kotlin.backend.common.BackendException: Backend Internal error: Exception during IR lowering
+File being compiled: C:/Users/gyung/Documents/GitHub/monitor/NanoDC_montoring/app/src/main/java/com/nanodatacenter/monitorwebview/MainActivity.kt
+The root cause java.lang.RuntimeException was thrown at: org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.common.CodegenUtil.reportBackendException(CodegenUtil.kt:253)
+	at org.jetbrains.kotlin.backend.common.CodegenUtil.reportBackendException$default(CodegenUtil.kt:236)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invokeSequential(performByIrFile.kt:55)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invoke(performByIrFile.kt:42)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invoke(performByIrFile.kt:28)
+	at org.jetbrains.kotlin.backend.common.phaser.NamedCompilerPhase.phaseBody(CompilerPhase.kt:166)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.CompositePhase.invoke(PhaseBuilders.kt:27)
+	at org.jetbrains.kotlin.backend.common.phaser.CompositePhase.invoke(PhaseBuilders.kt:14)
+	at org.jetbrains.kotlin.backend.common.phaser.NamedCompilerPhase.phaseBody(CompilerPhase.kt:166)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.CompilerPhaseKt.invokeToplevel(CompilerPhase.kt:62)
+	at org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory.invokeCodegen(JvmIrCodegenFactory.kt:371)
+	at org.jetbrains.kotlin.codegen.CodegenFactory.generateModule(CodegenFactory.kt:47)
+	at org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory.generateModuleInFrontendIRMode(JvmIrCodegenFactory.kt:433)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineKt.generateCodeFromIr(jvmCompilerPipeline.kt:192)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineKt.runBackend(jvmCompilerPipeline.kt:80)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileModule(jvmCompilerPipelineLightTree.kt:264)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileSingleModuleUsingFrontendIrAndLightTree(jvmCompilerPipelineLightTree.kt:231)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileModulesUsingFrontendIrAndLightTree(jvmCompilerPipelineLightTree.kt:86)
+	at org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:146)
+	at org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:43)
+	at org.jetbrains.kotlin.cli.common.CLICompiler.execImpl(CLICompiler.kt:102)
+	at org.jetbrains.kotlin.cli.common.CLICompiler.exec(CLICompiler.kt:316)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.runCompiler(IncrementalJvmCompilerRunner.kt:464)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.runCompiler(IncrementalJvmCompilerRunner.kt:73)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.doCompile(IncrementalCompilerRunner.kt:506)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileImpl(IncrementalCompilerRunner.kt:423)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.tryCompileIncrementally$lambda$9$compile(IncrementalCompilerRunner.kt:249)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.tryCompileIncrementally(IncrementalCompilerRunner.kt:267)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:120)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:683)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:91)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1811)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(Unknown Source)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Unknown Source)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Unknown Source)
+	at java.base/java.security.AccessController.doPrivileged(Unknown Source)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Unknown Source)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(Unknown Source)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(Unknown Source)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(Unknown Source)
+	at java.base/java.security.AccessController.doPrivileged(Unknown Source)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.Thread.run(Unknown Source)
+Caused by: java.lang.RuntimeException: Exception while generating code for:
+FUN name:setupWeeklyRewardsChart visibility:private modality:FINAL <> ($this:com.nanodatacenter.monitorwebview.MainActivity, container:android.widget.LinearLayout) returnType:kotlin.Unit
+  $this: VALUE_PARAMETER name:<this> type:com.nanodatacenter.monitorwebview.MainActivity
+  VALUE_PARAMETER name:container index:0 type:android.widget.LinearLayout
+  BLOCK_BODY
+    CALL 'public open fun removeAllViews (): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+    VAR name:displayMetrics type:@[FlexibleNullability] android.util.DisplayMetrics? [val]
+      CALL 'public open fun getDisplayMetrics (): @[FlexibleNullability] android.util.DisplayMetrics? declared in android.content.res.Resources' type=@[FlexibleNullability] android.util.DisplayMetrics? origin=GET_PROPERTY
+        $this: CALL 'public open fun getResources (): @[FlexibleNullability] android.content.res.Resources? [fake_override] declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[FlexibleNullability] android.content.res.Resources? origin=GET_PROPERTY
+          $this: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+    VAR name:isNarrowScreen type:kotlin.Boolean [val]
+      CALL 'public final fun less (arg0: kotlin.Float, arg1: kotlin.Float): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=LT
+        arg0: CALL 'public open fun toFloat (): kotlin.Float declared in kotlin.Int' type=kotlin.Float origin=null
+          $this: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:screenWidth type:kotlin.Int visibility:private' type=kotlin.Int origin=null
+            receiver: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        arg1: CALL 'public final fun times (other: kotlin.Float): kotlin.Float [operator] declared in kotlin.Int' type=kotlin.Float origin=MUL
+          $this: CONST Int type=kotlin.Int value=400
+          other: GET_FIELD 'FIELD IR_EXTERNAL_JAVA_DECLARATION_STUB name:density type:kotlin.Float visibility:public declared in android.util.DisplayMetrics' type=kotlin.Float superQualifierSymbol=android.util.DisplayMetrics origin=null
+            receiver: GET_VAR 'val displayMetrics: @[FlexibleNullability] android.util.DisplayMetrics? [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=@[FlexibleNullability] android.util.DisplayMetrics? origin=null
+    CALL 'public open fun setOrientation (p0: kotlin.Int): kotlin.Unit declared in android.widget.LinearLayout' type=kotlin.Unit origin=EQ
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: CONST Int type=kotlin.Int value=1
+    CALL 'public open fun setBackgroundColor (p0: kotlin.Int): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: CALL 'public open fun parseColor (p0: @[FlexibleNullability] kotlin.String?): kotlin.Int declared in android.graphics.Color' type=kotlin.Int origin=null
+        p0: CONST String type=kotlin.String value="#0D2C54"
+    VAR name:headerCard type:androidx.cardview.widget.CardView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=androidx.cardview.widget.CardView origin=null
+        <T>: androidx.cardview.widget.CardView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[EnhancedNullability] android.content.Context) declared in androidx.cardview.widget.CardView' type=androidx.cardview.widget.CardView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$6 (): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+    VAR name:headerLayout type:android.widget.LinearLayout [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.LinearLayout origin=null
+        <T>: android.widget.LinearLayout
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[FlexibleNullability] android.content.Context?) declared in android.widget.LinearLayout' type=android.widget.LinearLayout origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$7 (): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+    VAR name:iconView type:android.widget.ImageView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.ImageView origin=null
+        <T>: android.widget.ImageView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[FlexibleNullability] android.content.Context?) declared in android.widget.ImageView' type=android.widget.ImageView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.ImageView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$8 ($isNarrowScreen: kotlin.Boolean): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.ImageView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $isNarrowScreen: GET_VAR 'val isNarrowScreen: kotlin.Boolean [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Boolean origin=null
+    VAR name:titleTextView type:android.widget.TextView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.TextView origin=null
+        <T>: android.widget.TextView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[FlexibleNullability] android.content.Context?) declared in android.widget.TextView' type=android.widget.TextView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.TextView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$10 ($isNarrowScreen: kotlin.Boolean): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.TextView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $isNarrowScreen: GET_VAR 'val isNarrowScreen: kotlin.Boolean [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Boolean origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val headerLayout: android.widget.LinearLayout [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val iconView: android.widget.ImageView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.ImageView origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val headerLayout: android.widget.LinearLayout [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val titleTextView: android.widget.TextView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.TextView origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val headerCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+      p0: GET_VAR 'val headerLayout: android.widget.LinearLayout [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val headerCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+    VAR name:chartCard type:androidx.cardview.widget.CardView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=androidx.cardview.widget.CardView origin=null
+        <T>: androidx.cardview.widget.CardView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[EnhancedNullability] android.content.Context) declared in androidx.cardview.widget.CardView' type=androidx.cardview.widget.CardView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$12 ($isNarrowScreen: kotlin.Boolean): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $isNarrowScreen: GET_VAR 'val isNarrowScreen: kotlin.Boolean [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Boolean origin=null
+    VAR name:rewardValues type:kotlin.FloatArray [val]
+      BLOCK type=kotlin.FloatArray origin=null
+        VAR IR_TEMPORARY_VARIABLE name:tmp0 type:kotlin.FloatArray [val]
+          CONSTRUCTOR_CALL 'public constructor <init> (size: kotlin.Int) [primary] declared in kotlin.FloatArray' type=kotlin.FloatArray origin=null
+            size: CONST Int type=kotlin.Int value=7
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=0
+          value: CONST Float type=kotlin.Float value=15.1
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=1
+          value: CONST Float type=kotlin.Float value=15.3
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=2
+          value: CONST Float type=kotlin.Float value=15.0
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=3
+          value: CONST Float type=kotlin.Float value=15.4
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=4
+          value: CONST Float type=kotlin.Float value=15.2
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=5
+          value: CONST Float type=kotlin.Float value=15.5
+        CALL 'public final fun set (index: kotlin.Int, value: kotlin.Float): kotlin.Unit [operator] declared in kotlin.FloatArray' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+          index: CONST Int type=kotlin.Int value=6
+          value: CONST Float type=kotlin.Float value=15.3
+        GET_VAR 'val tmp0: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+    VAR name:dayLabels type:kotlin.Array<kotlin.String> [val]
+      BLOCK type=kotlin.Array<out kotlin.String> origin=null
+        VAR IR_TEMPORARY_VARIABLE name:tmp0 type:kotlin.Array<out kotlin.String> [val]
+          CALL 'public final fun arrayOfNulls <T> (size: kotlin.Int): kotlin.Array<T of kotlin.arrayOfNulls?> declared in kotlin' type=kotlin.Array<out kotlin.String> origin=null
+            <T>: kotlin.String
+            size: CONST Int type=kotlin.Int value=7
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=0
+          value: CONST String type=kotlin.String value="Mon"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=1
+          value: CONST String type=kotlin.String value="Tue"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=2
+          value: CONST String type=kotlin.String value="Wed"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=3
+          value: CONST String type=kotlin.String value="Thu"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=4
+          value: CONST String type=kotlin.String value="Fri"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=5
+          value: CONST String type=kotlin.String value="Sat"
+        CALL 'public final fun set (index: kotlin.Int, value: T of kotlin.Array): kotlin.Unit [operator] declared in kotlin.Array' type=kotlin.Unit origin=null
+          $this: GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+          index: CONST Int type=kotlin.Int value=6
+          value: CONST String type=kotlin.String value="Sun"
+        GET_VAR 'val tmp0: kotlin.Array<out kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<out kotlin.String> origin=null
+    VAR name:rewardsChartView type:com.nanodatacenter.monitorwebview.WeeklyRewardsChartView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=com.nanodatacenter.monitorwebview.WeeklyRewardsChartView origin=null
+        <T>: com.nanodatacenter.monitorwebview.WeeklyRewardsChartView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (context: android.content.Context, attrs: android.util.AttributeSet?, defStyleAttr: kotlin.Int, $mask0: kotlin.Int, $marker: kotlin.jvm.internal.DefaultConstructorMarker?) declared in com.nanodatacenter.monitorwebview.WeeklyRewardsChartView' type=com.nanodatacenter.monitorwebview.WeeklyRewardsChartView origin=DEFAULT_DISPATCH_CALL
+          context: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+          attrs: COMPOSITE type=android.util.AttributeSet? origin=DEFAULT_VALUE
+            CONST Null type=android.util.AttributeSet? value=null
+          defStyleAttr: COMPOSITE type=kotlin.Int origin=DEFAULT_VALUE
+            CONST Int type=kotlin.Int value=0
+          $mask0: CONST Int type=kotlin.Int value=6
+          $marker: CONST Null type=kotlin.jvm.internal.DefaultConstructorMarker? value=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<com.nanodatacenter.monitorwebview.WeeklyRewardsChartView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$14 ($rewardValues: kotlin.FloatArray, $dayLabels: kotlin.Array<kotlin.String>): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<com.nanodatacenter.monitorwebview.WeeklyRewardsChartView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $rewardValues: GET_VAR 'val rewardValues: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+            $dayLabels: GET_VAR 'val dayLabels: kotlin.Array<kotlin.String> [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Array<kotlin.String> origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val chartCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+      p0: GET_VAR 'val rewardsChartView: com.nanodatacenter.monitorwebview.WeeklyRewardsChartView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.WeeklyRewardsChartView origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val chartCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+    VAR name:statsCard type:androidx.cardview.widget.CardView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=androidx.cardview.widget.CardView origin=null
+        <T>: androidx.cardview.widget.CardView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[EnhancedNullability] android.content.Context) declared in androidx.cardview.widget.CardView' type=androidx.cardview.widget.CardView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$16 (): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<androidx.cardview.widget.CardView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+    VAR name:statsLayout type:android.widget.LinearLayout [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.LinearLayout origin=null
+        <T>: android.widget.LinearLayout
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[FlexibleNullability] android.content.Context?) declared in android.widget.LinearLayout' type=android.widget.LinearLayout origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$17 (): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+    VAR name:avgReward type:kotlin.Double [val]
+      CALL 'public final fun average (): kotlin.Double declared in kotlin.collections.ArraysKt' type=kotlin.Double origin=null
+        $receiver: GET_VAR 'val rewardValues: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+    VAR name:totalReward type:kotlin.Float [val]
+      CALL 'public final fun sum (): kotlin.Float declared in kotlin.collections.ArraysKt' type=kotlin.Float origin=null
+        $receiver: GET_VAR 'val rewardValues: kotlin.FloatArray [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.FloatArray origin=null
+    VAR name:monthlyReward type:kotlin.Float [val]
+      CALL 'public final fun div (other: kotlin.Int): kotlin.Float [operator] declared in kotlin.Float' type=kotlin.Float origin=DIV
+        $this: CALL 'public final fun times (other: kotlin.Int): kotlin.Float [operator] declared in kotlin.Float' type=kotlin.Float origin=MUL
+          $this: GET_VAR 'val totalReward: kotlin.Float [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Float origin=null
+          other: CONST Int type=kotlin.Int value=30
+        other: CONST Int type=kotlin.Int value=7
+    VAR name:statsText type:android.widget.TextView [val]
+      CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.TextView origin=null
+        <T>: android.widget.TextView
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: @[FlexibleNullability] android.content.Context?) declared in android.widget.TextView' type=android.widget.TextView origin=null
+          p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.TextView, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$18 ($avgReward: kotlin.Double, $totalReward: kotlin.Float, $monthlyReward: kotlin.Float, $isNarrowScreen: kotlin.Boolean): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.TextView, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $avgReward: GET_VAR 'val avgReward: kotlin.Double [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Double origin=null
+            $totalReward: GET_VAR 'val totalReward: kotlin.Float [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Float origin=null
+            $monthlyReward: GET_VAR 'val monthlyReward: kotlin.Float [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Float origin=null
+            $isNarrowScreen: GET_VAR 'val isNarrowScreen: kotlin.Boolean [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=kotlin.Boolean origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val statsLayout: android.widget.LinearLayout [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val statsText: android.widget.TextView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.TextView origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=null
+      $this: GET_VAR 'val statsCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+      p0: GET_VAR 'val statsLayout: android.widget.LinearLayout [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+    CALL 'public open fun addView (p0: @[FlexibleNullability] android.view.View?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val statsCard: androidx.cardview.widget.CardView [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=androidx.cardview.widget.CardView origin=null
+    VAR name:animation type:@[FlexibleNullability] android.view.animation.Animation? [val]
+      CALL 'public open fun loadAnimation (p0: @[FlexibleNullability] android.content.Context?, p1: kotlin.Int): @[FlexibleNullability] android.view.animation.Animation? declared in android.view.animation.AnimationUtils' type=@[FlexibleNullability] android.view.animation.Animation? origin=null
+        p0: GET_VAR '<this>: com.nanodatacenter.monitorwebview.MainActivity declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=com.nanodatacenter.monitorwebview.MainActivity origin=null
+        p1: CONST Int type=kotlin.Int value=17432576
+    CALL 'public open fun setDuration (p0: kotlin.Long): kotlin.Unit declared in android.view.animation.Animation' type=kotlin.Unit origin=EQ
+      $this: GET_VAR 'val animation: @[FlexibleNullability] android.view.animation.Animation? [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=@[FlexibleNullability] android.view.animation.Animation? origin=null
+      p0: CONST Long type=kotlin.Long value=800
+    CALL 'public open fun startAnimation (p0: @[FlexibleNullability] android.view.animation.Animation?): kotlin.Unit [fake_override] declared in android.widget.LinearLayout' type=kotlin.Unit origin=null
+      $this: GET_VAR 'container: android.widget.LinearLayout declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=android.widget.LinearLayout origin=null
+      p0: GET_VAR 'val animation: @[FlexibleNullability] android.view.animation.Animation? [val] declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart' type=@[FlexibleNullability] android.view.animation.Animation? origin=null
+
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate$default(FunctionCodegen.kt:41)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generateMethodNode(ClassCodegen.kt:407)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generateMethod(ClassCodegen.kt:424)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generate(ClassCodegen.kt:169)
+	at org.jetbrains.kotlin.backend.jvm.FileCodegen.lower(JvmPhases.kt:39)
+	at org.jetbrains.kotlin.backend.common.phaser.PhaseFactoriesKt.createFilePhase$lambda$4(PhaseFactories.kt:71)
+	at org.jetbrains.kotlin.backend.common.phaser.PhaseBuildersKt$createSimpleNamedCompilerPhase$1.phaseBody(PhaseBuilders.kt:69)
+	at org.jetbrains.kotlin.backend.common.phaser.SimpleNamedCompilerPhase.phaseBody(CompilerPhase.kt:226)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invokeSequential(performByIrFile.kt:52)
+	... 46 more
+Caused by: java.lang.RuntimeException: Exception while generating code for:
+FUN INLINE_LAMBDA name:setupWeeklyRewardsChart$lambda$6 visibility:private modality:FINAL <> ($receiver:androidx.cardview.widget.CardView) returnType:kotlin.Unit
+  $receiver: VALUE_PARAMETER name:$this$apply type:androidx.cardview.widget.CardView
+  BLOCK_BODY
+    VAR name:$i$a$-apply-MainActivity$setupWeeklyRewardsChart$headerCard$1 type:kotlin.Int [val]
+      CONST Int type=kotlin.Int value=0
+    CALL 'public open fun setRadius (p0: kotlin.Float): kotlin.Unit declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=EQ
+      $this: GET_VAR '$this$apply: androidx.cardview.widget.CardView declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart$lambda$6' type=androidx.cardview.widget.CardView origin=null
+      p0: CONST Float type=kotlin.Float value=8.0
+    CALL 'public open fun setCardElevation (p0: kotlin.Float): kotlin.Unit declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=EQ
+      $this: GET_VAR '$this$apply: androidx.cardview.widget.CardView declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart$lambda$6' type=androidx.cardview.widget.CardView origin=null
+      p0: CONST Float type=kotlin.Float value=4.0
+    CALL 'public open fun setCardBackgroundColor (p0: kotlin.Int): kotlin.Unit declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=null
+      $this: GET_VAR '$this$apply: androidx.cardview.widget.CardView declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart$lambda$6' type=androidx.cardview.widget.CardView origin=null
+      p0: CALL 'public open fun parseColor (p0: @[FlexibleNullability] kotlin.String?): kotlin.Int declared in android.graphics.Color' type=kotlin.Int origin=null
+        p0: CONST String type=kotlin.String value="#162B46"
+    SET_FIELD 'FIELD IR_EXTERNAL_JAVA_DECLARATION_STUB name:strokeColor type:kotlin.Int visibility:public [final,static] declared in android.R.attr' type=kotlin.Unit superQualifierSymbol=android.R.attr origin=EQ
+      value: CALL 'public open fun parseColor (p0: @[FlexibleNullability] kotlin.String?): kotlin.Int declared in android.graphics.Color' type=kotlin.Int origin=null
+        p0: CONST String type=kotlin.String value="#4CAF50"
+    CALL 'public open fun setLayoutParams (p0: @[FlexibleNullability] android.view.ViewGroup.LayoutParams?): kotlin.Unit [fake_override] declared in androidx.cardview.widget.CardView' type=kotlin.Unit origin=EQ
+      $this: GET_VAR '$this$apply: androidx.cardview.widget.CardView declared in com.nanodatacenter.monitorwebview.MainActivity.setupWeeklyRewardsChart$lambda$6' type=androidx.cardview.widget.CardView origin=null
+      p0: CALL 'public final fun apply <T> (block: @[ExtensionFunctionType] kotlin.Function1<T of kotlin.StandardKt.apply, kotlin.Unit>): T of kotlin.StandardKt.apply [inline] declared in kotlin.StandardKt' type=android.widget.LinearLayout.LayoutParams origin=null
+        <T>: android.widget.LinearLayout.LayoutParams
+        $receiver: CONSTRUCTOR_CALL 'public constructor <init> (p0: kotlin.Int, p1: kotlin.Int) declared in android.widget.LinearLayout.LayoutParams' type=android.widget.LinearLayout.LayoutParams origin=null
+          p0: CONST Int type=kotlin.Int value=-1
+          p1: CONST Int type=kotlin.Int value=-2
+        block: BLOCK type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout.LayoutParams, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun setupWeeklyRewardsChart$lambda$6$lambda$5 (): kotlin.Unit declared in com.nanodatacenter.monitorwebview.MainActivity' type=@[ExtensionFunctionType] kotlin.Function1<android.widget.LinearLayout.LayoutParams, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrSourceCompilerForInline.generateLambdaBody(IrSourceCompilerForInline.kt:67)
+	at org.jetbrains.kotlin.codegen.inline.ExpressionLambda.generateLambdaBody(LambdaInfo.kt:72)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrInlineCodegen.genValueAndPut(IrInlineCodegen.kt:100)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall$handleParameter(ExpressionCodegen.kt:561)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:589)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrCall.accept(IrCall.kt:24)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitVariable(ExpressionCodegen.kt:735)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitVariable(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.declarations.IrVariable.accept(IrVariable.kt:36)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:529)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrBlockBody.accept(IrBlockBody.kt:20)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.generate(ExpressionCodegen.kt:236)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.doGenerate(FunctionCodegen.kt:124)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:45)
+	... 56 more
+Caused by: java.lang.AssertionError: access of const val: SET_FIELD 'FIELD IR_EXTERNAL_JAVA_DECLARATION_STUB name:strokeColor type:kotlin.Int visibility:public [final,static] declared in android.R.attr' type=kotlin.Unit superQualifierSymbol=android.R.attr origin=EQ
+  value: CALL 'public open fun parseColor (p0: @[FlexibleNullability] kotlin.String?): kotlin.Int declared in android.graphics.Color' type=kotlin.Int origin=null
+    p0: CONST String type=kotlin.String value="#4CAF50"
+
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitFieldAccess(ExpressionCodegen.kt:813)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitFieldAccess(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.visitors.IrElementVisitor$DefaultImpls.visitSetField(IrElementVisitor.kt:210)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitSetField(ExpressionCodegen.kt:860)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitSetField(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrSetField.accept(IrSetField.kt:21)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:529)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrBlockBody.accept(IrBlockBody.kt:20)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.generate(ExpressionCodegen.kt:236)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.doGenerate(FunctionCodegen.kt:124)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:45)
+	... 73 more
+
+
