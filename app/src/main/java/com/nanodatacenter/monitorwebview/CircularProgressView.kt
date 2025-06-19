@@ -181,10 +181,16 @@ class CircularProgressView @JvmOverloads constructor(
         val sweepAngle = (animatedProgress / maxProgress) * 360
         canvas.drawArc(rect, -90f, sweepAngle, false, paint)
 
-        // 텍스트 그리기 - 중요 수정: 모든 라벨은 원 위에 표시
+        // 텍스트 그리기 - Storage 라벨일 때 더 큰 텍스트 사용
         if (showText) {
-            // 중앙에 퍼센트 값 표시 (이 부분은 그대로 유지)
-            textPaint.textSize = actualRadius * 0.45f
+            // Storage 라벨일 때 더 큰 퍼센트 텍스트 표시
+            val percentTextSize = if (labelText == "Storage") {
+                actualRadius * 0.6f // Storage일 때 더 큰 텍스트
+            } else {
+                actualRadius * 0.45f // 기본 크기
+            }
+            
+            textPaint.textSize = percentTextSize
             textPaint.textAlign = Paint.Align.CENTER
             canvas.drawText(
                 progressText,
@@ -193,12 +199,20 @@ class CircularProgressView @JvmOverloads constructor(
                 textPaint
             )
 
-            // 라벨 텍스트 표시 - 모든 라벨을 원 위에 표시하도록 수정
+            // 라벨 텍스트 표시 - Storage일 때 더 위쪽에 표시
             if (labelText.isNotEmpty()) {
-                textPaint.textSize = actualRadius * 0.35f
+                textPaint.textSize = if (labelText == "Storage") {
+                    actualRadius * 0.25f // Storage 라벨 텍스트 크기
+                } else {
+                    actualRadius * 0.35f // 기본 라벨 텍스트 크기
+                }
 
-                // 모든 라벨이 원 위에 표시되도록 함
-                val labelY = rect.top - textPaint.textSize * 0.3f
+                // Storage는 더 위쪽에 표시
+                val labelY = if (labelText == "Storage") {
+                    rect.top - textPaint.textSize * 0.5f
+                } else {
+                    rect.top - textPaint.textSize * 0.3f
+                }
 
                 canvas.drawText(
                     labelText,
@@ -256,10 +270,11 @@ class CircularProgressView @JvmOverloads constructor(
     fun setDiskUsage(usedSpace: Float, totalSpace: Float) {
         val percentage = ((usedSpace / totalSpace) * 100).toInt().coerceIn(0, 100)
 
+        // Storage 차트를 위한 보라색/핑크색 계열 색상 사용
         val color = when {
-            percentage >= 90 -> 0xFFF44336.toInt()  // Red (danger)
-            percentage >= 75 -> 0xFFFF9800.toInt()  // Orange (warning)
-            else -> 0xFF9C27B0.toInt()              // Purple (normal)
+            percentage >= 90 -> 0xFFE91E63.toInt()  // 핑크 (매우 높음)
+            percentage >= 60 -> 0xFF9C27B0.toInt()  // 보라색 (높음)
+            else -> 0xFF673AB7.toInt()              // 진보라색 (정상)
         }
 
         setLabel("Disk")

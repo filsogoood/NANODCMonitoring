@@ -420,7 +420,7 @@ class MainActivity : AppCompatActivity() {
         animatorSet.start()
     }
 
-    // setupRackInfoView 메서드 추가 - 랙 정보 표시
+    // setupRackInfoView 메서드 추가 - NDP 토큰 정보를 고급스럽게 표시
     private fun setupRackInfoView(container: LinearLayout) {
         // 기존 뷰를 모두 제거
         container.removeAllViews()
@@ -437,114 +437,323 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            setPadding(8, 8, 8, 8)
         }
 
-        // 전체 컨테이너를 감쌀 MaterialCardView 생성
-        val containerCard = MaterialCardView(this).apply {
-            radius = 16f
-            cardElevation = 12f
-            setCardBackgroundColor(Color.parseColor("#0D2C54"))
-            strokeColor = Color.parseColor("#2196F3") // 파란색 테두리
+        // 헤더 카드 - NDP 로고와 기본 정보
+        val headerCard = MaterialCardView(this).apply {
+            radius = 20f
+            cardElevation = 16f
+            setCardBackgroundColor(Color.parseColor("#0D1B2A"))
+            strokeColor = Color.parseColor("#00D4FF")
             strokeWidth = 2
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                setMargins(0, 0, 0, 12)
+            }
         }
 
-        // 실제 내용을 담을 내부 컨테이너
-        val innerContainer = LinearLayout(this).apply {
+        val headerContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(20, 20, 20, 20)
+        }
+
+        // NDP 로고 (더 세련된 디자인)
+        val logoContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            background = resources.getDrawable(android.R.drawable.editbox_background)
+            background.setTint(Color.parseColor("#4400D4FF"))
+            setPadding(16, 12, 16, 12)
+        }
+
+        val logoView = TextView(this).apply {
+            text = "NDP"
+            textSize = if (isNarrowScreen) 24f else 28f
+            setTextColor(Color.parseColor("#00D4FF"))
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        logoContainer.addView(logoView)
+
+        // 제목 컨테이너
+        val titleContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                weight = 1f
+                marginStart = 20
+            }
+        }
+
+        val titleText = TextView(this).apply {
+            text = "NANO DePIN PROTOCOL"
+            textSize = if (isNarrowScreen) 16f else 20f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        val subtitleText = TextView(this).apply {
+            text = "Decentralized Physical Infrastructure Network"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+        }
+
+        val descText = TextView(this).apply {
+            text = "Tokenizing & Connecting DePIN Resources"
+            textSize = if (isNarrowScreen) 11f else 13f
+            setTextColor(Color.parseColor("#00D4FF"))
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        titleContainer.addView(titleText)
+        titleContainer.addView(subtitleText)
+        titleContainer.addView(descText)
+
+        headerContainer.addView(logoContainer)
+        headerContainer.addView(titleContainer)
+        headerCard.addView(headerContainer)
+
+        // 토큰 정보 카드
+        val tokenInfoCard = MaterialCardView(this).apply {
+            radius = 16f
+            cardElevation = 12f
+            setCardBackgroundColor(Color.parseColor("#162B40"))
+            strokeColor = Color.parseColor("#4CAF50")
+            strokeWidth = 1
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 12)
+            }
+        }
+
+        val tokenInfoContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            // 패딩 조정
-            val horizontalPadding = when {
-                isVeryNarrowScreen -> 10
-                isNarrowScreen -> 12
-                else -> 16
-            }
-            setPadding(horizontalPadding, 16, horizontalPadding, 16)
+            setPadding(16, 16, 16, 16)
         }
 
-        // 헤더 생성
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
+        // 토큰 기본 정보
+        val tokenBasicInfo = createTokenInfoRow(
+            "Total Supply:", "2,000,000,000 NDP",
+            "Blockchain:", "BNB Smart Chain (BEP-20)"
+        )
+        tokenInfoContainer.addView(tokenBasicInfo)
+
+        val tokenUtilityInfo = createTokenInfoRow(
+            "Primary Use:", "Staking & Governance",
+            "Burn Mechanism:", "SLA Violation + 10% Auto-burn"
+        )
+        tokenInfoContainer.addView(tokenUtilityInfo)
+
+        tokenInfoCard.addView(tokenInfoContainer)
+
+        // 토크노믹스 차트 카드
+        val tokenomicsCard = MaterialCardView(this).apply {
+            radius = 16f
+            cardElevation = 12f
+            setCardBackgroundColor(Color.parseColor("#0A1929"))
+            strokeColor = Color.parseColor("#FF9800")
+            strokeWidth = 1
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 12)
+            }
+        }
+
+        val tokenomicsContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(16, 16, 16, 8)
+        }
+
+        // 토크노믹스 제목
+        val tokenomicsTitle = TextView(this).apply {
+            text = "Token Distribution"
+            textSize = if (isNarrowScreen) 16f else 18f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(0, 0, 0, 16)
             }
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.CENTER
         }
+        tokenomicsContainer.addView(tokenomicsTitle)
 
-        // 헤더 아이콘
-        val iconView = ImageView(this).apply {
-            setImageResource(R.drawable.rack_info)
+        // 토크노믹스 차트
+        val tokenomicsChart = NDPTokenomicsChartView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) 40 else 48,
-                if (isNarrowScreen) 40 else 48
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            }
-            setColorFilter(Color.parseColor("#2196F3")) // 파란색 아이콘
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isNarrowScreen) 350 else 400
+            )
+        }
+        tokenomicsContainer.addView(tokenomicsChart)
+
+        tokenomicsCard.addView(tokenomicsContainer)
+
+        // DePIN 네트워크 상태 카드
+        val networkCard = MaterialCardView(this).apply {
+            radius = 16f
+            cardElevation = 12f
+            setCardBackgroundColor(Color.parseColor("#0D2C54"))
+            strokeColor = Color.parseColor("#9C27B0")
+            strokeWidth = 1
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
 
-        // 헤더 제목
-        val titleTextView = TextView(this).apply {
-            text = "Data Center Rack Overview"
-            textSize = if (isNarrowScreen) 16f else 20f
+        val networkContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(16, 16, 16, 8)
+        }
+
+        // 네트워크 제목
+        val networkTitle = TextView(this).apply {
+            text = "DePIN Network Status"
+            textSize = if (isNarrowScreen) 16f else 18f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                marginStart = if (isNarrowScreen) 8 else 16
+                setMargins(0, 0, 0, 16)
             }
-        }
-
-        // 상태 표시기
-        val statusView = TextView(this).apply {
-            text = "Normal"
-            textSize = if (isNarrowScreen) 12f else 16f
-            setTextColor(Color.parseColor("#4CAF50"))
-            setBackgroundResource(android.R.drawable.editbox_background)
-            background.setTint(Color.parseColor("#334CAF50"))
-            setPadding(
-                if (isNarrowScreen) 8 else 16,
-                if (isNarrowScreen) 4 else 8,
-                if (isNarrowScreen) 8 else 16,
-                if (isNarrowScreen) 4 else 8
-            )
             gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                marginStart = 16
-            }
         }
+        networkContainer.addView(networkTitle)
 
-        headerLayout.addView(iconView)
-        headerLayout.addView(titleTextView)
-        headerLayout.addView(statusView)
-        innerContainer.addView(headerLayout)
+        // 네트워크 상태 차트
+        val networkStatusView = NDPNetworkStatusView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isNarrowScreen) 380 else 450
+            )
+        }
+        networkContainer.addView(networkStatusView)
 
-        // 컨테이너 계층 구성
-        containerCard.addView(innerContainer)
-        mainContainer.addView(containerCard)
+        networkCard.addView(networkContainer)
+
+        // 모든 카드를 메인 컨테이너에 추가
+        mainContainer.addView(headerCard)
+        mainContainer.addView(tokenInfoCard)
+        mainContainer.addView(tokenomicsCard)
+        mainContainer.addView(networkCard)
+
         container.addView(mainContainer)
 
         // 애니메이션 적용
-        val animation =
-            android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
-        animation.duration = 800
-        containerCard.startAnimation(animation)
+        val animation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
+        animation.duration = 1000
+        mainContainer.startAnimation(animation)
+    }
+
+    /**
+     * 토큰 정보 행 생성 헬퍼 메서드
+     */
+    private fun createTokenInfoRow(label1: String, value1: String, label2: String, value2: String): LinearLayout {
+        val displayMetrics = resources.displayMetrics
+        val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
+        
+        return LinearLayout(this).apply {
+            orientation = if (isNarrowScreen) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 8)
+            }
+
+            // 첫 번째 정보
+            val leftContainer = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    if (!isNarrowScreen) weight = 1f
+                }
+            }
+
+            val leftLabel = TextView(this@MainActivity).apply {
+                text = label1
+                textSize = if (isNarrowScreen) 12f else 14f
+                setTextColor(Color.parseColor("#B0BEC5"))
+            }
+
+            val leftValue = TextView(this@MainActivity).apply {
+                text = value1
+                textSize = if (isNarrowScreen) 13f else 15f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+
+            leftContainer.addView(leftLabel)
+            leftContainer.addView(leftValue)
+
+            // 두 번째 정보
+            val rightContainer = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    if (!isNarrowScreen) weight = 1f
+                    if (isNarrowScreen) topMargin = 16
+                }
+            }
+
+            val rightLabel = TextView(this@MainActivity).apply {
+                text = label2
+                textSize = if (isNarrowScreen) 12f else 14f
+                setTextColor(Color.parseColor("#B0BEC5"))
+            }
+
+            val rightValue = TextView(this@MainActivity).apply {
+                text = value2
+                textSize = if (isNarrowScreen) 13f else 15f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+
+            rightContainer.addView(rightLabel)
+            rightContainer.addView(rightValue)
+
+            addView(leftContainer)
+            addView(rightContainer)
+        }
     }
 
     // setupMinerInfoView 메서드에서 변경된 부분
@@ -867,223 +1076,119 @@ class MainActivity : AppCompatActivity() {
         val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
         val isVeryNarrowScreen = screenWidth < (370 * displayMetrics.density)
 
-        // 전체 컨테이너를 감쌀 LinearLayout 생성
+        // 전체 컨테이너
         val mainContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            setBackgroundColor(Color.parseColor("#1B2A4E"))
+            setPadding(16, 16, 16, 16)
         }
 
-        // 전체 컨테이너를 감쌀 MaterialCardView 생성
-        val containerCard = MaterialCardView(this).apply {
-            radius = 16f
-            cardElevation = 12f
-            setCardBackgroundColor(Color.parseColor("#0D2C54"))
-            strokeColor = Color.parseColor("#FFD700") // 금색 테두리
-            strokeWidth = 2
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        // 실제 내용을 담을 내부 컨테이너
-        val innerContainer = LinearLayout(this).apply {
+        // 제목 섹션
+        val titleLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            // 패딩 조정
-            val horizontalPadding = when {
-                isVeryNarrowScreen -> 10
-                isNarrowScreen -> 12
-                else -> 16
-            }
-            setPadding(horizontalPadding, 16, horizontalPadding, 16)
+            setPadding(0, 0, 0, 16)
         }
 
-        // 헤더 생성
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 16)
-            }
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        // 헤더 아이콘
-        val iconView = ImageView(this).apply {
-            setImageResource(R.drawable.filecoin)
-            layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) 40 else 48,
-                if (isNarrowScreen) 40 else 48
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            }
-            setColorFilter(Color.parseColor("#FFD700")) // 금색 아이콘
-        }
-
-        // 헤더 제목
-        val titleTextView = TextView(this).apply {
-            text = "Filecoin Storage Overview"
-            textSize = if (isNarrowScreen) 16f else 20f
+        // 메인 제목
+        val mainTitle = TextView(this).apply {
+            text = "Filecoin Storage"
+            textSize = 24f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 8)
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                marginStart = if (isNarrowScreen) 8 else 16
-            }
+            )
         }
 
-        // 상태 표시기
-        val statusView = TextView(this).apply {
-            text = "Active"
-            textSize = if (isNarrowScreen) 12f else 16f
-            setTextColor(Color.parseColor("#FFD700"))
-            setBackgroundResource(android.R.drawable.editbox_background)
-            background.setTint(Color.parseColor("#33FFD700"))
-            setPadding(
-                if (isNarrowScreen) 8 else 16,
-                if (isNarrowScreen) 4 else 8,
-                if (isNarrowScreen) 8 else 16,
-                if (isNarrowScreen) 4 else 8
-            )
+        // 부제목
+        val subTitle = TextView(this).apply {
+            text = "2PIB Storage Server"
+            textSize = 16f
+            setTextColor(Color.parseColor("#B0B0B0"))
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                marginStart = 16
-            }
-        }
-
-        headerLayout.addView(iconView)
-        headerLayout.addView(titleTextView)
-        headerLayout.addView(statusView)
-        innerContainer.addView(headerLayout)
-
-        // 구분선 추가
-        val divider = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1
-            )
-            setBackgroundColor(Color.parseColor("#33FFFFFF"))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1
-            ).apply {
-                setMargins(0, 0, 0, 16)
-            }
-        }
-        innerContainer.addView(divider)
-
-        // 메인 콘텐츠 레이아웃
-        val contentLayout = LinearLayout(this).apply {
-            orientation = if (isNarrowScreen) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
 
-        // 왼쪽: 도넛 차트 컨테이너
-        val chartContainer = LinearLayout(this).apply {
+        titleLayout.addView(mainTitle)
+        titleLayout.addView(subTitle)
+        mainContainer.addView(titleLayout)
+
+        // 차트 섹션
+        val chartSection = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                if (!isNarrowScreen) {
-                    weight = 1.0f
-                }
-                gravity = Gravity.CENTER
-                setMargins(0, 0, if (isNarrowScreen) 0 else 16, if (isNarrowScreen) 16 else 0)
-            }
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 32, 0, 32)
         }
 
-        // 도넛 차트 뷰 생성
-        val donutChartView = MinerDonutChartView(this).apply {
+        // 원형 차트 (65% 표시)
+        val storageChart = CircularProgressView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 220,
-                if (isNarrowScreen) 200 else 220
+                if (isNarrowScreen) 300 else 350,
+                if (isNarrowScreen) 300 else 350
             )
-            // 차트 데이터 설정 - 저장소 사용량 분포 표시
-            setChartData(
-                floatArrayOf(1295.2f, 691.3f), // 사용량, 남은 공간
-                arrayOf("Used", "Free"),
-                intArrayOf(
-                    Color.parseColor("#FF6F61"), // 빨간색 (사용됨)
-                    Color.parseColor("#6B5B95")  // 보라색 (남은 공간)
+            setDiskUsage(1295.2f, 1986.56f) // 65.2% 사용률
+            setLabel("Storage")
+        }
+
+        chartSection.addView(storageChart)
+        mainContainer.addView(chartSection)
+
+        // 하단 정보 섹션
+        val infoSection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(24, 24, 24, 0)
+        }
+
+        // 정보 항목들
+        val infoItems = listOf(
+            "• Total Capacity: 2.0 PIB (1.94 PIB)",
+            "• Used Storage: 1,295.2 TIB (65.2%)",
+            "• Free Storage: 691.3 TIB"
+        )
+
+        infoItems.forEach { item ->
+            val infoText = TextView(this).apply {
+                text = item
+                textSize = 16f
+                setTextColor(Color.WHITE)
+                setPadding(0, 4, 0, 4)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
-            )
-        }
-        chartContainer.addView(donutChartView)
-
-        // 오른쪽: 저장소 정보 컨테이너
-        val infoContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                if (!isNarrowScreen) {
-                    weight = 1.5f
-                }
             }
+            infoSection.addView(infoText)
         }
 
-        // 왼쪽 정보 섹션 (총 용량)
-        val leftInfoSection = createMinerInfoSection(
-            "Total Capacity",
-            "2.0 PiB (1.94 PiB)",
-            listOf(
-                Pair("Used Storage:", "1,295.2 TiB (65.2%)"),
-                Pair("Free Space:", "691.3 TiB")
-            )
-        )
-
-        // 오른쪽 정보 섹션 (추가 정보)
-        val rightInfoSection = createMinerInfoSection(
-            "Additional Info",
-            "",
-            listOf(
-                Pair("Storage Type:", "Filecoin"),
-                Pair("Provider:", "Zetacube"),
-                Pair("Status:", "Active")
-            )
-        )
-
-        infoContainer.addView(leftInfoSection)
-        infoContainer.addView(rightInfoSection)
-
-        // 콘텐츠 레이아웃에 추가
-        contentLayout.addView(chartContainer)
-        contentLayout.addView(infoContainer)
-
-        // 내부 컨테이너에 콘텐츠 레이아웃 추가
-        innerContainer.addView(contentLayout)
-
-        // 컨테이너 계층 구성
-        containerCard.addView(innerContainer)
-        mainContainer.addView(containerCard)
+        mainContainer.addView(infoSection)
         container.addView(mainContainer)
 
         // 애니메이션 적용
-        val animation =
-            android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
+        val animation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
         animation.duration = 800
-        containerCard.startAnimation(animation)
+        mainContainer.startAnimation(animation)
     }
 
     fun playSound(soundResId: Int) {
