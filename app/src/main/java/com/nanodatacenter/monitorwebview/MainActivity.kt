@@ -451,7 +451,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 12)
+                setMargins(0, 0, 0, 8)
             }
         }
 
@@ -473,16 +473,16 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             gravity = Gravity.CENTER
-            background = resources.getDrawable(android.R.drawable.editbox_background)
-            background.setTint(Color.parseColor("#4400D4FF"))
-            setPadding(16, 12, 16, 12)
+
         }
 
-        val logoView = TextView(this).apply {
-            text = "NDP"
-            textSize = if (isNarrowScreen) 24f else 28f
-            setTextColor(Color.parseColor("#00D4FF"))
-            typeface = Typeface.DEFAULT_BOLD
+        val logoView = ImageView(this).apply {
+            setImageResource(R.drawable.ndp_w)
+            layoutParams = LinearLayout.LayoutParams(
+                if (isNarrowScreen) 60 else 80,
+                if (isNarrowScreen) 60 else 80
+            )
+            scaleType = ImageView.ScaleType.FIT_CENTER
         }
 
         logoContainer.addView(logoView)
@@ -500,71 +500,73 @@ class MainActivity : AppCompatActivity() {
         }
 
         val titleText = TextView(this).apply {
-            text = "NDP Point"
+            text = "DePIN SCORE"
             textSize = if (isNarrowScreen) 16f else 20f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
         }
 
-        val subtitleText = TextView(this).apply {
-            text = "Decentralized Physical Infrastructure Network"
-            textSize = if (isNarrowScreen) 12f else 14f
-            setTextColor(Color.parseColor("#B0BEC5"))
-        }
-
-        val descText = TextView(this).apply {
-            text = "Tokenizing & Connecting DePIN Resources"
-            textSize = if (isNarrowScreen) 11f else 13f
-            setTextColor(Color.parseColor("#00D4FF"))
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        titleContainer.addView(titleText)
-        titleContainer.addView(subtitleText)
-        titleContainer.addView(descText)
-
-        headerContainer.addView(logoContainer)
-        headerContainer.addView(titleContainer)
-        headerCard.addView(headerContainer)
-
-        // 토큰 정보 카드
-        val tokenInfoCard = MaterialCardView(this).apply {
-            radius = 16f
-            cardElevation = 12f
-            setCardBackgroundColor(Color.parseColor("#162B40"))
-            strokeColor = Color.parseColor("#4CAF50")
-            strokeWidth = 1
+        // DePIN SCORE 점수와 평가를 담을 수평 레이아웃
+        val scoreLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 12)
+                setMargins(0, 4, 0, 0)
+            }
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        // DePIN SCORE 값 (94점, 초록색, BOLD)
+        val scoreValue = TextView(this).apply {
+            text = "94"
+            textSize = if (isNarrowScreen) 20f else 24f
+            setTextColor(Color.parseColor("#4CAF50"))
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = 8
             }
         }
 
-        val tokenInfoContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+        // 점수 단위
+        val scoreUnit = TextView(this).apply {
+            text = "/ 100"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setPadding(16, 16, 16, 16)
+            ).apply {
+                marginEnd = 16
+            }
         }
 
-        // 토큰 기본 정보
-        val tokenBasicInfo = createTokenInfoRow(
-            "Total Supply:", "2,000,000,000 NDP",
-            "Blockchain:", "BNB Smart Chain (BEP-20)"
-        )
-        tokenInfoContainer.addView(tokenBasicInfo)
+        // 상태 설명
+        val statusText = TextView(this).apply {
+            text = "Excellent"
+            textSize = if (isNarrowScreen) 11f else 13f
+            setTextColor(Color.parseColor("#4CAF50"))
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
 
-        val tokenUtilityInfo = createTokenInfoRow(
-            "Primary Use:", "Staking & Governance",
-            "Burn Mechanism:", "SLA Violation + 10% Auto-burn"
-        )
-        tokenInfoContainer.addView(tokenUtilityInfo)
+        scoreLayout.addView(scoreValue)
+        scoreLayout.addView(scoreUnit)
+        scoreLayout.addView(statusText)
 
-        tokenInfoCard.addView(tokenInfoContainer)
+        titleContainer.addView(titleText)
+        titleContainer.addView(scoreLayout)
+
+        headerContainer.addView(logoContainer)
+        headerContainer.addView(titleContainer)
+        headerCard.addView(headerContainer)
 
         // 토크노믹스 차트 카드
         val tokenomicsCard = MaterialCardView(this).apply {
@@ -577,7 +579,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 12)
+                setMargins(0, 0, 0, 8)
             }
         }
 
@@ -587,12 +589,12 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 16, 16, 8)
+            setPadding(16, 16, 16, 0)
         }
 
         // 토크노믹스 제목
         val tokenomicsTitle = TextView(this).apply {
-            text = "Token Distribution"
+            text = "NANO DePIN PROTOCOL"
             textSize = if (isNarrowScreen) 16f else 18f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
@@ -606,78 +608,242 @@ class MainActivity : AppCompatActivity() {
         }
         tokenomicsContainer.addView(tokenomicsTitle)
 
+        // 토큰 정보 섹션 (Balance, Staking, Rewards)
+        val tokenInfoSection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 4)
+            }
+            setPadding(8, 4, 8, 4)
+        }
+
+        // Balance 정보
+        val balanceInfo = createSingleTokenInfoRow("Balance:", "1,245,678 NDP")
+        tokenInfoSection.addView(balanceInfo)
+
+        // Staking 정보 (초록색 표시 추가)
+        val stakingInfo =
+            createTokenInfoRowWithColor("Staking:", "856,432 NDP", Color.parseColor("#4CAF50"))
+        tokenInfoSection.addView(stakingInfo)
+
+        // Rewards 정보 (주황색 표시 추가)
+        val rewardsInfo =
+            createTokenInfoRowWithColor("Rewards:", "389,246 NDP", Color.parseColor("#FF9800"))
+        tokenInfoSection.addView(rewardsInfo)
+
+        tokenomicsContainer.addView(tokenInfoSection)
+
         // 토크노믹스 차트
         val tokenomicsChart = NDPTokenomicsChartView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                if (isNarrowScreen) 350 else 400
+                if (isNarrowScreen) 280 else 320
             )
         }
         tokenomicsContainer.addView(tokenomicsChart)
 
         tokenomicsCard.addView(tokenomicsContainer)
 
-        // DePIN 네트워크 상태 카드
-        val networkCard = MaterialCardView(this).apply {
-            radius = 16f
-            cardElevation = 12f
-            setCardBackgroundColor(Color.parseColor("#0D2C54"))
-            strokeColor = Color.parseColor("#9C27B0")
-            strokeWidth = 1
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        val networkContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setPadding(16, 16, 16, 8)
-        }
-
-        // 네트워크 제목
-        val networkTitle = TextView(this).apply {
-            text = "DePIN Network Status"
-            textSize = if (isNarrowScreen) 16f else 18f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 16)
-            }
-            gravity = Gravity.CENTER
-        }
-        networkContainer.addView(networkTitle)
-
-        // 네트워크 상태 차트
-        val networkStatusView = NDPNetworkStatusView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                if (isNarrowScreen) 380 else 450
-            )
-        }
-        networkContainer.addView(networkStatusView)
-
-        networkCard.addView(networkContainer)
-
         // 모든 카드를 메인 컨테이너에 추가
         mainContainer.addView(headerCard)
-        mainContainer.addView(tokenInfoCard)
         mainContainer.addView(tokenomicsCard)
-        mainContainer.addView(networkCard)
-
         container.addView(mainContainer)
 
         // 애니메이션 적용
         val animation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
         animation.duration = 1000
         mainContainer.startAnimation(animation)
+    }
+
+    /**
+     * DePIN SCORE 행 생성 메서드
+     */
+    private fun createDePINScoreRow(): LinearLayout {
+        val displayMetrics = resources.displayMetrics
+        val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
+
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 16)
+            }
+            gravity = Gravity.CENTER_VERTICAL
+
+            // DePIN SCORE 레이블
+            val scoreLabel = TextView(this@MainActivity).apply {
+                text = "DePIN SCORE:"
+                textSize = if (isNarrowScreen) 14f else 16f
+                setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 16
+                }
+            }
+
+            // DePIN SCORE 값 (94점, 초록색, BOLD)
+            val scoreValue = TextView(this@MainActivity).apply {
+                text = "94"
+                textSize = if (isNarrowScreen) 24f else 28f
+                setTextColor(Color.parseColor("#4CAF50"))
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 8
+                }
+            }
+
+            // 점수 단위
+            val scoreUnit = TextView(this@MainActivity).apply {
+                text = "/ 100"
+                textSize = if (isNarrowScreen) 14f else 16f
+                setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            // 상태 설명
+            val statusText = TextView(this@MainActivity).apply {
+                text = "Excellent"
+                textSize = if (isNarrowScreen) 12f else 14f
+                setTextColor(Color.parseColor("#4CAF50"))
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                ).apply {
+                    marginStart = 16
+                }
+                gravity = Gravity.END
+            }
+
+            addView(scoreLabel)
+            addView(scoreValue)
+            addView(scoreUnit)
+            addView(statusText)
+        }
+    }
+
+    /**
+     * 단일 토큰 정보 행 생성 메서드
+     */
+    private fun createSingleTokenInfoRow(label: String, value: String): LinearLayout {
+        val displayMetrics = resources.displayMetrics
+        val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
+
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 8)
+            }
+            gravity = Gravity.CENTER_VERTICAL
+
+            // 레이블
+            val labelView = TextView(this@MainActivity).apply {
+                text = label
+                textSize = if (isNarrowScreen) 12f else 14f
+                setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 16
+                }
+            }
+
+            // 값
+            val valueView = TextView(this@MainActivity).apply {
+                text = value
+                textSize = if (isNarrowScreen) 13f else 15f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            addView(labelView)
+            addView(valueView)
+        }
+    }
+
+    /**
+     * 색상이 적용된 토큰 정보 행 생성 메서드
+     */
+    private fun createTokenInfoRowWithColor(
+        label: String,
+        value: String,
+        color: Int
+    ): LinearLayout {
+        val displayMetrics = resources.displayMetrics
+        val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
+
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 8)
+            }
+            gravity = Gravity.CENTER_VERTICAL
+
+            // 색상 표시기 (작은 사각형)
+            val colorView = View(this@MainActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    16,
+                    16
+                ).apply {
+                    marginEnd = 12
+                }
+                setBackgroundColor(color)
+            }
+
+            // 레이블
+            val labelView = TextView(this@MainActivity).apply {
+                text = label
+                textSize = if (isNarrowScreen) 12f else 14f
+                setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 16
+                }
+            }
+
+            // 값
+            val valueView = TextView(this@MainActivity).apply {
+                text = value
+                textSize = if (isNarrowScreen) 13f else 15f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            addView(colorView)
+            addView(labelView)
+            addView(valueView)
+        }
     }
 
     /**
@@ -688,7 +854,7 @@ class MainActivity : AppCompatActivity() {
         val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
         
         return LinearLayout(this).apply {
-            orientation = if (isNarrowScreen) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -698,19 +864,27 @@ class MainActivity : AppCompatActivity() {
 
             // 첫 번째 정보
             val leftContainer = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.VERTICAL
+                orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
-                    if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
                 ).apply {
-                    if (!isNarrowScreen) weight = 1f
+                    marginEnd = if (isNarrowScreen) 8 else 16
                 }
+                gravity = Gravity.CENTER_VERTICAL
             }
 
             val leftLabel = TextView(this@MainActivity).apply {
                 text = label1
                 textSize = if (isNarrowScreen) 12f else 14f
                 setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 8
+                }
             }
 
             val leftValue = TextView(this@MainActivity).apply {
@@ -725,20 +899,25 @@ class MainActivity : AppCompatActivity() {
 
             // 두 번째 정보
             val rightContainer = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.VERTICAL
+                orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
-                    if (isNarrowScreen) LinearLayout.LayoutParams.MATCH_PARENT else 0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    if (!isNarrowScreen) weight = 1f
-                    if (isNarrowScreen) topMargin = 16
-                }
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+                gravity = Gravity.CENTER_VERTICAL
             }
 
             val rightLabel = TextView(this@MainActivity).apply {
                 text = label2
                 textSize = if (isNarrowScreen) 12f else 14f
                 setTextColor(Color.parseColor("#B0BEC5"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = 8
+                }
             }
 
             val rightValue = TextView(this@MainActivity).apply {
@@ -811,7 +990,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 16)
+                setMargins(0, 0, 0, 4)
             }
             gravity = Gravity.CENTER_VERTICAL
         }
@@ -830,7 +1009,7 @@ class MainActivity : AppCompatActivity() {
 
         // 헤더 제목
         val titleTextView = TextView(this).apply {
-            text = "Miner Overview|Address:f02368818"
+            text = "Miner Address: f02368818"
             textSize = if (isNarrowScreen) 16f else 20f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD

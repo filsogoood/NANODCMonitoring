@@ -22,35 +22,20 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
     private val rectF = RectF()
     private val path = Path()
 
-    // Tokenomics data (from user's specification)
+    // Tokenomics data - Staking, Rewards 비중만
     private val tokenDistribution = floatArrayOf(
-        40f,  // Ecosystem Rewards
-        15f,  // Team
-        15f,  // DAO Reserve
-        10f,  // Community & Marketing
-        10f,  // Strategic Partners
-        5f,   // Foundation
-        5f    // Initial DEX Liquidity
+        68.7f,  // Staking (856,432 / (856,432 + 389,246) * 100)
+        31.3f   // Rewards (389,246 / (856,432 + 389,246) * 100)
     )
 
     private val distributionLabels = arrayOf(
-        "Ecosystem\nRewards",
-        "Team",
-        "DAO\nReserve", 
-        "Community &\nMarketing",
-        "Strategic\nPartners",
-        "Foundation",
-        "DEX\nLiquidity"
+        "Staking",
+        "Rewards"
     )
 
     private val distributionColors = intArrayOf(
-        Color.parseColor("#00D4FF"), // Cyan - Ecosystem Rewards
-        Color.parseColor("#4CAF50"), // Green - Team
-        Color.parseColor("#FF9800"), // Orange - DAO Reserve
-        Color.parseColor("#9C27B0"), // Purple - Community
-        Color.parseColor("#F44336"), // Red - Strategic Partners
-        Color.parseColor("#3F51B5"), // Indigo - Foundation
-        Color.parseColor("#FFEB3B")  // Yellow - DEX Liquidity
+        Color.parseColor("#4CAF50"), // Green - Staking
+        Color.parseColor("#FF9800")  // Orange - Rewards
     )
 
     // Screen adaptation variables
@@ -79,7 +64,8 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         
         centerX = w / 2f
-        centerY = h / 2f
+        // 반원형 차트이므로 centerY를 조정하여 공백 줄임
+        centerY = h / 2f - 20f
         radius = Math.min(w, h) / 2f * 0.7f
         
         checkScreenWidth()
@@ -90,7 +76,6 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
         
         drawTokenomicsChart(canvas)
         drawCenterInfo(canvas)
-        drawLegend(canvas)
     }
 
     private fun drawTokenomicsChart(canvas: Canvas) {
@@ -106,10 +91,11 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
             centerY + radius - strokeWidth/2
         )
 
-        var startAngle = -90f // Start from top
+        var startAngle = 180f // Start from left side for semicircle
         
         for (i in tokenDistribution.indices) {
-            val sweepAngle = (tokenDistribution[i] / 100f) * 360f
+            // Calculate sweep angle for semicircle (180 degrees total)
+            val sweepAngle = (tokenDistribution[i] / 100f) * 180f
             
             // Create gradient effect
             paint.color = distributionColors[i]
@@ -119,8 +105,8 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
                 color = Color.parseColor("#33000000")
                 maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.OUTER)
             }
-            
-            canvas.drawArc(rectF, startAngle + 2, sweepAngle, false, shadowPaint)
+
+            canvas.drawArc(rectF, startAngle + 1, sweepAngle, false, shadowPaint)
             canvas.drawArc(rectF, startAngle, sweepAngle, false, paint)
             
             startAngle += sweepAngle
@@ -128,65 +114,115 @@ class NDPTokenomicsChartView @JvmOverloads constructor(
     }
 
     private fun drawCenterInfo(canvas: Canvas) {
-        // Center circle background
+        // Center semicircle background - only upper half
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#0D2C54")
         val centerRadius = radius * 0.45f
-        canvas.drawCircle(centerX, centerY, centerRadius, paint)
-        
-        // Center circle border
+
+        // Draw semicircle path
+        path.reset()
+        path.addArc(
+            centerX - centerRadius,
+            centerY - centerRadius,
+            centerX + centerRadius,
+            centerY + centerRadius,
+            180f,
+            180f
+        )
+        canvas.drawPath(path, paint)
+
+        // Center semicircle border
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 3f
         paint.color = Color.parseColor("#00D4FF")
-        canvas.drawCircle(centerX, centerY, centerRadius, paint)
-        
-        // Center text
+        canvas.drawArc(
+            centerX - centerRadius,
+            centerY - centerRadius,
+            centerX + centerRadius,
+            centerY + centerRadius,
+            180f,
+            180f,
+            false,
+            paint
+        )
+
+        // Draw base line for semicircle
+        canvas.drawLine(
+            centerX - centerRadius,
+            centerY,
+            centerX + centerRadius,
+            centerY,
+            paint
+        )
+
+        // Center text - position adjusted for semicircle
         val centerTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
-            textSize = if (isNarrowScreen) 16f else 20f
+            textSize = if (isNarrowScreen) 12f else 16f
         }
-        
-        canvas.drawText("NDP", centerX, centerY - 10f, centerTextPaint)
-        
-        centerTextPaint.textSize = if (isNarrowScreen) 12f else 14f
-        centerTextPaint.color = Color.parseColor("#00D4FF")
-        canvas.drawText("2B Total Supply", centerX, centerY + 15f, centerTextPaint)
+
+        canvas.drawText("NDP", centerX, centerY - 15f, centerTextPaint)
     }
 
-    private fun drawLegend(canvas: Canvas) {
-        val legendStartY = centerY + radius + 30f
-        val legendItemHeight = if (isNarrowScreen) 25f else 30f
-        
-        for (i in tokenDistribution.indices) {
-            val y = legendStartY + (i * legendItemHeight)
-            
-            // Legend color box
-            paint.style = Paint.Style.FILL
-            paint.color = distributionColors[i]
-            canvas.drawRect(
-                centerX - radius,
-                y - 8f,
-                centerX - radius + 16f,
-                y + 8f,
-                paint
-            )
-            
-            // Legend text
-            val legendTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.WHITE
-                textSize = if (isNarrowScreen) 12f else 14f
-                textAlign = Paint.Align.LEFT
-            }
-            
-            val labelText = "${distributionLabels[i]}: ${tokenDistribution[i]}%"
-            canvas.drawText(
-                labelText,
-                centerX - radius + 25f,
-                y + 5f,
-                legendTextPaint
-            )
-        }
-    }
+    // private fun drawLegend(canvas: Canvas) {
+    //     val legendStartY = centerY + 40f // Reduced gap for semicircle
+    //     val legendItemHeight = if (isNarrowScreen) 25f else 28f
+    //     val itemsPerColumn = 2 // Split into two columns for better layout
+
+    //     // Actual token amounts
+    //     val tokenAmounts = arrayOf(
+    //         "856,432 NDP",
+    //         "389,246 NDP"
+    //     )
+
+    //     for (i in tokenDistribution.indices) {
+    //         val column = i / itemsPerColumn
+    //         val row = i % itemsPerColumn
+
+    //         val x = centerX - radius + (column * (radius * 1.1f))
+    //         val y = legendStartY + (row * legendItemHeight)
+
+    //         // Legend color box
+    //         paint.style = Paint.Style.FILL
+    //         paint.color = distributionColors[i]
+    //         canvas.drawRect(
+    //             x,
+    //             y - 8f,
+    //             x + 16f,
+    //             y + 8f,
+    //             paint
+    //         )
+
+    //         // Legend text - label
+    //         val legendTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    //             color = Color.WHITE
+    //             textSize = if (isNarrowScreen) 11f else 13f
+    //             textAlign = Paint.Align.LEFT
+    //             typeface = Typeface.DEFAULT_BOLD
+    //         }
+
+    //         canvas.drawText(
+    //             distributionLabels[i],
+    //             x + 22f,
+    //             y,
+    //             legendTextPaint
+    //         )
+
+    //         // Legend text - amount
+    //         legendTextPaint.apply {
+    //             textSize = if (isNarrowScreen) 10f else 11f
+    //             color = Color.parseColor("#B0BEC5")
+    //             typeface = Typeface.DEFAULT
+    //         }
+
+    //         canvas.drawText(
+    //             tokenAmounts[i],
+    //             x + 22f,
+    //             y + 12f,
+    //             legendTextPaint
+    //         )
+    //     }
+    // }
 }
