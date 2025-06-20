@@ -1587,7 +1587,7 @@ class MainActivity : AppCompatActivity() {
             "Compute Server 2",
             "Compute Server 3",
             "Storage Server 6",
-            "NVIDA RTX 3090 X 8",
+            "NVIDA RTX 3090 X 4",
             "GPU Server RTX",
             "Aethir GPU Server",  // index 12: Aethir가 명확히 포함된 서버타입으로 변경
             "Filecoin Storage",
@@ -1707,7 +1707,7 @@ class MainActivity : AppCompatActivity() {
             val index = i
 
             // 터치시 반응 없음
-            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 11 || index == 14 || index == 15 || index == 16) {
+            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 9 ||  index == 11 || index == 14 || index == 15 || index == 16) {
                 continue
             }
 

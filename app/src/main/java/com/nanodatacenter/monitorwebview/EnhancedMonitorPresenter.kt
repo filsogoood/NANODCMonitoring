@@ -143,8 +143,8 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
             // GPU Server Aethir 조건을 먼저 처리 (index = 12)
             serverType.contains("Aethir") || title.contains("Aethir") -> {
-                // Aethir GPU Server 전용 막대 그래프 (일반 GPU Server와 다른 그래프 사용)
-                setupAethirGpuMetrics(metricsLayout, serverType, title)
+                // Aethir GPU Server 전용 원형 차트 (GPU Server와 같은 구성이지만 다른 수치)
+                setupAethirGpuCircularCharts(metricsLayout, serverType, title)
             }
 
             // 특정 RTX GPU 서버 처리 (index = 11, 13)
@@ -1180,28 +1180,8 @@ class EnhancedMonitorPresenter(private val context: Context) {
         // 항상 수직으로 배치
         container.orientation = LinearLayout.VERTICAL
 
-        // GPU 정보 표시 (GPU 수 표시)
-        val gpuInfoContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setPadding(16, 0, 16, 8)
-            gravity = Gravity.CENTER
-        }
-
-        // GPU 정보 텍스트
-        val gpuInfoText = TextView(context).apply {
-            text = gpuCount
-            textSize = if (isNarrowScreen) 14f else 16f
-            setTextColor(Color.parseColor("#FFFFFF"))
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        gpuInfoContainer.addView(gpuInfoText)
-        container.addView(gpuInfoContainer)
-
+        // GPU 정보 표시 부분 제거 (NVIDA RTX 3090 X 8 텍스트 삭제)
+        
         // 반원형 게이지 높이 설정
         val gaugeHeight = if (isVeryNarrowScreen) 120 else 140
 
@@ -1397,9 +1377,9 @@ class EnhancedMonitorPresenter(private val context: Context) {
     }
 
     /**
-     * Aethir GPU Server 전용 메트릭스 설정 - 막대 그래프 사용
+     * Aethir GPU Server 전용 원형 차트 설정 - GPU Server와 같은 구성이지만 다른 수치
      */
-    private fun setupAethirGpuMetrics(container: LinearLayout, serverType: String, title: String) {
+    private fun setupAethirGpuCircularCharts(container: LinearLayout, serverType: String, title: String) {
         // 화면 너비 확인
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
@@ -1408,56 +1388,198 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
         // 항상 수직으로 배치
         container.orientation = LinearLayout.VERTICAL
+        
+        // 반원형 게이지 높이 설정
+        val gaugeHeight = if (isVeryNarrowScreen) 120 else 140
 
-        val spacer = View(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                20
-            )
-        }
-        container.addView(spacer)
-
-        // Aethir GPU 전용 막대 그래프 메트릭스 
-        val metricsView = StatusBarMetricsView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                260  // Aethir용 전용 높이
-            )
-            // Aethir GPU 전용 메트릭 - 다른 값들 사용
-            setAethirGpuMetrics(
-                Random.nextInt(75, 95).toFloat(),   // Aethir GPU 사용률 (더 높음)
-                Random.nextInt(65, 85).toFloat(),   // Aethir 온도
-                Random.nextInt(80, 95).toFloat(),   // Aethir 메모리 사용량 (더 높음)
-                Random.nextInt(85, 99).toFloat()    // Aethir FLOPS 활용률 (더 높음)
-            )
-        }
-        container.addView(metricsView)
-
-        // Aethir GPU 서버 정보 텍스트
-        val aethirInfoText = TextView(context).apply {
-            setTextColor(Color.parseColor("#E0E0E0"))
-            text = "• Aethir Network: Connected\n• AI Tasks: 24 active\n• Rewards: 1,542 ATH"
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            params.topMargin = -30
-            layoutParams = params
-            setPadding(16, 16, 16, 8)
-        }
-        container.addView(aethirInfoText)
-
-        // Aethir 실시간 정보 뷰
-        val aethirLiveInfoView = TextView(context).apply {
+        // VRAM 그래프를 2x2 그리드로 배치 (GPU Server와 동일한 구성)
+        val gridContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setTextColor(Color.parseColor("#4CAF50"))
+            setPadding(0, 16, 0, 16)
+        }
+
+        // 상단 행 (VRAM 1, 2)
+        val topRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Aethir VRAM 1 - GPU Server보다 8GB 더 높게
+        val vram1Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge1 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(10.8f, 24f, 0) // GPU Server(2.8) + 8 = 10.8GB
+        }
+        val vramLabel1 = TextView(context).apply {
+            text = "VRAM 1"
             textSize = if (isNarrowScreen) 12f else 14f
-            text = "Aethir Rewards: +15.8 ATH/hr | AI Computing: Active"
-            setPadding(16, 4, 16, 8)
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
         }
-        container.addView(aethirLiveInfoView)
+        vram1Container.addView(vramGauge1)
+        vram1Container.addView(vramLabel1)
+
+        // Aethir VRAM 2 - GPU Server보다 9GB 더 높게
+        val vram2Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge2 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(12.5f, 24f, 200) // GPU Server(3.5) + 9 = 12.5GB
+        }
+        val vramLabel2 = TextView(context).apply {
+            text = "VRAM 2"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram2Container.addView(vramGauge2)
+        vram2Container.addView(vramLabel2)
+
+        topRow.addView(vram1Container)
+        topRow.addView(vram2Container)
+
+        // 하단 행 (VRAM 3, 4)
+        val bottomRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 0)
+            }
+        }
+
+        // Aethir VRAM 3 - GPU Server보다 7GB 더 높게
+        val vram3Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge3 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(8.9f, 24f, 400) // GPU Server(1.9) + 7 = 8.9GB
+        }
+        val vramLabel3 = TextView(context).apply {
+            text = "VRAM 3"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram3Container.addView(vramGauge3)
+        vram3Container.addView(vramLabel3)
+
+        // Aethir VRAM 4 - GPU Server보다 11GB 더 높게
+        val vram4Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge4 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(15.3f, 24f, 600) // GPU Server(4.3) + 11 = 15.3GB
+        }
+        val vramLabel4 = TextView(context).apply {
+            text = "VRAM 4"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram4Container.addView(vramGauge4)
+        vram4Container.addView(vramLabel4)
+
+        bottomRow.addView(vram3Container)
+        bottomRow.addView(vram4Container)
+
+        gridContainer.addView(topRow)
+        gridContainer.addView(bottomRow)
+        container.addView(gridContainer)
+
+        // Aethir GPU Server 온도 게이지 추가 (GPU Server와 동일한 구성이지만 다른 온도)
+        val temperatureContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 0)
+        }
+
+        val temperatureGauge = TemperatureGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isVeryNarrowScreen) 200 else 220
+            )
+            setTemperature(27f) // Aethir 온도는 27도로 설정 (GPU Server는 24도)
+        }
+
+        temperatureContainer.addView(temperatureGauge)
+        container.addView(temperatureContainer)
     }
 }
