@@ -141,9 +141,14 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 setupFileCoinMetrics(metricsLayout, serverType, title)
             }
 
+            // GPU Server Aethir 조건을 먼저 처리 (index = 12)
+            serverType.contains("Aethir") || title.contains("Aethir") -> {
+                // Aethir GPU Server 전용 막대 그래프 (일반 GPU Server와 다른 그래프 사용)
+                setupAethirGpuMetrics(metricsLayout, serverType, title)
+            }
+
             // 특정 RTX GPU 서버 처리 (index = 11, 13)
             serverType.contains("NVIDA RTX 3090") -> {
-                // 기존 코드 유지
                 if (title.contains("GPU Server") && !title.contains("Aethir")) {
                     setupGpuCircularCharts(metricsLayout, 5, 25.6f, 2.8f, "")
                 } else {
@@ -153,19 +158,13 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
             // GPU Server (index = 10)를 원형 차트로 변경 - Aethir가 아닌 일반 GPU Server
             (title.contains("GPU Server") && !title.contains("Aethir") && serverType.contains("Server")) -> {
-                // GPU Server용 원형 차트로 변경  
+                // 일반 GPU Server용 원형 차트 (Aethir와 구분)
                 setupGpuCircularCharts(metricsLayout, 40, 60.5f, 3.0f, "")
             }
 
-            // GPU Server Aethir (index = 12)를 원형 차트로 변경
-            serverType.contains("Aethir") -> {
-                // Aethir Server용 원형 차트로 변경
-                setupGpuCircularCharts(metricsLayout, 75, 105.2f, 3.5f, "")
-            }
-
-            // 나머지 GPU 서버 처리 (Aethir가 아닌 경우)
-            (serverType.contains("GPU") && !serverType.contains("GPU Server RTX") && !serverType.contains("Aethir") && !title.contains("GPU Server")) ||
-                    (title.contains("GPU") && serverType.contains("Server") && !title.contains("GPU Server") && !serverType.contains("Aethir")) -> {
+            // 일반 GPU 서버 (Aethir 제외)
+            (serverType.contains("GPU") && !serverType.contains("GPU Server RTX") && !serverType.contains("Aethir")) ||
+                    (title.contains("GPU") && serverType.contains("Server") && !title.contains("Aethir")) -> {
                 setupGpuServerMetrics(metricsLayout, serverType, title)
             }
 
@@ -195,13 +194,6 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
             serverType.contains("Server 3") || serverType.contains("Compute Server 3") -> {
                 setupServerMetrics(metricsLayout, 3)
-            }
-
-            // 일반 GPU 서버 (Aethir 등)
-            serverType.contains("Aethir") ||
-                    (serverType.contains("GPU") && !serverType.contains("GPU Server RTX")) ||
-                    (title.contains("GPU") && serverType.contains("Server")) -> {
-                setupGpuServerMetrics(metricsLayout, serverType, title)
             }
 
             // Computing servers display CPU, memory, disk metrics in circular form
@@ -1402,5 +1394,70 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
         temperatureContainer.addView(temperatureGauge)
         container.addView(temperatureContainer)
+    }
+
+    /**
+     * Aethir GPU Server 전용 메트릭스 설정 - 막대 그래프 사용
+     */
+    private fun setupAethirGpuMetrics(container: LinearLayout, serverType: String, title: String) {
+        // 화면 너비 확인
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
+        val isVeryNarrowScreen = screenWidth < (370 * displayMetrics.density)
+
+        // 항상 수직으로 배치
+        container.orientation = LinearLayout.VERTICAL
+
+        val spacer = View(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                20
+            )
+        }
+        container.addView(spacer)
+
+        // Aethir GPU 전용 막대 그래프 메트릭스 
+        val metricsView = StatusBarMetricsView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                260  // Aethir용 전용 높이
+            )
+            // Aethir GPU 전용 메트릭 - 다른 값들 사용
+            setAethirGpuMetrics(
+                Random.nextInt(75, 95).toFloat(),   // Aethir GPU 사용률 (더 높음)
+                Random.nextInt(65, 85).toFloat(),   // Aethir 온도
+                Random.nextInt(80, 95).toFloat(),   // Aethir 메모리 사용량 (더 높음)
+                Random.nextInt(85, 99).toFloat()    // Aethir FLOPS 활용률 (더 높음)
+            )
+        }
+        container.addView(metricsView)
+
+        // Aethir GPU 서버 정보 텍스트
+        val aethirInfoText = TextView(context).apply {
+            setTextColor(Color.parseColor("#E0E0E0"))
+            text = "• Aethir Network: Connected\n• AI Tasks: 24 active\n• Rewards: 1,542 ATH"
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.topMargin = -30
+            layoutParams = params
+            setPadding(16, 16, 16, 8)
+        }
+        container.addView(aethirInfoText)
+
+        // Aethir 실시간 정보 뷰
+        val aethirLiveInfoView = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setTextColor(Color.parseColor("#4CAF50"))
+            textSize = if (isNarrowScreen) 12f else 14f
+            text = "Aethir Rewards: +15.8 ATH/hr | AI Computing: Active"
+            setPadding(16, 4, 16, 8)
+        }
+        container.addView(aethirLiveInfoView)
     }
 }

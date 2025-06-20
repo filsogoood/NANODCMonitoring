@@ -282,6 +282,37 @@ class StatusBarMetricsView @JvmOverloads constructor(
         setData(values, labels, colors)
     }
 
+    // Aethir GPU Server 전용 메트릭 함수
+    fun setAethirGpuMetrics(
+        aethirGpuUsage: Float,
+        aethirTemp: Float,
+        aethirMemory: Float,
+        aethirFlops: Float
+    ) {
+        val values = floatArrayOf(
+            aethirGpuUsage,
+            aethirTemp,
+            aethirMemory,
+            aethirFlops
+        )
+
+        val labels = arrayOf(
+            "Aethir GPU",
+            "AI Temp",
+            "AI Memory",
+            "AI FLOPS"
+        )
+
+        val colors = intArrayOf(
+            getColorForPercentage(aethirGpuUsage),
+            getColorForPercentage(aethirTemp),
+            getColorForPercentage(aethirMemory),
+            getColorForPercentage(aethirFlops, true)  // FLOPS는 높을수록 좋음
+        )
+
+        setData(values, labels, colors)
+    }
+
     // Return color based on percentage (lower is better)
     private fun getColorForPercentage(percentage: Float, inverse: Boolean = false): Int {
         val adjustedPercentage = if (inverse) 100 - percentage else percentage
