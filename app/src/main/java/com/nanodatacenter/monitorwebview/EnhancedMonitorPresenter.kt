@@ -145,22 +145,22 @@ class EnhancedMonitorPresenter(private val context: Context) {
             serverType.contains("NVIDA RTX 3090") -> {
                 // 기존 코드 유지
                 if (title.contains("GPU Server") && !title.contains("Aethir")) {
-                    setupGpuCircularCharts(metricsLayout, 5, 25.6f, 10.2f, "")
+                    setupGpuCircularCharts(metricsLayout, 5, 25.6f, 2.8f, "")
                 } else {
-                    setupGpuCircularCharts(metricsLayout, 65, 90.4f, 18.7f, "")
+                    setupGpuCircularCharts(metricsLayout, 65, 90.4f, 3.5f, "")
                 }
             }
 
             // GPU Server (index = 10)를 원형 차트로 변경 - Aethir가 아닌 일반 GPU Server
             (title.contains("GPU Server") && !title.contains("Aethir") && serverType.contains("Server")) -> {
                 // GPU Server용 원형 차트로 변경  
-                setupGpuCircularCharts(metricsLayout, 40, 60.5f, 15.3f, "")
+                setupGpuCircularCharts(metricsLayout, 40, 60.5f, 3.0f, "")
             }
 
             // GPU Server Aethir (index = 12)를 원형 차트로 변경
             serverType.contains("Aethir") -> {
                 // Aethir Server용 원형 차트로 변경
-                setupGpuCircularCharts(metricsLayout, 75, 105.2f, 20.1f, "")
+                setupGpuCircularCharts(metricsLayout, 75, 105.2f, 3.5f, "")
             }
 
             // 나머지 GPU 서버 처리 (Aethir가 아닌 경우)
@@ -1247,7 +1247,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 gaugeHeight
             )
-            setVramUsage(vramUsage * 0.9f, 24f) // 각 GPU마다 약간 다른 사용률
+            setVramUsage(2.8f, 24f, 0) // GPU 1 VRAM 사용량 (17.3 -> 2.8로 감소)
         }
         val vramLabel1 = TextView(context).apply {
             text = "VRAM 1"
@@ -1279,7 +1279,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 gaugeHeight
             )
-            setVramUsage(vramUsage * 0.95f, 24f)
+            setVramUsage(3.5f, 24f, 200) // GPU 2 VRAM 사용량 (19.7 -> 3.5로 감소)
         }
         val vramLabel2 = TextView(context).apply {
             text = "VRAM 2"
@@ -1325,7 +1325,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 gaugeHeight
             )
-            setVramUsage(vramUsage * 1.05f, 24f)
+            setVramUsage(1.9f, 24f, 400) // GPU 3 VRAM 사용량 (15.1 -> 1.9로 감소)
         }
         val vramLabel3 = TextView(context).apply {
             text = "VRAM 3"
@@ -1357,7 +1357,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 gaugeHeight
             )
-            setVramUsage(vramUsage, 24f)
+            setVramUsage(4.3f, 24f, 600) // GPU 4 VRAM 사용량 (22.1 -> 4.3으로 감소)
         }
         val vramLabel4 = TextView(context).apply {
             text = "VRAM 4"
@@ -1380,5 +1380,27 @@ class EnhancedMonitorPresenter(private val context: Context) {
         gridContainer.addView(topRow)
         gridContainer.addView(bottomRow)
         container.addView(gridContainer)
+
+        // FileCoin Storage와 동일한 온도 게이지 추가
+        val temperatureContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 0)
+        }
+
+        val temperatureGauge = TemperatureGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isVeryNarrowScreen) 200 else 220
+            )
+            setTemperature(24f) // 24도로 설정
+        }
+
+        temperatureContainer.addView(temperatureGauge)
+        container.addView(temperatureContainer)
     }
 }

@@ -31,17 +31,59 @@ class TemperatureGaugeView @JvmOverloads constructor(
         textPaint.typeface = Typeface.DEFAULT_BOLD
     }
 
+    private var animator: android.animation.ValueAnimator? = null
+    
     fun setTemperature(temperature: Float) {
         currentTemp = temperature
+        animatedTemp = 0f
+        invalidate()
         
-        // 애니메이션 효과
-        val animator = android.animation.ValueAnimator.ofFloat(0f, temperature)
-        animator.duration = 1000
-        animator.addUpdateListener { animation ->
-            animatedTemp = animation.animatedValue as Float
-            invalidate()
+        // 애니메이션 시작
+        startAnimation()
+    }
+    
+    private fun startAnimation() {
+        animator?.cancel()
+        
+        animator = android.animation.ValueAnimator.ofFloat(0f, currentTemp).apply {
+            duration = 1000
+            startDelay = 200
+            interpolator = android.view.animation.DecelerateInterpolator()
+            addUpdateListener { animation ->
+                animatedTemp = animation.animatedValue as Float
+                invalidate()
+            }
+            start()
         }
-        animator.start()
+    }
+    
+    fun restartAnimationIfNeeded() {
+        if (currentTemp > 0) {
+            animatedTemp = 0f
+            invalidate()
+            
+            post {
+                startAnimation()
+            }
+        }
+    }
+    
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        animator?.cancel()
+        animator = null
+    }
+    
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        restartAnimationIfNeeded()
+    }
+    
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) {
+            restartAnimationIfNeeded()
+        }
     }
 
     override fun onDraw(canvas: Canvas) {

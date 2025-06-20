@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
     # GPU Server: RTX 3090 × 4
     # CPU: 40.2%
     # Memory: 60.5GB/128GB
-    # VRAM: 15.3GB/24GB
+    # VRAM: 3.0GB/24GB
     # Temperature: 55.7°C
 """.trimIndent(),
 
@@ -194,7 +194,7 @@ class MainActivity : AppCompatActivity() {
         # GPU Server: RTX 3090 × 8
         # CPU: 5.2%
         # Memory: 25.6GB/128GB
-        # VRAM: 10.2GB/24GB
+        # VRAM: 2.8GB/24GB
         # Temperature: 45.7°C
     """.trimIndent(),
 
@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity() {
         # GPU Server: RTX 3090 × 8
         # CPU: 65.8%
         # Memory: 90.4GB/128GB
-        # VRAM: 18.7GB/24GB
+        # VRAM: 3.5GB/24GB
         # Temperature: 68.2°C
     """.trimIndent(),
         // Storage 3 - storage server 3 requiring attention
@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
         # GPU Server: RTX 3090 × 8
         # CPU: 65.8%
         # Memory: 90.4GB/128GB
-        # VRAM: 18.7GB/24GB
+        # VRAM: 3.5GB/24GB
         # Temperature: 68.2°C
     """.trimIndent(),
 
@@ -247,6 +247,42 @@ class MainActivity : AppCompatActivity() {
     private val mHandler = Handler()
     private val mRunnable: Runnable = Runnable { close_down_all() }
     private var loadCnt = 0
+
+    /**
+     * ViewGroup에서 모든 VramGaugeView를 재귀적으로 찾는 메서드
+     */
+    private fun findVramGaugeViews(viewGroup: ViewGroup): List<VramGaugeView> {
+        val vramGaugeViews = mutableListOf<VramGaugeView>()
+        
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+            if (child is VramGaugeView) {
+                vramGaugeViews.add(child)
+            } else if (child is ViewGroup) {
+                vramGaugeViews.addAll(findVramGaugeViews(child))
+            }
+        }
+        
+        return vramGaugeViews
+    }
+    
+    /**
+     * ViewGroup에서 모든 TemperatureGaugeView를 재귀적으로 찾는 메서드
+     */
+    private fun findTemperatureGaugeViews(viewGroup: ViewGroup): List<TemperatureGaugeView> {
+        val temperatureGaugeViews = mutableListOf<TemperatureGaugeView>()
+        
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+            if (child is TemperatureGaugeView) {
+                temperatureGaugeViews.add(child)
+            } else if (child is ViewGroup) {
+                temperatureGaugeViews.addAll(findTemperatureGaugeViews(child))
+            }
+        }
+        
+        return temperatureGaugeViews
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -385,6 +421,44 @@ class MainActivity : AppCompatActivity() {
 
                     viewAnimator.duration = 200
                     viewAnimator.start()
+                    
+                    // 기존에 생성된 MaterialCardView를 찾아서 애니메이션 적용
+                    val childCount = monitorView.childCount
+                    for (childIndex in 0 until childCount) {
+                        val child = monitorView.getChildAt(childIndex)
+                        if (child is LinearLayout) {
+                            // LinearLayout 내부의 MaterialCardView 찾기
+                            val innerChildCount = child.childCount
+                            for (innerIndex in 0 until innerChildCount) {
+                                val innerChild = child.getChildAt(innerIndex)
+                                if (innerChild is MaterialCardView) {
+                                    // MaterialCardView에 fade in 애니메이션 적용
+                                    val fadeInAnimation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
+                                    fadeInAnimation.duration = 800
+                                    fadeInAnimation.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                                        override fun onAnimationStart(animation: android.view.animation.Animation?) {
+                                            innerChild.alpha = 0f
+                                            innerChild.animate().alpha(1f).setDuration(800).start()
+                                        }
+                                        override fun onAnimationEnd(animation: android.view.animation.Animation?) {}
+                                        override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
+                                    })
+                                    innerChild.startAnimation(fadeInAnimation)
+                                    
+                                    // VramGaugeView 찾아서 애니메이션 재시작
+                                    findVramGaugeViews(innerChild).forEach { vramGauge ->
+                                        vramGauge.restartAnimationIfNeeded()
+                                    }
+                                    
+                                    // TemperatureGaugeView 찾아서 애니메이션 재시작
+                                    findTemperatureGaugeViews(innerChild).forEach { tempGauge ->
+                                        tempGauge.restartAnimationIfNeeded()
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 // Hide monitoring info and buttons for other images
@@ -1633,7 +1707,7 @@ class MainActivity : AppCompatActivity() {
             val index = i
 
             // 터치시 반응 없음
-            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 9 || index == 11 || index == 14 || index == 15 || index == 16) {
+            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 11 || index == 14 || index == 15 || index == 16) {
                 continue
             }
 

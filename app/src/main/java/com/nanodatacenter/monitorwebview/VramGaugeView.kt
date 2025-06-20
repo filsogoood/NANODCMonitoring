@@ -1,9 +1,11 @@
 package com.nanodatacenter.monitorwebview
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 
 /**
  * VRAM 사용률을 표시하는 단순한 반원형 차트
@@ -21,6 +23,8 @@ class VramGaugeView @JvmOverloads constructor(
     private var vramUsed = 0f
     private var vramTotal = 24f // 기본값 24GB (RTX 3090)
     private var percentage = 0f
+    private var animatedPercentage = 0f // 애니메이션용 변수
+    private var animator: ValueAnimator? = null
     
     // 색상 정의
     private val greenColor = Color.parseColor("#4CAF50")
@@ -35,11 +39,20 @@ class VramGaugeView @JvmOverloads constructor(
         textPaint.typeface = Typeface.DEFAULT_BOLD
     }
     
-    fun setVramUsage(used: Float, total: Float) {
+    fun setVramUsage(used: Float, total: Float, animationDelay: Long = 0) {
         vramUsed = used
         vramTotal = total
-        percentage = (used / total * 100).coerceIn(0f, 100f)
+        val targetPercentage = (used / total * 100).coerceIn(0f, 100f)
+        
+        // 초기값 설정
+        percentage = 0f
+        animatedPercentage = 0f
         invalidate()
+        
+        // 애니메이션 시작
+        postDelayed({
+            startAnimation(targetPercentage)
+        }, animationDelay)
     }
     
     override fun onDraw(canvas: Canvas) {
@@ -92,6 +105,55 @@ class VramGaugeView @JvmOverloads constructor(
             percentage >= 70 -> orangeColor
             percentage >= 50 -> yellowColor
             else -> greenColor
+        }
+    }
+    
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        // 뷰가 화면에서 제거될 때 애니메이션 정리
+        animator?.cancel()
+        animator = null
+    }
+    
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // 뷰가 화면에 다시 표시될 때 애니메이션 재시작
+        restartAnimationIfNeeded()
+    }
+    
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) {
+            restartAnimationIfNeeded()
+        }
+    }
+    
+    fun restartAnimationIfNeeded() {
+        if (vramUsed > 0 && vramTotal > 0) {
+            val targetPercentage = (vramUsed / vramTotal * 100).coerceIn(0f, 100f)
+            percentage = 0f
+            animatedPercentage = 0f
+            invalidate()
+            
+            postDelayed({
+                startAnimation(targetPercentage)
+            }, 100)
+        }
+    }
+    
+    private fun startAnimation(targetPercentage: Float) {
+        animator?.cancel()
+        
+        animator = ValueAnimator.ofFloat(0f, targetPercentage).apply {
+            duration = 1500
+            startDelay = 0
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { animation ->
+                animatedPercentage = animation.animatedValue as Float
+                percentage = animatedPercentage
+                invalidate()
+            }
+            start()
         }
     }
 } 
