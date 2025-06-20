@@ -1080,17 +1080,38 @@ class EnhancedMonitorPresenter(private val context: Context) {
         val usedStorage = 1295.24f     // 65.2% 사용 (실제 가용 용량 기준)
         val freeStorage = actualStorage - usedStorage
 
-        // 원형 진행 차트 생성 - 실제 가용 용량 기준으로 계산
-        val storageProgress = CircularProgressView(context).apply {
+        // 막대 차트 생성 - 실제 가용 용량 기준으로 계산
+        val storageProgress = StorageBarChartView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight
+                if (isVeryNarrowScreen) 160 else 180
             )
-            setDiskUsage(usedStorage, actualStorage) // 디스크 사용량 설정
-            setLabel("Storage") // 레이블 설정
+            setStorageData(usedStorage, actualStorage, "Storage") // 디스크 사용량 설정
         }
         storageContainer.addView(storageProgress)
         container.addView(storageContainer)
+
+        // 온도계 추가
+        val temperatureContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 0)
+        }
+
+        val temperatureGauge = TemperatureGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isVeryNarrowScreen) 200 else 220
+            )
+            setTemperature(23f) // 23도로 설정
+        }
+
+        temperatureContainer.addView(temperatureGauge)
+        container.addView(temperatureContainer)
 
         // 스토리지 정보 텍스트 추가
         val storageInfoText = TextView(context).apply {

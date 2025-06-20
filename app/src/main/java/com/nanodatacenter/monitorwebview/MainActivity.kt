@@ -221,6 +221,7 @@ class MainActivity : AppCompatActivity() {
     # Total Capacity: 2.0 PiB (1.94 PiB)
     # Used Storage: 1,295.2 TiB (65.2%)
     # Free Space: 691.3 TiB
+    # Temperature: 23°C (Normal)
 """.trimIndent(),
         // Storage 4 - storage server 4 in normal state
         """
@@ -1305,7 +1306,7 @@ class MainActivity : AppCompatActivity() {
                 if (isNarrowScreen) 36 else 42,
                 if (isNarrowScreen) 36 else 42
             )
-            setColorFilter(Color.parseColor("#FFD700")) // 금색 필터
+            setColorFilter(Color.parseColor("#4CAF50")) // 초록색 필터
         }
 
         // 제목 컨테이너
@@ -1378,17 +1379,47 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 24, 0, 16)
         }
 
-        // 원형 차트
-        val storageChart = CircularProgressView(this).apply {
+        // 막대 차트 (원형 차트 대신)
+        val storageChart = StorageBarChartView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) 280 else 320,
-                if (isNarrowScreen) 280 else 320
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                if (isNarrowScreen) 180 else 200
             )
-            setDiskUsage(1295.2f, 1986.56f) // 65.2% 사용률
-            setLabel("Storage")
+            setStorageData(1295.2f, 1986.56f, "Storage") // 65.2% 사용률
         }
 
         chartSection.addView(storageChart)
+
+        // 온도계와 스토리지 차트를 나란히 배치하는 컨테이너
+        val metricsContainer = LinearLayout(this).apply {
+            orientation = if (isNarrowScreen) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 0)
+        }
+
+        // 온도계 그래프 추가
+        val temperatureGauge = TemperatureGaugeView(this).apply {
+            layoutParams = if (isNarrowScreen) {
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    220
+                )
+            } else {
+                LinearLayout.LayoutParams(
+                    0,
+                    240,
+                    1f
+                )
+            }
+            setTemperature(23f) // 23도로 설정
+        }
+
+        metricsContainer.addView(temperatureGauge)
+        chartSection.addView(metricsContainer)
         innerContainer.addView(chartSection)
 
         // 정보 섹션
