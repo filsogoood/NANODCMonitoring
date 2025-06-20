@@ -706,8 +706,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
     }
 
     /**
-     * Post Worker 등 막대 그래프로 표시하는 서버에 텍스트 정보 추가
-     * 공백 줄이기 위해 간격 최적화
+     * Post Worker VRAM 표시 - 단일 VRAM 게이지
      */
     private fun setupPostWorkerMetrics(container: LinearLayout) {
         // 화면 너비 확인
@@ -718,63 +717,68 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
         // 항상 수직으로 배치
         container.orientation = LinearLayout.VERTICAL
+        
+        // 반원형 게이지 높이 설정
+        val gaugeHeight = if (isVeryNarrowScreen) 160 else 180
 
-        // CPU 사용량 표시 - 높이 감소
-        val cpuContainer = LinearLayout(context).apply {
+        // 단일 VRAM 게이지 컨테이너
+        val vramContainer = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            setPadding(0, 16, 0, 0) // 상단 패딩 감소
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 16)
         }
 
-        // 원형 차트 - Post Worker 수치
-        val circleHeight = if (isVeryNarrowScreen) 180 else 200 // 높이 감소 (240 → 180~200)
-
-        val cpuProgress = CircularProgressView(context).apply {
+        // 단일 VRAM 게이지
+        val vramGauge = VramGaugeView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setCpuUsage(48) // Post Worker CPU 사용량 (더 높게 설정)
+                gaugeHeight
+            )
+            setVramUsage(8.4f, 24f, 0) // Post Worker VRAM 사용량
         }
-        cpuContainer.addView(cpuProgress)
-
-        // Memory 사용량 표시 - 높이 감소
-        val memoryContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        
+        val vramLabel = TextView(context).apply {
+            text = "VRAM"
+            textSize = if (isNarrowScreen) 14f else 16f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 0)
+            }
         }
-
-        // Post Worker Memory - 다른 메모리 사용량
-        val memoryProgress = CircularProgressView(context).apply {
+        
+        vramContainer.addView(vramGauge)
+        vramContainer.addView(vramLabel)
+        container.addView(vramContainer)
+        
+        // Post Worker 온도 게이지 추가
+        val temperatureContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setMemoryUsage(9.8f, 16f) // Post Worker 메모리 사용량
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(0, 16, 0, 0)
         }
-        memoryContainer.addView(memoryProgress)
 
-        // Disk 사용량 표시 - 높이 감소 (Miner Node와 동일 종류의 차트)
-        val diskContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        val temperatureGauge = TemperatureGaugeView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+                if (isVeryNarrowScreen) 200 else 220
+            )
+            setTemperature(32f) // Post Worker 온도 32도로 설정
         }
 
-        val diskProgress = CircularProgressView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setDiskUsage(45.0f, 100f) // Post Worker Disk 사용량 (Miner Node와 다른 값)
-        }
-        diskContainer.addView(diskProgress)
-
-        container.addView(cpuContainer)
-        container.addView(memoryContainer)
-        container.addView(diskContainer)
+        temperatureContainer.addView(temperatureGauge)
+        container.addView(temperatureContainer)
     }
 
     /**
