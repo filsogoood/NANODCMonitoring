@@ -297,8 +297,6 @@ class MainActivity : AppCompatActivity() {
             val monitorView = monitorViews[i]
 
             if (findViewById<ImageView>(imageViewIds[i]) == imageView) {
-                // 첫 번째 인덱스(rack_info)는 별도 처리하므로 스킵
-                if (i == 0) continue
                 // index 1 (node_info)도 별도 처리하므로 스킵  
                 if (i == 1) continue
                 // index 13 (filecoin storage)도 별도 처리하므로 스킵
@@ -311,12 +309,6 @@ class MainActivity : AppCompatActivity() {
 
                     // 각 서버 타입별 맞춤 높이 설정
                     val targetHeight = when (i) {
-                        1 -> when {
-                            isVeryNarrowScreen -> 530
-                            isNarrowScreen -> 560
-                            else -> 600
-                        }
-
                         // 마이너 노드 (Image 1)
                         4 -> when {
                             isVeryNarrowScreen -> 660
@@ -436,7 +428,9 @@ class MainActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                setMargins(0, 0, 0, -8)
+            }
             setPadding(8, 8, 8, 8)
         }
 
@@ -579,7 +573,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 8)
+                setMargins(0, 0, 0, 16)
             }
         }
 
@@ -589,7 +583,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 16, 16, 0)
+            setPadding(16, 16, 16, 8)
         }
 
         // 토크노믹스 제목
@@ -615,9 +609,9 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 4)
+                setMargins(0, 0, 0, -8)
             }
-            setPadding(8, 4, 8, 4)
+            setPadding(8, 4, 8, 8)
         }
 
         // Balance 정보
@@ -636,14 +630,14 @@ class MainActivity : AppCompatActivity() {
 
         tokenomicsContainer.addView(tokenInfoSection)
 
-        // 토크노믹스 차트
-        val tokenomicsChart = NDPTokenomicsChartView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                if (isNarrowScreen) 280 else 320
-            )
-        }
-        tokenomicsContainer.addView(tokenomicsChart)
+        // 토크노믹스 차트 - 주석처리
+        // val tokenomicsChart = NDPTokenomicsChartView(this).apply {
+        //     layoutParams = LinearLayout.LayoutParams(
+        //         LinearLayout.LayoutParams.MATCH_PARENT,
+        //         if (isNarrowScreen) 280 else 320
+        //     )
+        // }
+        // tokenomicsContainer.addView(tokenomicsChart)
 
         tokenomicsCard.addView(tokenomicsContainer)
 
@@ -804,16 +798,16 @@ class MainActivity : AppCompatActivity() {
             }
             gravity = Gravity.CENTER_VERTICAL
 
-            // 색상 표시기 (작은 사각형)
-            val colorView = View(this@MainActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    16,
-                    16
-                ).apply {
-                    marginEnd = 12
-                }
-                setBackgroundColor(color)
-            }
+            // 색상 표시기 (작은 사각형) - 주석처리
+            // val colorView = View(this@MainActivity).apply {
+            //     layoutParams = LinearLayout.LayoutParams(
+            //         16,
+            //         16
+            //     ).apply {
+            //         marginEnd = 12
+            //     }
+            //     setBackgroundColor(color)
+            // }
 
             // 레이블
             val labelView = TextView(this@MainActivity).apply {
@@ -840,7 +834,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            addView(colorView)
+            // addView(colorView)  // 색상 표시기 주석처리
             addView(labelView)
             addView(valueView)
         }
@@ -980,7 +974,7 @@ class MainActivity : AppCompatActivity() {
                 isNarrowScreen -> 12
                 else -> 16
             }
-            setPadding(horizontalPadding, 16, horizontalPadding, 16)
+            setPadding(horizontalPadding, 8, horizontalPadding, 16)
         }
 
         // 헤더 생성
@@ -1651,9 +1645,9 @@ class MainActivity : AppCompatActivity() {
                                     val isVeryNarrowScreen =
                                         screenWidth < (370 * displayMetrics.density)
                                     layoutParams.height = when {
-                                        isVeryNarrowScreen -> 650
-                                        isNarrowScreen -> 680
-                                        else -> 720
+                                        isVeryNarrowScreen -> 300
+                                        isNarrowScreen -> 300
+                                        else -> 300
                                     }
                                     monitorView.layoutParams = layoutParams
 
@@ -1680,9 +1674,9 @@ class MainActivity : AppCompatActivity() {
                                     val isVeryNarrowScreen =
                                         screenWidth < (370 * displayMetrics.density)
                                     layoutParams.height = when {
-                                        isVeryNarrowScreen -> 550
-                                        isNarrowScreen -> 580
-                                        else -> 620
+                                        isVeryNarrowScreen -> 650
+                                        isNarrowScreen -> 680
+                                        else -> 720
                                     }
                                     monitorView.layoutParams = layoutParams
 
