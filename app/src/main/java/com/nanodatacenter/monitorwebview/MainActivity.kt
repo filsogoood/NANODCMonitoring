@@ -343,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                             else -> 900
                         }
 
-                        //deepseek
+                        //gpu server
                         10 -> when {
                             isVeryNarrowScreen -> 630
                             isNarrowScreen -> 690
@@ -1534,7 +1534,7 @@ class MainActivity : AppCompatActivity() {
                 "Server 2",
                 "Server 3",
                 "Storage 6",
-                "DeepSeek Server",
+                "GPU Server",
                 "RTX 3090",
                 "Aethir GPU Server",
                 "Filecoin Storage",
@@ -1554,7 +1554,7 @@ class MainActivity : AppCompatActivity() {
                 "Compute Server 2",
                 "Compute Server 3",
                 "Storage Server 6",
-                "DeepSeek Server",
+                "GPU Server",
                 "NVIDIA RTX 3090 Cluster",
                 "Storage Server",
                 "Filecoin Storage",

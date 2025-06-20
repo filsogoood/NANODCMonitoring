@@ -207,7 +207,7 @@
                 android:visibility="gone">
             </LinearLayout>
 
-            <!-- DEEPSEEK AI SERVER 1 -->
+            <!-- GPU SERVER 1 -->
             <ImageView
                 android:id="@+id/upscontroller"
                 android:layout_width="match_parent"
@@ -225,7 +225,7 @@
                 android:visibility="gone">
             </LinearLayout>
 
-            <!-- DEEPSEEK AI SERVER 2 -->
+            <!-- GPU SERVER 2 -->
             <ImageView
                 android:id="@+id/storage_1"
                 android:layout_width="match_parent"

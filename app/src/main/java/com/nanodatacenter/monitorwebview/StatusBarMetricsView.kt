@@ -248,7 +248,7 @@ class StatusBarMetricsView @JvmOverloads constructor(
         setData(values, labels, colors)
     }
 
-    fun setDeepSeekMetrics(
+    fun setGpuServerMetrics(
         cpuUsage: Float,
         gpuUsage: Float,
         memoryUsage: Float,

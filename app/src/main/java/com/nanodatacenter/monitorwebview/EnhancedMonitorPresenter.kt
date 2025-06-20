@@ -144,16 +144,16 @@ class EnhancedMonitorPresenter(private val context: Context) {
             // 특정 RTX GPU 서버 처리 (index = 11, 13)
             serverType.contains("NVIDA RTX 3090") -> {
                 // 기존 코드 유지
-                if (title.contains("DeepSeek")) {
+                if (title.contains("GPU Server") && !title.contains("Aethir")) {
                     setupGpuCircularCharts(metricsLayout, 5, 25.6f, 10.2f, "")
                 } else {
                     setupGpuCircularCharts(metricsLayout, 65, 90.4f, 18.7f, "")
                 }
             }
 
-            // DeepSeek Server (index = 10)를 원형 차트로 변경
-            serverType.contains("DeepSeek") -> {
-                // DeepSeek Server용 원형 차트로 변경
+            // GPU Server (index = 10)를 원형 차트로 변경 - Aethir가 아닌 일반 GPU Server
+            (title.contains("GPU Server") && !title.contains("Aethir") && serverType.contains("Server")) -> {
+                // GPU Server용 원형 차트로 변경  
                 setupGpuCircularCharts(metricsLayout, 40, 60.5f, 15.3f, "")
             }
 
@@ -163,9 +163,9 @@ class EnhancedMonitorPresenter(private val context: Context) {
                 setupGpuCircularCharts(metricsLayout, 75, 105.2f, 20.1f, "")
             }
 
-            // 나머지 GPU 서버 처리 (Aethir나 DeepSeek이 아닌 경우)
-            (serverType.contains("GPU") && !serverType.contains("GPU Server RTX") && !serverType.contains("Aethir")) ||
-                    (title.contains("GPU") && serverType.contains("Server") && !serverType.contains("DeepSeek") && !serverType.contains("Aethir")) -> {
+            // 나머지 GPU 서버 처리 (Aethir가 아닌 경우)
+            (serverType.contains("GPU") && !serverType.contains("GPU Server RTX") && !serverType.contains("Aethir") && !title.contains("GPU Server")) ||
+                    (title.contains("GPU") && serverType.contains("Server") && !title.contains("GPU Server") && !serverType.contains("Aethir")) -> {
                 setupGpuServerMetrics(metricsLayout, serverType, title)
             }
 
@@ -1148,7 +1148,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
         }
     }
 
-    private fun setupDeepSeekServerMetrics(container: LinearLayout) {
+    private fun setupGpuServerMetrics(container: LinearLayout) {
         // 항상 수직 레이아웃으로 설정
         container.orientation = LinearLayout.VERTICAL
 
@@ -1161,18 +1161,17 @@ class EnhancedMonitorPresenter(private val context: Context) {
         }
         container.addView(spacer)
 
-        // 막대 그래프 메트릭스 (StatusBarMetricsView) 사용
+        // 막대 그래프 메트릭스 (StatusBarMetricsView) 사용 - GPU 관련 항목만 표시
         val metricsView = StatusBarMetricsView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                280
+                200  // 높이 줄임 (항목이 줄어들었으므로)
             )
 
-            setDeepSeekMetrics(
-                Random.nextInt(60, 85).toFloat(),   // CPU 사용률
+            setGpuMetrics(
                 Random.nextInt(70, 95).toFloat(),   // GPU 사용률
-                Random.nextInt(60, 80).toFloat(),   // 메모리 사용량
-                Random.nextInt(40, 70).toFloat(),   // 디스크 사용량
+                Random.nextInt(60, 85).toFloat(),   // 온도
+                Random.nextInt(60, 80).toFloat(),   // VRAM 사용량
                 Random.nextInt(70, 99).toFloat()    // FLOPS 활용률
             )
         }
@@ -1211,66 +1210,175 @@ class EnhancedMonitorPresenter(private val context: Context) {
         gpuInfoContainer.addView(gpuInfoText)
         container.addView(gpuInfoContainer)
 
-        // CPU 사용량 표시
-        val cpuContainer = LinearLayout(context).apply {
+        // 반원형 게이지 높이 설정
+        val gaugeHeight = if (isVeryNarrowScreen) 120 else 140
+
+        // VRAM 그래프를 2x2 그리드로 배치
+        val gridContainer = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(0, 8, 0, 0)
+            setPadding(0, 16, 0, 16)
         }
 
-        // 더 작은 원형 차트 높이
-        val circleHeight = if (isVeryNarrowScreen) 160 else 180
-
-        val cpuProgress = CircularProgressView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight
-            )
-            setCpuUsage(cpuUsage)
-        }
-        cpuContainer.addView(cpuProgress)
-
-        // Memory 사용량 표시
-        val memoryContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        // 상단 행 (VRAM 1, 2)
+        val topRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
 
-        val memoryProgress = CircularProgressView(context).apply {
+        // VRAM 1
+        val vram1Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge1 = VramGaugeView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight
+                gaugeHeight
             )
-            setMemoryUsage(memoryUsage, 128f) // 128GB RAM 가정
+            setVramUsage(vramUsage * 0.9f, 24f) // 각 GPU마다 약간 다른 사용률
         }
-        memoryContainer.addView(memoryProgress)
-
-        // VRAM 사용량 표시
-        val vramContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        val vramLabel1 = TextView(context).apply {
+            text = "VRAM 1"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
         }
+        vram1Container.addView(vramGauge1)
+        vram1Container.addView(vramLabel1)
 
-        val vramProgress = CircularProgressView(context).apply {
+        // VRAM 2
+        val vram2Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge2 = VramGaugeView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight
+                gaugeHeight
             )
-            setVramUsage(vramUsage, 24f) // 각 GPU 24GB VRAM 가정 (3090)
+            setVramUsage(vramUsage * 0.95f, 24f)
         }
-        vramContainer.addView(vramProgress)
+        val vramLabel2 = TextView(context).apply {
+            text = "VRAM 2"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram2Container.addView(vramGauge2)
+        vram2Container.addView(vramLabel2)
 
-        container.addView(cpuContainer)
-        container.addView(memoryContainer)
-        container.addView(vramContainer)
+        topRow.addView(vram1Container)
+        topRow.addView(vram2Container)
+
+        // 하단 행 (VRAM 3, 4)
+        val bottomRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 8, 0, 0)
+            }
+        }
+
+        // VRAM 3
+        val vram3Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge3 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(vramUsage * 1.05f, 24f)
+        }
+        val vramLabel3 = TextView(context).apply {
+            text = "VRAM 3"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram3Container.addView(vramGauge3)
+        vram3Container.addView(vramLabel3)
+
+        // VRAM 4
+        val vram4Container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            gravity = Gravity.CENTER
+        }
+        val vramGauge4 = VramGaugeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                gaugeHeight
+            )
+            setVramUsage(vramUsage, 24f)
+        }
+        val vramLabel4 = TextView(context).apply {
+            text = "VRAM 4"
+            textSize = if (isNarrowScreen) 12f else 14f
+            setTextColor(Color.parseColor("#B0BEC5"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 4, 0, 0)
+            }
+        }
+        vram4Container.addView(vramGauge4)
+        vram4Container.addView(vramLabel4)
+
+        bottomRow.addView(vram3Container)
+        bottomRow.addView(vram4Container)
+
+        gridContainer.addView(topRow)
+        gridContainer.addView(bottomRow)
+        container.addView(gridContainer)
     }
 }
