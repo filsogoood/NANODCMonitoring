@@ -344,79 +344,130 @@ class MainActivity : AppCompatActivity() {
                     monitorView.visibility = View.VISIBLE
                     val layoutParams = monitorView.layoutParams
 
-                    // 각 서버 타입별 맞춤 높이 설정
-                    val targetHeight = when (i) {
-                        // 마이너 노드 (Image 1)
-                        4 -> when {
-                            isVeryNarrowScreen -> 660
-                            isNarrowScreen -> 690
-                            else -> 720
-                        }
+                    Log.d("CardSizeMeasure", "=== 카드 크기 측정 시작 (인덱스: $i) ===")
+                    Log.d("CardSizeMeasure", "화면 크기 - Width: $screenWidth, Height: $screenHeight")
+                    Log.d("CardSizeMeasure", "isNarrowScreen: $isNarrowScreen, isVeryNarrowScreen: $isVeryNarrowScreen")
+                    Log.d("CardSizeMeasure", "측정 전 - monitorView.width: ${monitorView.width}, monitorView.height: ${monitorView.height}")
+                    Log.d("CardSizeMeasure", "monitorView.childCount: ${monitorView.childCount}")
 
-                        // 포스트 워커 (Image 2)
-                        5 -> when {
-                            isVeryNarrowScreen -> 660
-                            isNarrowScreen -> 690
-                            else -> 720
+                    // 뷰가 레이아웃된 후 측정하기 위해 ViewTreeObserver 사용
+                    monitorView.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+                        override fun onPreDraw(): Boolean {
+                            monitorView.viewTreeObserver.removeOnPreDrawListener(this)
+                            
+                            Log.d("CardSizeMeasure", "OnPreDraw - monitorView 실제 크기: width=${monitorView.width}, height=${monitorView.height}")
+                            
+                            // 실제 렌더링된 크기를 기반으로 측정
+                            val actualHeight = monitorView.height
+                            Log.d("CardSizeMeasure", "실제 렌더링된 높이: $actualHeight")
+                            
+                            return true
                         }
+                    })
 
-                        // Supra
-                        6 -> when {
-                            isVeryNarrowScreen -> 610
-                            isNarrowScreen -> 640
-                            else -> 670
+                    // 카드의 실제 크기를 측정하여 동적으로 높이 설정
+                    val widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(screenWidth - 16, View.MeasureSpec.AT_MOST) // 마진 고려
+                    val heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                    
+                    Log.d("CardSizeMeasure", "MeasureSpec - Width: ${screenWidth - 16}, Height: UNSPECIFIED")
+                    
+                    monitorView.measure(widthMeasureSpec, heightMeasureSpec)
+                    val measuredHeight = monitorView.measuredHeight
+                    val measuredWidth = monitorView.measuredWidth
+                    
+                    Log.d("CardSizeMeasure", "측정 완료 - measuredWidth: $measuredWidth, measuredHeight: $measuredHeight")
+                    
+                    // 자식 뷰들의 크기도 확인
+                    for (childIndex in 0 until monitorView.childCount) {
+                        val child = monitorView.getChildAt(childIndex)
+                        child.measure(widthMeasureSpec, heightMeasureSpec)
+                        Log.d("CardSizeMeasure", "자식 뷰 $childIndex - width: ${child.measuredWidth}, height: ${child.measuredHeight}, class: ${child.javaClass.simpleName}")
+                    }
+                    
+                    // 자식 뷰의 실제 높이를 기준으로 최소 여백만 추가
+                    val targetHeight = if (measuredHeight > 0 && monitorView.childCount > 0) {
+                        // 첫 번째 자식 뷰(실제 콘텐츠)의 높이 사용
+                        val child = monitorView.getChildAt(0)
+                        val contentHeight = child.measuredHeight
+                        
+                        // 최소한의 여백만 추가 (마진 8 * 2 + 약간의 패딩)
+                        val minPadding = when {
+                            isVeryNarrowScreen -> 20
+                            isNarrowScreen -> 24  
+                            else -> 28
                         }
-
-                        7 -> when {
-                            isVeryNarrowScreen -> 820
-                            isNarrowScreen -> 850
-                            else -> 900
-                        }
-
-                        8 -> when {
-                            isVeryNarrowScreen -> 820
-                            isNarrowScreen -> 850
-                            else -> 900
-                        }
-
-                        //gpu server
-                        10 -> when {
-                            isVeryNarrowScreen -> 630
-                            isNarrowScreen -> 690
-                            else -> 720
-                        }
-
-                        //aethir
-                        12 -> when {
-                            isVeryNarrowScreen -> 630
-                            isNarrowScreen -> 690
-                            else -> 720
-                        }
-
-                        13 -> when {
-                            isVeryNarrowScreen -> 440
-                            isNarrowScreen -> 440//690
-                            else -> 440//720
-                        }
-                        // 스토리지 서버 (더 많은 정보 표시)
-                        in listOf(11, 14, 15) -> when {
-                            isVeryNarrowScreen -> 750
-                            isNarrowScreen -> 780
-                            else -> 820
-                        }
-
-                        // 다른 모든 화면
-                        else -> when {
-                            isVeryNarrowScreen -> 600
-                            isNarrowScreen -> 650
-                            else -> 700
+                        val calculatedHeight = contentHeight + minPadding
+                        Log.d("CardSizeMeasure", "동적 높이 계산 - 콘텐츠 높이: $contentHeight + 최소 패딩: $minPadding = $calculatedHeight")
+                        Log.d("CardSizeMeasure", "기존 측정 높이: $measuredHeight vs 새 계산 높이: $calculatedHeight")
+                        calculatedHeight
+                    } else {
+                        Log.d("CardSizeMeasure", "측정 실패 또는 자식 뷰 없음, 기본값 사용")
+                        // 측정에 실패한 경우 기존 로직 사용
+                        when (i) {
+                            4 -> when {
+                                isVeryNarrowScreen -> 660
+                                isNarrowScreen -> 690
+                                else -> 720
+                            }
+                            5 -> when {
+                                isVeryNarrowScreen -> 660
+                                isNarrowScreen -> 690
+                                else -> 720
+                            }
+                            6 -> when {
+                                isVeryNarrowScreen -> 610
+                                isNarrowScreen -> 640
+                                else -> 670
+                            }
+                            7 -> when {
+                                isVeryNarrowScreen -> 820
+                                isNarrowScreen -> 850
+                                else -> 900
+                            }
+                            8 -> when {
+                                isVeryNarrowScreen -> 820
+                                isNarrowScreen -> 850
+                                else -> 900
+                            }
+                            10 -> when {
+                                isVeryNarrowScreen -> 630
+                                isNarrowScreen -> 690
+                                else -> 720
+                            }
+                            12 -> when {
+                                isVeryNarrowScreen -> 630
+                                isNarrowScreen -> 690
+                                else -> 720
+                            }
+                            13 -> when {
+                                isVeryNarrowScreen -> 440
+                                isNarrowScreen -> 440
+                                else -> 440
+                            }
+                            in listOf(11, 14, 15) -> when {
+                                isVeryNarrowScreen -> 750
+                                isNarrowScreen -> 780
+                                else -> 820
+                            }
+                            else -> when {
+                                isVeryNarrowScreen -> 600
+                                isNarrowScreen -> 650
+                                else -> 700
+                            }
                         }
                     }
 
+                    Log.d("CardSizeMeasure", "최종 적용 높이: $targetHeight")
+                    Log.d("CardSizeMeasure", "=== 카드 크기 측정 완료 ===")
+
                     val viewAnimator = ValueAnimator.ofInt(0, targetHeight)
                     viewAnimator.addUpdateListener { animation ->
-                        layoutParams.height = animation.animatedValue as Int
+                        val currentHeight = animation.animatedValue as Int
+                        layoutParams.height = currentHeight
                         monitorView.layoutParams = layoutParams
+                        if (currentHeight == targetHeight) {
+                            Log.d("CardSizeMeasure", "애니메이션 완료 - 최종 높이: $currentHeight")
+                        }
                     }
 
                     viewAnimator.duration = 200
