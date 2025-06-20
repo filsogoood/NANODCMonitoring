@@ -1037,7 +1037,7 @@ class MainActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 8, 0, 0)
+                setMargins(8, 8, 8, 8)
             }
         }
 
@@ -1698,13 +1698,13 @@ class MainActivity : AppCompatActivity() {
                 status = statuses[i]
             )
 
-            // Miner Node (index 4)에 상하단 마진 적용
-            if (i == 4) {
+            // 인덱스 0을 제외한 모든 카드에 상하좌우 마진 8 적용
+            if (i != 0) {
                 val layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    setMargins(0, 8, 0, 8)
+                    setMargins(8, 8, 8, 8)
                 }
                 enhancedView.layoutParams = layoutParams
             }
