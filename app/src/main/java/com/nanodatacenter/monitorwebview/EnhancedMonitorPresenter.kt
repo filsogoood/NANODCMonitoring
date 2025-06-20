@@ -15,6 +15,9 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import com.google.android.material.card.MaterialCardView
 import kotlin.random.Random
+import android.animation.ValueAnimator
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 
 /**
  * Utility class for enhanced monitoring data display
@@ -537,7 +540,7 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
 
     /**
-     * 서버1, 서버2, 서버3 전용 메트릭스 설정 - 더 큰 원형 그래프와 하단 텍스트
+     * SUPRA WORKER 전용 메트릭스 설정 - 현실적인 CPU와 메모리 사용량 차트
      */
     private fun setupServerMetrics(container: LinearLayout, serverNumber: Int) {
         // 화면 너비 확인
@@ -549,36 +552,157 @@ class EnhancedMonitorPresenter(private val context: Context) {
         // 항상 수직으로 배치
         container.orientation = LinearLayout.VERTICAL
 
-        // 더 작은 원형 차트 높이
-        val circleHeight = if (isVeryNarrowScreen) 170 else 190 // 높이 감소 (220 → 170~190)
+        // SUPRA WORKER의 현실적인 수치 설정
+        val cpuUsage = when (serverNumber) {
+            1 -> 45 // SUPRA WORKER 1: 중간 정도 사용량
+            2 -> Random.nextInt(35, 55) // 다른 서버들: 일반적인 범위
+            else -> Random.nextInt(40, 60)
+        }
+        
+        val memoryUsed = when (serverNumber) {
+            1 -> 12.8f // SUPRA WORKER 1: 현실적인 메모리 사용량
+            2 -> Random.nextInt(8, 14).toFloat()
+            else -> Random.nextInt(10, 16).toFloat()
+        }
+        val memoryTotal = 32f // 32GB 총 메모리
 
-        // CPU 사용량 표시
-        val cpuProgress = CircularProgressView(context).apply {
+        // 현실적인 막대형 차트 컨테이너
+        val metricsContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setCpuUsage(if (serverNumber == 1) 88 else Random.nextInt(60, 95))
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(16, 20, 16, 16)
         }
 
-        // Memory 사용량 표시
-        val memoryProgress = CircularProgressView(context).apply {
+        // CPU 사용량 섹션
+        val cpuSection = createRealisticMetricSection(
+            "CPU",
+            "${cpuUsage}%",
+            cpuUsage.toFloat(),
+            100f,
+            "#FF6B35", // 주황색
+            isNarrowScreen
+        )
+        metricsContainer.addView(cpuSection)
+
+        // 구분선
+        val divider = View(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setMemoryUsage(8f, 16f)
+                1
+            ).apply {
+                setMargins(0, 16, 0, 16)
+            }
+            setBackgroundColor(Color.parseColor("#33FFFFFF"))
         }
+        metricsContainer.addView(divider)
 
-        // Disk 사용량 표시
-        val diskProgress = CircularProgressView(context).apply {
+        // 메모리 사용량 섹션
+        val memoryPercentage = ((memoryUsed / memoryTotal) * 100).toInt()
+        val memorySection = createRealisticMetricSection(
+            "MEMORY",
+            "${memoryPercentage}%",
+            memoryUsed,
+            memoryTotal,
+            "#4CAF50", // 녹색
+            isNarrowScreen
+        )
+        metricsContainer.addView(memorySection)
+
+        container.addView(metricsContainer)
+    }
+
+    /**
+     * 현실적인 막대형 메트릭 섹션 생성
+     */
+    private fun createRealisticMetricSection(
+        title: String,
+        valueText: String,
+        currentValue: Float,
+        maxValue: Float,
+        barColor: String,
+        isNarrowScreen: Boolean
+    ): LinearLayout {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                circleHeight)
-            setDiskUsage(if (serverNumber == 1) 49f else Random.nextInt(30, 70).toFloat(), 100f)
-        }
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
 
-        container.addView(cpuProgress)
-        container.addView(memoryProgress)
-        container.addView(diskProgress)
+            // 제목과 수치 표시
+            val headerLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setPadding(0, 0, 0, 8)
+            }
+
+            val titleView = TextView(context).apply {
+                text = title
+                textSize = if (isNarrowScreen) 14f else 16f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+
+            val valueView = TextView(context).apply {
+                text = valueText
+                textSize = if (isNarrowScreen) 13f else 15f
+                setTextColor(Color.parseColor(barColor))
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.END
+            }
+
+            headerLayout.addView(titleView)
+            headerLayout.addView(valueView)
+
+            // 진행률 바 컨테이너
+            val progressContainer = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    if (isNarrowScreen) 12 else 16
+                ).apply {
+                    setMargins(0, 4, 0, 0)
+                }
+                setBackgroundColor(Color.parseColor("#2A2A2A"))
+            }
+
+            // 진행률 바 전경 (애니메이션 대상)
+            val targetPercentage = currentValue / maxValue
+            val progressForeground = View(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, // 전체 너비
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.parseColor(barColor))
+                scaleX = 0f // 초기 상태: 완전히 숨김
+                pivotX = 0f // 왼쪽 기준으로 확장
+            }
+
+            progressContainer.addView(progressForeground)
+
+            // 간단하고 확실한 scaleX 애니메이션
+            Handler().postDelayed({
+                progressForeground.animate()
+                    .scaleX(targetPercentage)
+                    .setDuration(1200)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .start()
+            }, 500) // 카드 나타나는 애니메이션 이후 실행
+
+            addView(headerLayout)
+            addView(progressContainer)
+        }
     }
 
     /**

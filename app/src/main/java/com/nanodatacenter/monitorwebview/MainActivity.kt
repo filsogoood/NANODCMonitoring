@@ -1589,7 +1589,7 @@ class MainActivity : AppCompatActivity() {
             "Storage Server 6",
             "NVIDA RTX 3090 X 4",
             "GPU Server RTX",
-            "Aethir GPU Server",  // index 12: Aethir가 명확히 포함된 서버타입으로 변경
+            "Aethir GPU Server",
             "Filecoin Storage",
             "Storage Server 4",
             "Storage Server 5",
