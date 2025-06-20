@@ -454,6 +454,9 @@ class MainActivity : AppCompatActivity() {
                                     findTemperatureGaugeViews(innerChild).forEach { tempGauge ->
                                         tempGauge.restartAnimationIfNeeded()
                                     }
+                                    
+                                    // SUPRA WORKER 진행률 바 애니메이션 재시작
+                                    EnhancedMonitorPresenter.restartProgressBarAnimations(innerChild)
                                     break
                                 }
                             }
@@ -1033,7 +1036,9 @@ class MainActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                setMargins(0, 8, 0, 0)
+            }
         }
 
         // 실제 내용을 담을 내부 컨테이너
@@ -1205,9 +1210,9 @@ class MainActivity : AppCompatActivity() {
         // 오른쪽 정보 섹션 (조정된 파워)
         val rightInfoSection = createMinerInfoSection(
             "Adjusted Power",
-            "541.69 TiB",
+            "541.69 PiB",
             listOf(
-                Pair("Raw Byte Power:", "541.69 TiB"),
+                Pair("Raw Byte Power:", "541.69 PiB"),
                 Pair("Total Reward:", "1,063.58 FIL"),
                 Pair("Sector Status:", "")
             )
@@ -1692,6 +1697,17 @@ class MainActivity : AppCompatActivity() {
                 data = "",
                 status = statuses[i]
             )
+
+            // Miner Node (index 4)에 상하단 마진 적용
+            if (i == 4) {
+                val layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 8, 0, 8)
+                }
+                enhancedView.layoutParams = layoutParams
+            }
 
             monitorView.addView(enhancedView)
             monitorViews.add(monitorView)

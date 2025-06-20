@@ -681,24 +681,28 @@ class EnhancedMonitorPresenter(private val context: Context) {
             val targetPercentage = currentValue / maxValue
             val progressForeground = View(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, // 전체 너비
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.MATCH_PARENT
                 )
                 setBackgroundColor(Color.parseColor(barColor))
-                scaleX = 0f // 초기 상태: 완전히 숨김
-                pivotX = 0f // 왼쪽 기준으로 확장
+                scaleX = 0f
+                pivotX = 0f
+                tag = "progress_bar_animation" // 애니메이션 재시작을 위한 태그 추가
             }
 
             progressContainer.addView(progressForeground)
 
-            // 간단하고 확실한 scaleX 애니메이션
-            Handler().postDelayed({
-                progressForeground.animate()
-                    .scaleX(targetPercentage)
-                    .setDuration(1200)
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .start()
-            }, 500) // 카드 나타나는 애니메이션 이후 실행
+            // ViewTreeObserver를 사용하여 레이아웃 완료 후 애니메이션 시작
+            progressForeground.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    progressForeground.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    
+                    // 애니메이션 시작 전 잠시 대기
+                    progressForeground.postDelayed({
+                        startProgressBarAnimation(progressForeground, targetPercentage)
+                    }, 300)
+                }
+            })
 
             addView(headerLayout)
             addView(progressContainer)
@@ -1709,5 +1713,46 @@ class EnhancedMonitorPresenter(private val context: Context) {
 
         temperatureContainer.addView(temperatureGauge)
         container.addView(temperatureContainer)
+    }
+
+    /**
+     * 진행률 바 애니메이션 시작
+     */
+    private fun startProgressBarAnimation(progressView: View, targetPercentage: Float) {
+        progressView.clearAnimation()
+        progressView.scaleX = 0f
+        progressView.animate()
+            .scaleX(targetPercentage)
+            .setDuration(1500)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setStartDelay(200)
+            .start()
+    }
+
+    /**
+     * ViewGroup에서 모든 진행률 바를 재귀적으로 찾고 애니메이션 재시작
+     */
+    companion object {
+        fun restartProgressBarAnimations(viewGroup: ViewGroup) {
+            for (i in 0 until viewGroup.childCount) {
+                val child = viewGroup.getChildAt(i)
+                if (child.tag == "progress_bar_animation") {
+                    // 진행률 바 애니메이션 재시작
+                    child.clearAnimation()
+                    val currentScale = child.scaleX
+                    if (currentScale > 0f) {
+                        child.scaleX = 0f
+                        child.animate()
+                            .scaleX(currentScale)
+                            .setDuration(1500)
+                            .setInterpolator(AccelerateDecelerateInterpolator())
+                            .setStartDelay(200)
+                            .start()
+                    }
+                } else if (child is ViewGroup) {
+                    restartProgressBarAnimations(child)
+                }
+            }
+        }
     }
 }
