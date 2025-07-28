@@ -64,14 +64,14 @@ class SkynetScoreView @JvmOverloads constructor(
 
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#9CA3AF")
-        textSize = 24f
+        textSize = 14f  // 80% 재축소 (18→14)
         textAlign = Paint.Align.CENTER
         typeface = Typeface.DEFAULT
     }
 
     private val valuePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
-        textSize = 28f
+        textSize = 18f  // 80% 재축소 (22→18)
         textAlign = Paint.Align.CENTER
         typeface = Typeface.DEFAULT_BOLD
     }
@@ -90,11 +90,11 @@ class SkynetScoreView @JvmOverloads constructor(
 
     // 육각형 격자선 그리기
     private fun drawHexagonGrid(canvas: Canvas, centerX: Float, centerY: Float) {
-        val radii = listOf(80f, 110f, 140f, 170f) // 4개 레이어, 더 큰 크기로 조정
+        val radii = listOf(38f, 54f, 70f, 86f) // 현재의 80%로 재축소 (48→38, 68→54, 88→70, 108→86)
         
         // 격자선 색상을 좀 더 진하게 변경
         gridPaint.color = Color.parseColor("#6B7280")
-        gridPaint.strokeWidth = 2.5f
+        gridPaint.strokeWidth = 2f  // 두께 약간 줄임 (2.5→2)
         
         // 외곽선과 격자선
         radii.forEach { radius ->
@@ -109,7 +109,7 @@ class SkynetScoreView @JvmOverloads constructor(
         }
 
         // 중심에서 각 꼭짓점으로 선 그리기
-        val outerPoints = calculateHexagonPoints(centerX, centerY, 170f)
+        val outerPoints = calculateHexagonPoints(centerX, centerY, 86f)  // 최외곽 반지름 조정 (108→86)
         outerPoints.forEach { point ->
             canvas.drawLine(centerX, centerY, point.x, point.y, gridPaint)
         }
@@ -122,7 +122,7 @@ class SkynetScoreView @JvmOverloads constructor(
             metrics.ssd, metrics.network, metrics.health
         )
         
-        val radii = listOf(80f, 110f, 140f, 170f) // 격자와 동일한 크기
+        val radii = listOf(38f, 54f, 70f, 86f) // 격자와 동일한 크기로 80% 재축소
         
         for (sectionIndex in metricsList.indices) {
             val metricValue = metricsList[sectionIndex]
@@ -190,14 +190,14 @@ class SkynetScoreView @JvmOverloads constructor(
             if (metrics.health == 0f) "none" else String.format("%.1f", metrics.health)
         )
         
-        // 웹과 동일한 라벨 위치 (각 변의 중앙 바깥쪽)
+        // 라벨 위치를 현재의 80%로 재축소하여 뷰 안에 안전하게 배치
         val labelPositions = listOf(
-            PointF(centerX, centerY - 200f),           // CPU (위)
-            PointF(centerX + 173f, centerY - 100f),    // GPU (오른쪽 위)
-            PointF(centerX + 173f, centerY + 100f),    // RAM (오른쪽 아래)
-            PointF(centerX, centerY + 200f),           // STORAGE (아래)
-            PointF(centerX - 173f, centerY + 100f),    // NETWORK (왼쪽 아래)
-            PointF(centerX - 173f, centerY - 100f)     // HEALTH (왼쪽 위)
+            PointF(centerX, centerY - 112f),           // CPU (위) - 80% 재축소 (140→112)
+            PointF(centerX + 97f, centerY - 56f),      // GPU (오른쪽 위) - 80% 재축소 (121→97)
+            PointF(centerX + 97f, centerY + 56f),      // RAM (오른쪽 아래) - 80% 재축소 (121→97)
+            PointF(centerX, centerY + 112f),           // STORAGE (아래) - 80% 재축소 (140→112)
+            PointF(centerX - 97f, centerY + 56f),      // NETWORK (왼쪽 아래) - 80% 재축소 (121→97)
+            PointF(centerX - 97f, centerY - 56f)       // HEALTH (왼쪽 위) - 80% 재축소 (121→97)
         )
         
         for (i in labels.indices) {
@@ -221,8 +221,8 @@ class SkynetScoreView @JvmOverloads constructor(
             // 라벨 이름
             canvas.drawText(labels[i], pos.x, pos.y, labelPaint)
             
-            // 라벨 값 (색상이 동적으로 변경됨)
-            canvas.drawText(values[i], pos.x, pos.y + 35f, valuePaint)
+            // 라벨 값 (색상이 동적으로 변경됨) - 80% 재축소
+            canvas.drawText(values[i], pos.x, pos.y + 22f, valuePaint)  // 80% 재축소 (28→22)
         }
     }
 
@@ -258,8 +258,8 @@ class SkynetScoreView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val desiredWidth = 500  // 더 큰 크기로 변경
-        val desiredHeight = 500 // 더 큰 크기로 변경
+        val desiredWidth = 350   // 원래 크기로 복원하여 라벨이 잘리지 않도록
+        val desiredHeight = 350  // 원래 크기로 복원하여 라벨이 잘리지 않도록
 
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)

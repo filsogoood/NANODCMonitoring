@@ -23,7 +23,7 @@ import androidx.cardview.widget.CardView
 import com.google.android.material.card.MaterialCardView
 import androidx.lifecycle.lifecycleScope
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AutoLoginCallback {
     private lateinit var scrollView: NestedScrollView
     private lateinit var progressBar: RelativeLayout
     private var mediaPlayer: MediaPlayer? = null
@@ -348,21 +348,16 @@ class MainActivity : AppCompatActivity() {
 
         imageViewInitializing()
 
-        // 자동 로그인 매니저 초기화
+        // 자동 로그인 매니저 초기화 및 콜백 설정
         autoLoginManager = AutoLoginManager(this, lifecycleScope)
+        autoLoginManager.setCallback(this)
 
-        // Simulating delay for loading completion (instead of original webview loading)
-        mHandler.postDelayed({
-            progressBar.visibility = View.GONE
-            scrollView.visibility = View.VISIBLE
-            close_down_all()
-            
-            // 앱이 로드된 후 3초 뒤에 자동 로그인 시작
-            Handler().postDelayed({
-                Log.i("NANODP_MAIN", "🚀 자동 로그인 시작")
-                autoLoginManager.startAutoLogin()
-            }, 3000)
-        }, 2000)
+        // 즉시 자동 로그인 시작 (API 데이터 로드)
+        Log.i("NANODP_MAIN", "🚀 앱 시작 - 즉시 자동 로그인 시작")
+        autoLoginManager.startAutoLogin()
+
+        // 기존의 2초 딜레이와 3초 딜레이 제거
+        // 이제 API 데이터 로드 완료 시 onDataLoadCompleted에서 UI를 표시함
     }
 
     //너비 조정
@@ -754,34 +749,21 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                if (isNarrowScreen) 320 else 370  // 뷰 크기에 맞춰 높이 조정
             )
             gravity = Gravity.CENTER
         }
 
-        // SkynetScoreView 추가 - 웹과 동일한 육각형 차트
+        // SkynetScoreView 추가 - 그래프 크기는 80%로 유지, 뷰 크기는 라벨을 위해 충분히 확보
         val skynetScoreView = SkynetScoreView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) 320 else 400,
-                if (isNarrowScreen) 320 else 400
-            )
+            val viewSize = if (isNarrowScreen) 300 else 350  // 라벨이 잘리지 않도록 충분한 크기 확보
+            layoutParams = LinearLayout.LayoutParams(viewSize, viewSize)
             
-            Log.i("SKYNET_SCORE_UI", "🎨 SkynetScoreView 메트릭 설정:")
-            Log.i("SKYNET_SCORE_UI", "  - CPU 점수 전달: ${if (cpuScore == 0f && bc02Score?.cpuScore == null) "null" else cpuScore}")
-            Log.i("SKYNET_SCORE_UI", "  - GPU 점수 전달: ${if (gpuScore == 0f && bc02Score?.gpuScore == null) "null" else gpuScore}") 
-            Log.i("SKYNET_SCORE_UI", "  - RAM 점수 전달: ${if (ramScore == 0f && bc02Score?.ramScore == null) "null" else ramScore}")
-            Log.i("SKYNET_SCORE_UI", "  - SSD 점수 전달: ${if (ssdScore == 0f && bc02Score?.ssdScore == null) "null" else ssdScore}")
-            Log.i("SKYNET_SCORE_UI", "  - Network 점수 전달: ${if (networkScore == 0f && bc02Score?.networkScore == null) "null" else networkScore}")
-            Log.i("SKYNET_SCORE_UI", "  - Health 점수 전달: ${if (healthScore == 0f && bc02Score?.hardwareHealthScore == null) "null" else healthScore}")
+            // 최소 크기 보장
+            minimumWidth = viewSize
+            minimumHeight = viewSize
             
-            // API 데이터 존재 여부 확인
-            Log.i("SKYNET_SCORE_UI", "🔍 API 데이터 검증:")
-            Log.i("SKYNET_SCORE_UI", "  - bc02Score 객체: ${if (bc02Score != null) "존재" else "null"}")
-            if (bc02Score != null) {
-                Log.i("SKYNET_SCORE_UI", "  - 원본 RAM 점수: '${bc02Score.ramScore}'")
-                Log.i("SKYNET_SCORE_UI", "  - 원본 Network 점수: '${bc02Score.networkScore}'")
-                Log.i("SKYNET_SCORE_UI", "  - 원본 Health 점수: '${bc02Score.hardwareHealthScore}'")
-            }
+            Log.i("SKYNET_SCORE_UI", "🎯 SkynetScoreView 크기: ${viewSize}x${viewSize}")
             
             // BC02 점수 데이터로 메트릭 설정
             setMetrics(
@@ -1885,9 +1867,9 @@ class MainActivity : AppCompatActivity() {
                                     val isVeryNarrowScreen =
                                         screenWidth < (370 * displayMetrics.density)
                                     layoutParams.height = when {
-                                        isVeryNarrowScreen -> 650  // SkynetScore UI를 위해 높이 증가
-                                        isNarrowScreen -> 700
-                                        else -> 750
+                                        isVeryNarrowScreen -> 800  // SkynetScore UI 크기에 맞춰 조정
+                                        isNarrowScreen -> 850
+                                        else -> 900
                                     }
                                     monitorView.layoutParams = layoutParams
 
@@ -1997,5 +1979,34 @@ class MainActivity : AppCompatActivity() {
         }
 
         currentSelectedImageView = null
+    }
+
+    /**
+     * 데이터 로드 완료 콜백 - AutoLoginCallback 구현
+     */
+    override fun onDataLoadCompleted(success: Boolean) {
+        Log.i("NANODP_MAIN", "📊 데이터 로드 완료: success = $success")
+        
+        // UI 스레드에서 실행
+        runOnUiThread {
+            // 성공 여부와 관계없이 로딩 화면을 숨기고 UI를 표시
+            progressBar.visibility = View.GONE
+            scrollView.visibility = View.VISIBLE
+            close_down_all()
+            
+            if (success) {
+                Log.i("NANODP_MAIN", "✅ API 데이터 로드 성공 - UI 상호작용 가능")
+            } else {
+                Log.w("NANODP_MAIN", "⚠️ API 데이터 로드 실패 - 기본값으로 UI 표시")
+            }
+        }
+    }
+
+    /**
+     * 로딩 상태 변경 콜백 - AutoLoginCallback 구현
+     */
+    override fun onLoadingStatus(message: String) {
+        Log.d("NANODP_MAIN", "🔄 로딩 상태: $message")
+        // 필요시 로딩 텍스트 업데이트 (현재는 로그만 출력)
     }
 }

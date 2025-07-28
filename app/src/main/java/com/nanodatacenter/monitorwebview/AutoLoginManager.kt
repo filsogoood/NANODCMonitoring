@@ -6,6 +6,14 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import kotlinx.coroutines.launch
 
 /**
+ * 데이터 로드 완료 콜백 인터페이스
+ */
+interface AutoLoginCallback {
+    fun onDataLoadCompleted(success: Boolean)
+    fun onLoadingStatus(message: String)
+}
+
+/**
  * 자동 로그인 및 NDP Score 관리 클래스
  */
 class AutoLoginManager(
@@ -24,9 +32,17 @@ class AutoLoginManager(
     private val apiClient = NdpApiClient.getInstance()
     private var authToken: String? = null
     private var apiResponseData: ApiResponse? = null
+    private var callback: AutoLoginCallback? = null
     
     // BC02의 nanodc_id
     private val BC02_NANODC_ID = "5e807a27-7c3a-4a22-8df2-20c392186ed3"
+    
+    /**
+     * 콜백 설정
+     */
+    fun setCallback(callback: AutoLoginCallback) {
+        this.callback = callback
+    }
     
     /**
      * 자동 로그인 및 NDP Score 조회 시작
@@ -38,6 +54,9 @@ class AutoLoginManager(
         Log.i(SCORE_TAG, "===============================================")
         Log.d("BC02_SCORE_DEBUG", "🚀 자동 로그인 프로세스 시작")
         
+        // 로딩 상태 알림
+        callback?.onLoadingStatus("API 연결 중...")
+        
         lifecycleScope.launch {
             var retryCount = 0
             val maxRetries = 3
@@ -45,12 +64,14 @@ class AutoLoginManager(
             while (retryCount <= maxRetries) {
                 try {
                     Log.i(TAG, "🔄 시도 횟수: ${retryCount + 1}/${maxRetries + 1}")
+                    callback?.onLoadingStatus("로그인 시도 중... (${retryCount + 1}/${maxRetries + 1})")
                     
                     // 1단계: 자동 로그인
                     performLogin()
                     
                     // 2단계: NDP Score 조회
                     if (authToken != null) {
+                        callback?.onLoadingStatus("데이터 로드 중...")
                         fetchNdpScore()
                         // 성공 시 반복 종료
                         break
@@ -66,10 +87,14 @@ class AutoLoginManager(
                         Log.e(TAG, "❌ 모든 재시도 실패 - 기본값으로 진행")
                         Log.e(SCORE_TAG, "❌ NDP SCORE 조회 최종 실패: ${e.message}")
                         Log.e("BC02_SCORE_DEBUG", "❌ 자동 로그인 최종 실패: ${e.message}")
+                        
+                        // 최종 실패 콜백 호출
+                        callback?.onDataLoadCompleted(false)
                         break
                     } else {
                         val delayMs = (retryCount * 2000L) // 2초, 4초, 6초 지연
                         Log.w(TAG, "⏳ ${delayMs/1000}초 후 재시도...")
+                        callback?.onLoadingStatus("${delayMs/1000}초 후 재시도...")
                         kotlinx.coroutines.delay(delayMs)
                     }
                 }
@@ -150,6 +175,9 @@ class AutoLoginManager(
         }.onFailure { exception ->
             Log.e(TAG, "❌ POST 방식도 실패: ${exception.message}")
             Log.e(SCORE_TAG, "❌ 모든 방식 실패 - NDP SCORE 조회 불가: ${exception.message}")
+            
+            // 모든 방식 실패 시 콜백 호출
+            callback?.onDataLoadCompleted(false)
         }
     }
     
@@ -178,6 +206,8 @@ class AutoLoginManager(
         if (allScores.isNullOrEmpty()) {
             Log.w(TAG, "⚠️ NDP Score 데이터가 없습니다")
             Log.w(SCORE_TAG, "⚠️ 수신된 점수 데이터가 없습니다")
+            // 데이터가 없어도 성공으로 처리 (UI 표시를 위해)
+            callback?.onDataLoadCompleted(true)
             return
         }
         
@@ -205,6 +235,10 @@ class AutoLoginManager(
         if (allScores.size > 1) {
             showAdditionalScores(allScores)
         }
+        
+        // 데이터 로드 완료 콜백 호출
+        callback?.onDataLoadCompleted(true)
+        Log.d("BC02_SCORE_DEBUG", "✅ 데이터 로드 완료 - UI 표시 가능")
     }
     
     /**
