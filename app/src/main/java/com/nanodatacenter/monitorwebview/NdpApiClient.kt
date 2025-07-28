@@ -15,7 +15,7 @@ class NdpApiClient {
     
     companion object {
         // 서버 URL (웹 프로젝트와 동일한 서버)
-        private const val BASE_URL = "http://192.168.100.102:8080"
+        private const val BASE_URL = "http://211.176.180.172:8080"
         
         @Volatile
         private var INSTANCE: NdpApiClient? = null

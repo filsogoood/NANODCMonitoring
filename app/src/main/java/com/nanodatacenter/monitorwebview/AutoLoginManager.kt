@@ -222,7 +222,6 @@ class AutoLoginManager(
      * 현재 인증 토큰 반환
      */
     fun getAuthToken(): String? = authToken
-}
     
     /**
      * 수동으로 NDP Score 새로고침
