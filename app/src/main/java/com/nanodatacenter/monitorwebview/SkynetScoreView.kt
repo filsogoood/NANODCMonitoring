@@ -35,6 +35,17 @@ class SkynetScoreView @JvmOverloads constructor(
         health = 91.8f
     )
 
+    // 점수를 받으면 자동으로 적절한 색상 계산
+    private fun getScoreColor(score: Float): Int {
+        return when {
+            score >= 90f -> Color.parseColor("#4CAF50")  // 초록색
+            score >= 80f -> Color.parseColor("#8BC34A")  // 연초록색
+            score >= 70f -> Color.parseColor("#FFC107")  // 노란색
+            score >= 60f -> Color.parseColor("#FF9800")  // 주황색
+            else -> Color.parseColor("#F44336")         // 빨간색
+        }
+    }
+
     // 페인트 객체들
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#4a4a4a")
@@ -116,10 +127,13 @@ class SkynetScoreView @JvmOverloads constructor(
         for (sectionIndex in metricsList.indices) {
             val metricValue = metricsList[sectionIndex]
             
+            // 0 값인 경우 최소 5% 표시 (시각적 피드백을 위해)
+            val displayValue = if (metricValue == 0f) 5f else metricValue
+            
             for (layerIndex in radii.indices) {
                 val layerThreshold = (layerIndex + 1) * 25f // 25, 50, 75, 100
                 
-                if (metricValue >= layerThreshold) {
+                if (displayValue >= layerThreshold) {
                     val currentRadius = radii[layerIndex]
                     val nextRadius = if (layerIndex > 0) radii[layerIndex - 1] else 0f
                     
@@ -148,7 +162,15 @@ class SkynetScoreView @JvmOverloads constructor(
                     
                     // 레이어별 투명도 조정 (웹과 유사하게)
                     val paint = sectionPaints[sectionIndex]
-                    paint.alpha = (200 - layerIndex * 25).coerceIn(80, 200)
+                    
+                    // 0 값인 경우 투명도를 더 낮게 설정
+                    val alphaValue = if (metricValue == 0f) {
+                        50 // 매우 투명하게
+                    } else {
+                        (200 - layerIndex * 25).coerceIn(80, 200)
+                    }
+                    
+                    paint.alpha = alphaValue
                     
                     canvas.drawPath(path, paint)
                 }
@@ -156,35 +178,50 @@ class SkynetScoreView @JvmOverloads constructor(
         }
     }
 
-    // 라벨 그리기
+    // 라벨 그리기 - 웹과 동일한 위치로 조정
     private fun drawLabels(canvas: Canvas, centerX: Float, centerY: Float) {
         val labels = listOf("CPU", "GPU", "RAM", "STORAGE", "NETWORK", "HEALTH")
         val values = listOf(
-            String.format("%.1f", metrics.cpu),
-            String.format("%.1f", metrics.gpu),
-            String.format("%.1f", metrics.ram),
-            String.format("%.1f", metrics.ssd),
-            String.format("%.1f", metrics.network),
-            String.format("%.1f", metrics.health)
+            if (metrics.cpu == 0f) "none" else String.format("%.1f", metrics.cpu),
+            if (metrics.gpu == 0f) "none" else String.format("%.1f", metrics.gpu),
+            if (metrics.ram == 0f) "none" else String.format("%.1f", metrics.ram),
+            if (metrics.ssd == 0f) "none" else String.format("%.1f", metrics.ssd),
+            if (metrics.network == 0f) "none" else String.format("%.1f", metrics.network),
+            if (metrics.health == 0f) "none" else String.format("%.1f", metrics.health)
         )
         
-        // 라벨 위치 (각 변의 중앙 바깥쪽, 새로운 크기에 맞게 조정)
+        // 웹과 동일한 라벨 위치 (각 변의 중앙 바깥쪽)
         val labelPositions = listOf(
-            PointF(centerX + 90f, centerY - 170f),     // CPU (오른쪽 위)
-            PointF(centerX + 190f, centerY - 30f),     // GPU (오른쪽)
-            PointF(centerX + 140f, centerY + 150f),    // RAM (오른쪽 아래)
-            PointF(centerX - 30f, centerY + 170f),     // STORAGE (아래, 왼쪽으로 이동)
-            PointF(centerX - 190f, centerY + 30f),     // NETWORK (왼쪽)
-            PointF(centerX - 90f, centerY - 150f)      // HEALTH (왼쪽 위)
+            PointF(centerX, centerY - 200f),           // CPU (위)
+            PointF(centerX + 173f, centerY - 100f),    // GPU (오른쪽 위)
+            PointF(centerX + 173f, centerY + 100f),    // RAM (오른쪽 아래)
+            PointF(centerX, centerY + 200f),           // STORAGE (아래)
+            PointF(centerX - 173f, centerY + 100f),    // NETWORK (왼쪽 아래)
+            PointF(centerX - 173f, centerY - 100f)     // HEALTH (왼쪽 위)
         )
         
         for (i in labels.indices) {
             val pos = labelPositions[i]
+            val score = when (i) {
+                0 -> metrics.cpu
+                1 -> metrics.gpu
+                2 -> metrics.ram
+                3 -> metrics.ssd
+                4 -> metrics.network
+                else -> metrics.health
+            }
+            
+            // 점수에 따른 동적 색상 적용 (0일 때는 회색)
+            valuePaint.color = if (score == 0f) {
+                Color.parseColor("#9CA3AF")  // 회색 (none용)
+            } else {
+                getScoreColor(score)
+            }
             
             // 라벨 이름
             canvas.drawText(labels[i], pos.x, pos.y, labelPaint)
             
-            // 라벨 값
+            // 라벨 값 (색상이 동적으로 변경됨)
             canvas.drawText(values[i], pos.x, pos.y + 35f, valuePaint)
         }
     }

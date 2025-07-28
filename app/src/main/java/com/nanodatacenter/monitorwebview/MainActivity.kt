@@ -538,7 +538,7 @@ class MainActivity : AppCompatActivity() {
         animatorSet.start()
     }
 
-    // setupRackInfoView 메서드
+    // setupRackInfoView 메서드 - 웹의 SkynetScore와 동일한 UI
     private fun setupRackInfoView(container: LinearLayout) {
         // 기존 뷰를 모두 제거
         container.removeAllViews()
@@ -548,297 +548,271 @@ class MainActivity : AppCompatActivity() {
         val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
         val isVeryNarrowScreen = screenWidth < (370 * displayMetrics.density)
         
-        // BC02의 점수 가져오기
-        Log.d("BC02_SCORE_DEBUG", "========== MainActivity: BC02 점수 요청 ==========")
+        // 유니크한 로그 태그로 API 데이터 추적
+        Log.d("SKYNET_SCORE_UI", "========== SkynetScore UI 데이터 검증 시작 ==========")
+        
+        // AutoLoginManager 상태 확인
+        Log.i("SKYNET_SCORE_UI", "🔍 AutoLoginManager 상태 점검:")
+        Log.i("SKYNET_SCORE_UI", "  - 데이터 로드 상태: ${autoLoginManager.isDataLoaded()}")
+        Log.i("SKYNET_SCORE_UI", "  - 인증 토큰 존재: ${autoLoginManager.getAuthToken() != null}")
         
         // 데이터가 로드되었는지 확인
         if (!autoLoginManager.isDataLoaded()) {
-            Log.e("BC02_SCORE_DEBUG", "❌ API 데이터가 아직 로드되지 않았습니다!")
+            Log.e("SKYNET_SCORE_UI", "❌ API 데이터가 아직 로드되지 않았습니다!")
         }
         
         // 방법 1: BC02 점수 가져오기
+        Log.d("SKYNET_SCORE_UI", "🔄 방법 1: BC02 점수 직접 조회")
         var bc02Score = autoLoginManager.getBC02Score()
+        Log.d("SKYNET_SCORE_UI", "  - BC02 점수 결과: ${if (bc02Score != null) "성공" else "null"}")
         
         // 방법 2: BC02 점수가 없고 89점을 원한다면, 89점인 노드 찾기
         if (bc02Score == null) {
-            Log.w("BC02_SCORE_DEBUG", "⚠️ BC02 점수가 null - 89점인 노드 검색 시도")
+            Log.w("SKYNET_SCORE_UI", "🔄 방법 2: 89점인 노드 검색 시도")
             bc02Score = autoLoginManager.getScoreByAverage("89")
+            Log.d("SKYNET_SCORE_UI", "  - 89점 노드 검색 결과: ${if (bc02Score != null) "성공" else "null"}")
         }
         
         // 방법 3: 그래도 없으면 첫 번째 노드 사용
         if (bc02Score == null) {
-            Log.w("BC02_SCORE_DEBUG", "⚠️ 89점 노드도 없음 - 첫 번째 노드 사용 시도")
+            Log.w("SKYNET_SCORE_UI", "🔄 방법 3: 첫 번째 노드 사용 시도")
             bc02Score = autoLoginManager.getScoreByIndex(0)
+            Log.d("SKYNET_SCORE_UI", "  - 첫 번째 노드 검색 결과: ${if (bc02Score != null) "성공" else "null"}")
         }
         
+        // 최종 점수 데이터 상세 로그
         if (bc02Score == null) {
-            Log.e("BC02_SCORE_DEBUG", "❌ MainActivity: 모든 방법으로도 점수를 찾을 수 없음!")
+            Log.e("SKYNET_SCORE_UI", "❌ 모든 방법으로도 점수를 찾을 수 없음!")
+            Log.w("SKYNET_SCORE_UI", "🔧 기본값을 사용하여 UI 구성")
         } else {
-            Log.d("BC02_SCORE_DEBUG", "✅ MainActivity: 최종 점수 - ${bc02Score.averageScore}")
+            Log.d("SKYNET_SCORE_UI", "✅ 최종 BC02 점수 데이터:")
+            Log.d("SKYNET_SCORE_UI", "  - averageScore: ${bc02Score.averageScore ?: "null"}")
+            Log.d("SKYNET_SCORE_UI", "  - cpuScore: ${bc02Score.cpuScore ?: "null"}")
+            Log.d("SKYNET_SCORE_UI", "  - gpuScore: ${bc02Score.gpuScore ?: "null"}")
+            Log.d("SKYNET_SCORE_UI", "  - ssdScore: ${bc02Score.ssdScore ?: "null"}")
         }
         
-        val averageScore = bc02Score?.averageScore ?: "90"  // 기본값 90
-        val scoreValue = averageScore.split(".")[0]  // 소수점 제거
+        // 점수 데이터 변환 및 처리
+        val averageScore = bc02Score?.averageScore ?: "none"
+        val scoreFloat = averageScore.toFloatOrNull() ?: 0f  // null일 때 0으로 표시
         
-        // 디버깅 로그
-        Log.i("BC02_SCORE_DEBUG", "🎯 Index 0 클릭: 최종 표시 점수")
-        Log.i("BC02_SCORE_DEBUG", "📊 평균 점수: $averageScore")
-        Log.i("BC02_SCORE_DEBUG", "📊 표시할 점수: $scoreValue")
-        Log.i("BC02_SCORE_DEBUG", "📊 기본값 사용 여부: ${bc02Score == null}")
-        Log.d("BC02_SCORE_DEBUG", "========== MainActivity: BC02 점수 처리 완료 ==========")
+        Log.i("SKYNET_SCORE_UI", "📊 점수 변환 결과:")
+        Log.i("SKYNET_SCORE_UI", "  - 원본 averageScore: '$averageScore'")
+        Log.i("SKYNET_SCORE_UI", "  - 변환된 scoreFloat: $scoreFloat")
+        
+        // BC02 점수에서 개별 메트릭 추출 (실제 API 값 사용)
+        val cpuScore = bc02Score?.cpuScore?.toFloatOrNull() ?: 0f
+        val gpuScore = bc02Score?.gpuScore?.toFloatOrNull() ?: 0f  
+        val ramScore = bc02Score?.ramScore?.toFloatOrNull() ?: 0f        // 실제 API 값 사용!
+        val ssdScore = bc02Score?.ssdScore?.toFloatOrNull() ?: 0f
+        val networkScore = bc02Score?.networkScore?.toFloatOrNull() ?: 0f  // 실제 API 값 사용!
+        val healthScore = bc02Score?.hardwareHealthScore?.toFloatOrNull() ?: 0f  // 실제 API 값 사용!
+        
+        Log.i("SKYNET_SCORE_UI", "📈 개별 메트릭 점수:")
+        Log.i("SKYNET_SCORE_UI", "  - CPU: ${if (cpuScore == 0f && bc02Score?.cpuScore == null) "null" else cpuScore} (원본: ${bc02Score?.cpuScore ?: "null"})")
+        Log.i("SKYNET_SCORE_UI", "  - GPU: ${if (gpuScore == 0f && bc02Score?.gpuScore == null) "null" else gpuScore} (원본: ${bc02Score?.gpuScore ?: "null"})")
+        Log.i("SKYNET_SCORE_UI", "  - RAM: ${if (ramScore == 0f && bc02Score?.ramScore == null) "null" else ramScore} (원본: ${bc02Score?.ramScore ?: "null"})")
+        Log.i("SKYNET_SCORE_UI", "  - SSD: ${if (ssdScore == 0f && bc02Score?.ssdScore == null) "null" else ssdScore} (원본: ${bc02Score?.ssdScore ?: "null"})")
+        Log.i("SKYNET_SCORE_UI", "  - Network: ${if (networkScore == 0f && bc02Score?.networkScore == null) "null" else networkScore} (원본: ${bc02Score?.networkScore ?: "null"})")
+        Log.i("SKYNET_SCORE_UI", "  - Health: ${if (healthScore == 0f && bc02Score?.hardwareHealthScore == null) "null" else healthScore} (원본: ${bc02Score?.hardwareHealthScore ?: "null"})")
 
-        // 전체 컨테이너를 감쌀 LinearLayout 생성
-        val mainContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, -8)
-            }
-            setPadding(8, 8, 8, 8)
-        }
-
-        // 헤더 카드 - NDP 로고와 기본 정보
-        val headerCard = MaterialCardView(this).apply {
+        // 웹의 SkynetScore와 동일한 스타일의 메인 카드
+        val mainCard = MaterialCardView(this).apply {
             radius = 20f
             cardElevation = 16f
-            setCardBackgroundColor(Color.parseColor("#0D1B2A"))
-            strokeColor = Color.parseColor("#00D4FF")
-            strokeWidth = 2
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 8)
-            }
-        }
-
-        val headerContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(20, 20, 20, 20)
-        }
-
-        // NDP 로고 (더 세련된 디자인)
-        val logoContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            gravity = Gravity.CENTER
-
-        }
-
-        val logoView = ImageView(this).apply {
-            setImageResource(R.drawable.ndp_w)
-            layoutParams = LinearLayout.LayoutParams(
-                if (isNarrowScreen) 60 else 80,
-                if (isNarrowScreen) 60 else 80
-            )
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-
-        logoContainer.addView(logoView)
-
-        // 제목 컨테이너
-        val titleContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                weight = 1f
-                marginStart = 20
-            }
-        }
-
-        val titleText = TextView(this).apply {
-            text = "DePIN SCORE"
-            textSize = if (isNarrowScreen) 16f else 20f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        // DePIN SCORE 점수와 평가를 담을 수평 레이아웃
-        val scoreLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 4, 0, 0)
-            }
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        // DePIN SCORE 값 (BC02 점수, 초록색, BOLD)
-        val scoreValueText = TextView(this).apply {
-            text = scoreValue
-            textSize = if (isNarrowScreen) 20f else 24f
-            setTextColor(Color.parseColor("#4CAF50"))
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginEnd = 8
-            }
-        }
-
-        // 점수 단위
-        val scoreUnit = TextView(this).apply {
-            text = "/ 100"
-            textSize = if (isNarrowScreen) 12f else 14f
-            setTextColor(Color.parseColor("#B0BEC5"))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginEnd = 16
-            }
-        }
-
-        // 상태 설명 (점수에 따라 동적으로 변경)
-        val statusText = TextView(this).apply {
-            val score = scoreValue.toIntOrNull() ?: 89
-            text = when {
-                score >= 90 -> "Excellent"
-                score >= 80 -> "Very Good"
-                score >= 70 -> "Good"
-                score >= 60 -> "Fair"
-                else -> "Needs Improvement"
-            }
-            textSize = if (isNarrowScreen) 11f else 13f
-            setTextColor(when {
-                score >= 90 -> Color.parseColor("#4CAF50")  // 초록색
-                score >= 80 -> Color.parseColor("#8BC34A")  // 연초록색
-                score >= 70 -> Color.parseColor("#FFC107")  // 노란색
-                score >= 60 -> Color.parseColor("#FF9800")  // 주황색
-                else -> Color.parseColor("#F44336")         // 빨간색
-            })
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        scoreLayout.addView(scoreValueText)
-        scoreLayout.addView(scoreUnit)
-        scoreLayout.addView(statusText)
-
-        titleContainer.addView(titleText)
-        titleContainer.addView(scoreLayout)
-
-        headerContainer.addView(logoContainer)
-        headerContainer.addView(titleContainer)
-        headerCard.addView(headerContainer)
-
-        // 토크노믹스 차트 카드
-        val tokenomicsCard = MaterialCardView(this).apply {
-            radius = 16f
-            cardElevation = 12f
-            setCardBackgroundColor(Color.parseColor("#0A1929"))
-            strokeColor = Color.parseColor("#FF9800")
+            setCardBackgroundColor(Color.parseColor("#1F2937"))  // bg-gray-800/50
+            strokeColor = Color.parseColor("#374151")  // border-gray-700/50
             strokeWidth = 1
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 16)
+                setMargins(8, 8, 8, 8)
             }
         }
 
-        val tokenomicsContainer = LinearLayout(this).apply {
+        val mainContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setPadding(16, 16, 16, 8)
+            setPadding(20, 20, 20, 20)
         }
 
-        // 토크노믹스 제목
-        val tokenomicsTitle = TextView(this).apply {
-            text = if (bc02Score != null) "BC02 - DePIN SCORE DETAIL" else "NANO DePIN PROTOCOL"
-            textSize = if (isNarrowScreen) 16f else 18f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+        // 헤더 - 웹과 동일한 구조
+        val headerLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 16)
+                setMargins(0, 0, 0, 24)
             }
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        // 제목과 파란색 라인
+        val titleContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        // 파란색 라인 (웹의 w-1.5 h-6 bg-blue-500)
+        val blueLine = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                6,  // 1.5 * 4 = 6dp
+                24  // 6 * 4 = 24dp
+            ).apply {
+                marginEnd = 8
+            }
+            setBackgroundColor(Color.parseColor("#3B82F6"))  // bg-blue-500
+        }
+
+        val titleText = TextView(this).apply {
+            text = "Score"
+            textSize = if (isNarrowScreen) 18f else 20f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        titleContainer.addView(blueLine)
+        titleContainer.addView(titleText)
+
+        // Shield 아이콘 (웹의 Shield 컴포넌트)
+        val shieldIcon = ImageView(this).apply {
+            setImageResource(android.R.drawable.ic_secure)  // 기본 보안 아이콘 사용
+            layoutParams = LinearLayout.LayoutParams(24, 24).apply {
+                marginStart = 8
+            }
+            setColorFilter(Color.parseColor("#60A5FA"))  // text-blue-400
+        }
+
+        headerLayout.addView(titleContainer)
+        headerLayout.addView(shieldIcon)
+
+        // 점수 표시 박스 - 웹과 동일한 스타일
+        val scoreCard = MaterialCardView(this).apply {
+            radius = 12f
+            cardElevation = 8f
+            setCardBackgroundColor(Color.parseColor("#111827"))  // bg-gray-900/50
+            strokeColor = Color.parseColor("#4B5563")  // border-gray-600/30
+            strokeWidth = 1
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 24)
+            }
+        }
+
+        val scoreContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = Gravity.CENTER
+            setPadding(16, 16, 16, 16)
+        }
+
+        // 큰 점수 숫자 (웹의 text-5xl font-bold text-yellow-400)
+        val scoreText = TextView(this).apply {
+            val displayText = if (averageScore == "none") {
+                "none"
+            } else if (scoreFloat == 0f) {
+                "null" 
+            } else {
+                String.format("%.2f", scoreFloat)
+            }
+            
+            Log.i("SKYNET_SCORE_UI", "🎯 메인 점수 표시:")
+            Log.i("SKYNET_SCORE_UI", "  - 표시할 텍스트: '$displayText'")
+            Log.i("SKYNET_SCORE_UI", "  - averageScore: '$averageScore'")
+            Log.i("SKYNET_SCORE_UI", "  - scoreFloat: $scoreFloat")
+            
+            text = displayText
+            textSize = if (isNarrowScreen) 36f else 48f  // text-5xl
+            setTextColor(if (displayText == "none" || displayText == "null") {
+                Color.parseColor("#9CA3AF")  // 회색으로 표시
+            } else {
+                Color.parseColor("#FBBF24")  // text-yellow-400
+            })
+            typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
         }
-        tokenomicsContainer.addView(tokenomicsTitle)
 
-        // 토큰 정보 섹션 (Balance, Staking, Rewards) -> BC02 점수 정보로 변경
-        val tokenInfoSection = LinearLayout(this).apply {
+        scoreContainer.addView(scoreText)
+        scoreCard.addView(scoreContainer)
+
+        // 육각형 차트 컨테이너
+        val chartContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, -8)
+            )
+            gravity = Gravity.CENTER
+        }
+
+        // SkynetScoreView 추가 - 웹과 동일한 육각형 차트
+        val skynetScoreView = SkynetScoreView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                if (isNarrowScreen) 320 else 400,
+                if (isNarrowScreen) 320 else 400
+            )
+            
+            Log.i("SKYNET_SCORE_UI", "🎨 SkynetScoreView 메트릭 설정:")
+            Log.i("SKYNET_SCORE_UI", "  - CPU 점수 전달: ${if (cpuScore == 0f && bc02Score?.cpuScore == null) "null" else cpuScore}")
+            Log.i("SKYNET_SCORE_UI", "  - GPU 점수 전달: ${if (gpuScore == 0f && bc02Score?.gpuScore == null) "null" else gpuScore}") 
+            Log.i("SKYNET_SCORE_UI", "  - RAM 점수 전달: ${if (ramScore == 0f && bc02Score?.ramScore == null) "null" else ramScore}")
+            Log.i("SKYNET_SCORE_UI", "  - SSD 점수 전달: ${if (ssdScore == 0f && bc02Score?.ssdScore == null) "null" else ssdScore}")
+            Log.i("SKYNET_SCORE_UI", "  - Network 점수 전달: ${if (networkScore == 0f && bc02Score?.networkScore == null) "null" else networkScore}")
+            Log.i("SKYNET_SCORE_UI", "  - Health 점수 전달: ${if (healthScore == 0f && bc02Score?.hardwareHealthScore == null) "null" else healthScore}")
+            
+            // API 데이터 존재 여부 확인
+            Log.i("SKYNET_SCORE_UI", "🔍 API 데이터 검증:")
+            Log.i("SKYNET_SCORE_UI", "  - bc02Score 객체: ${if (bc02Score != null) "존재" else "null"}")
+            if (bc02Score != null) {
+                Log.i("SKYNET_SCORE_UI", "  - 원본 RAM 점수: '${bc02Score.ramScore}'")
+                Log.i("SKYNET_SCORE_UI", "  - 원본 Network 점수: '${bc02Score.networkScore}'")
+                Log.i("SKYNET_SCORE_UI", "  - 원본 Health 점수: '${bc02Score.hardwareHealthScore}'")
             }
-            setPadding(8, 4, 8, 8)
+            
+            // BC02 점수 데이터로 메트릭 설정
+            setMetrics(
+                cpu = cpuScore,
+                gpu = gpuScore,
+                ram = ramScore,
+                ssd = ssdScore,
+                network = networkScore,
+                health = healthScore
+            )
+            
+            Log.d("SKYNET_SCORE_UI", "✅ SkynetScoreView 메트릭 설정 완료")
         }
 
-        // BC02의 상세 점수 정보 표시
-        if (bc02Score != null) {
-            // BC02 상세 점수
-            val cpuInfo = createSingleTokenInfoRow("CPU Score:", bc02Score.cpuScore)
-            tokenInfoSection.addView(cpuInfo)
-            
-            val gpuInfo = createSingleTokenInfoRow("GPU Score:", bc02Score.gpuScore)
-            tokenInfoSection.addView(gpuInfo)
-            
-            val ssdInfo = createSingleTokenInfoRow("SSD Score:", bc02Score.ssdScore)
-            tokenInfoSection.addView(ssdInfo)
-        } else {
-            // 기본값 표시
-            val balanceInfo = createSingleTokenInfoRow("Balance:", "1,245,678 NDP")
-            tokenInfoSection.addView(balanceInfo)
+        chartContainer.addView(skynetScoreView)
 
-            val stakingInfo =
-                createTokenInfoRowWithColor("Staking:", "856,432 NDP", Color.parseColor("#4CAF50"))
-            tokenInfoSection.addView(stakingInfo)
+        // 모든 컴포넌트를 메인 컨테이너에 추가
+        mainContainer.addView(headerLayout)
+        mainContainer.addView(scoreCard)
+        mainContainer.addView(chartContainer)
 
-            val rewardsInfo =
-                createTokenInfoRowWithColor("Rewards:", "389,246 NDP", Color.parseColor("#FF9800"))
-            tokenInfoSection.addView(rewardsInfo)
-        }
-
-        tokenomicsContainer.addView(tokenInfoSection)
-
-        // 토크노믹스 차트 - 주석처리
-        // val tokenomicsChart = NDPTokenomicsChartView(this).apply {
-        //     layoutParams = LinearLayout.LayoutParams(
-        //         LinearLayout.LayoutParams.MATCH_PARENT,
-        //         if (isNarrowScreen) 280 else 320
-        //     )
-        // }
-        // tokenomicsContainer.addView(tokenomicsChart)
-
-        tokenomicsCard.addView(tokenomicsContainer)
-
-        // 모든 카드를 메인 컨테이너에 추가
-        mainContainer.addView(headerCard)
-        mainContainer.addView(tokenomicsCard)
-        container.addView(mainContainer)
+        mainCard.addView(mainContainer)
+        container.addView(mainCard)
 
         // 애니메이션 적용
         val animation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in)
         animation.duration = 1000
-        mainContainer.startAnimation(animation)
+        mainCard.startAnimation(animation)
+        
+        Log.d("SKYNET_SCORE_UI", "🎉 SkynetScore UI 구성 완료")
+        Log.d("SKYNET_SCORE_UI", "========== SkynetScore UI 데이터 검증 종료 ==========")
     }
 
     /**
@@ -1911,9 +1885,9 @@ class MainActivity : AppCompatActivity() {
                                     val isVeryNarrowScreen =
                                         screenWidth < (370 * displayMetrics.density)
                                     layoutParams.height = when {
-                                        isVeryNarrowScreen -> 300
-                                        isNarrowScreen -> 300
-                                        else -> 300
+                                        isVeryNarrowScreen -> 650  // SkynetScore UI를 위해 높이 증가
+                                        isNarrowScreen -> 700
+                                        else -> 750
                                     }
                                     monitorView.layoutParams = layoutParams
 
