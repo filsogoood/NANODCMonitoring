@@ -21,11 +21,15 @@ import android.widget.*
 import java.util.ArrayList
 import androidx.cardview.widget.CardView
 import com.google.android.material.card.MaterialCardView
+import androidx.lifecycle.lifecycleScope
 
 class MainActivity : AppCompatActivity() {
     private lateinit var scrollView: NestedScrollView
     private lateinit var progressBar: RelativeLayout
     private var mediaPlayer: MediaPlayer? = null
+
+    // API 관련 추가
+    private lateinit var autoLoginManager: AutoLoginManager
 
     // Variables for tracking touch count
     private var currentSelectedImageView: ImageView? = null
@@ -313,11 +317,20 @@ class MainActivity : AppCompatActivity() {
 
         imageViewInitializing()
 
+        // 자동 로그인 매니저 초기화
+        autoLoginManager = AutoLoginManager(this, lifecycleScope)
+
         // Simulating delay for loading completion (instead of original webview loading)
         mHandler.postDelayed({
             progressBar.visibility = View.GONE
             scrollView.visibility = View.VISIBLE
             close_down_all()
+            
+            // 앱이 로드된 후 3초 뒤에 자동 로그인 시작
+            Handler().postDelayed({
+                Log.i("NANODP_MAIN", "🚀 자동 로그인 시작")
+                autoLoginManager.startAutoLogin()
+            }, 3000)
         }, 2000)
     }
 
@@ -1726,8 +1739,8 @@ class MainActivity : AppCompatActivity() {
             imageViewsScrollLocation.add(imageView.top)
             val index = i
 
-            // 터치시 반응 없음
-            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 9 ||  index == 11 || index == 14 || index == 15 || index == 16) {
+            // 터치시 반응 없음 (로고 제외)
+            if (index == 2 || index == 3 || index == 7 || index == 8 || index == 9 ||  index == 11 || index == 14 || index == 15) {
                 continue
             }
 
@@ -1751,8 +1764,21 @@ class MainActivity : AppCompatActivity() {
 
                         when (touchCount) {
                             1 -> {
+                                // 로고 더블탭 대기 (index 16)
+                                if (index == 16) {
+                                    // 로고는 첫 번째 탭에서 아무것도 하지 않고 더블탭을 대기
+                                    Log.i("NANODP_MAIN", "🔄 로고 첫 번째 탭 - 더블탭 대기 중")
+                                    
+                                    // 1.5초 후에 touchCount 리셋 (더블탭 타이밍 제한)
+                                    touchCountResetHandler.removeCallbacksAndMessages(null)
+                                    touchCountResetHandler.postDelayed({
+                                        touchCount = 0
+                                        currentSelectedImageView = null
+                                        Log.d("NANODP_MAIN", "🕐 더블탭 시간 초과 - 카운트 리셋")
+                                    }, 1500)
+                                }
                                 // Rack Info (index 0) - show rack overview
-                                if (index == 0) {
+                                else if (index == 0) {
                                     // 다른 모든 모니터링 뷰 닫기
                                     for (monitorView in monitorViews) {
                                         monitorView.visibility = View.GONE
@@ -1822,8 +1848,28 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
 
+                            2 -> {
+                                // 로고 더블탭 - NDP Score 새로고침 (index 16)
+                                if (index == 16) {
+                                    Log.i("NANODP_MAIN", "🔄 로고 더블탭 성공 - NDP Score 새로고침 요청")
+                                    Log.i("NDP_SCORE_MONITOR", "🔄 사용자 요청으로 인한 NDP Score 새로고침")
+                                    touchCountResetHandler.removeCallbacksAndMessages(null)
+                                    
+                                    // NDP Score 새로고침 실행
+                                    autoLoginManager.refreshNdpScore()
+                                    
+                                    // 터치 카운트 리셋
+                                    touchCount = 0
+                                    currentSelectedImageView = null
+                                } else {
+                                    // 다른 이미지들은 두 번째 터치에서 모든 것을 닫음
+                                    closeEverything()
+                                    touchCount = 0 // Reset touch count
+                                }
+                            }
+
                             else -> {
-                                // Second or more touch: Close everything
+                                // 세 번째 이상 터치: 모든 것을 닫음
                                 closeEverything()
                                 touchCount = 0 // Reset touch count
                             }

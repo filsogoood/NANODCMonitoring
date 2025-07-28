@@ -1,0 +1,246 @@
+package com.nanodatacenter.monitorwebview
+
+import android.content.Context
+import android.graphics.*
+import android.util.AttributeSet
+import android.view.View
+import kotlin.math.*
+
+/**
+ * 웹의 SkynetScore 컴포넌트와 동일한 디자인의 육각형 Score 차트 뷰
+ */
+class SkynetScoreView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+
+    // Score 데이터
+    data class ScoreMetrics(
+        val cpu: Float = 0f,
+        val gpu: Float = 0f,
+        val ram: Float = 0f,
+        val ssd: Float = 0f,
+        val network: Float = 0f,
+        val health: Float = 0f
+    )
+
+    // 기본 메트릭 데이터
+    private var metrics = ScoreMetrics(
+        cpu = 85.2f,
+        gpu = 78.5f,
+        ram = 92.1f,
+        ssd = 88.7f,
+        network = 94.3f,
+        health = 91.8f
+    )
+
+    // 페인트 객체들
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#4a4a4a")
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+    }
+
+    private val sectionPaints = listOf(
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#3b82f6"); alpha = 180 }, // CPU - 파란색
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#8b5cf6"); alpha = 180 }, // GPU - 보라색  
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#06b6d4"); alpha = 180 }, // RAM - 청록색
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#10b981"); alpha = 180 }, // SSD - 초록색
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#f59e0b"); alpha = 180 }, // NETWORK - 주황색
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#ef4444"); alpha = 180 }  // HEALTH - 빨간색
+    )
+
+    private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#9CA3AF")
+        textSize = 24f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.DEFAULT
+    }
+
+    private val valuePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 28f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.DEFAULT_BOLD
+    }
+
+    // 육각형 좌표 계산
+    private fun calculateHexagonPoints(centerX: Float, centerY: Float, radius: Float): List<PointF> {
+        val points = mutableListOf<PointF>()
+        for (i in 0 until 6) {
+            val angle = (i * 60 - 90) * (PI / 180) // -90도에서 시작하여 시계방향
+            val x = centerX + radius * cos(angle).toFloat()
+            val y = centerY + radius * sin(angle).toFloat()
+            points.add(PointF(x, y))
+        }
+        return points
+    }
+
+    // 육각형 격자선 그리기
+    private fun drawHexagonGrid(canvas: Canvas, centerX: Float, centerY: Float) {
+        val radii = listOf(80f, 110f, 140f, 170f) // 4개 레이어, 더 큰 크기로 조정
+        
+        // 격자선 색상을 좀 더 진하게 변경
+        gridPaint.color = Color.parseColor("#6B7280")
+        gridPaint.strokeWidth = 2.5f
+        
+        // 외곽선과 격자선
+        radii.forEach { radius ->
+            val points = calculateHexagonPoints(centerX, centerY, radius)
+            val path = Path()
+            path.moveTo(points[0].x, points[0].y)
+            for (i in 1 until points.size) {
+                path.lineTo(points[i].x, points[i].y)
+            }
+            path.close()
+            canvas.drawPath(path, gridPaint)
+        }
+
+        // 중심에서 각 꼭짓점으로 선 그리기
+        val outerPoints = calculateHexagonPoints(centerX, centerY, 170f)
+        outerPoints.forEach { point ->
+            canvas.drawLine(centerX, centerY, point.x, point.y, gridPaint)
+        }
+    }
+
+    // 데이터 섹션 그리기
+    private fun drawDataSections(canvas: Canvas, centerX: Float, centerY: Float) {
+        val metricsList = listOf(
+            metrics.cpu, metrics.gpu, metrics.ram, 
+            metrics.ssd, metrics.network, metrics.health
+        )
+        
+        val radii = listOf(80f, 110f, 140f, 170f) // 격자와 동일한 크기
+        
+        for (sectionIndex in metricsList.indices) {
+            val metricValue = metricsList[sectionIndex]
+            
+            for (layerIndex in radii.indices) {
+                val layerThreshold = (layerIndex + 1) * 25f // 25, 50, 75, 100
+                
+                if (metricValue >= layerThreshold) {
+                    val currentRadius = radii[layerIndex]
+                    val nextRadius = if (layerIndex > 0) radii[layerIndex - 1] else 0f
+                    
+                    val outerPoints = calculateHexagonPoints(centerX, centerY, currentRadius)
+                    val innerPoints = if (layerIndex > 0) 
+                        calculateHexagonPoints(centerX, centerY, nextRadius) 
+                    else 
+                        listOf(PointF(centerX, centerY))
+                    
+                    val path = Path()
+                    
+                    if (layerIndex == 0) {
+                        // 중심에서 시작하는 삼각형
+                        path.moveTo(centerX, centerY)
+                        path.lineTo(outerPoints[sectionIndex].x, outerPoints[sectionIndex].y)
+                        path.lineTo(outerPoints[(sectionIndex + 1) % 6].x, outerPoints[(sectionIndex + 1) % 6].y)
+                        path.close()
+                    } else {
+                        // 육각형 링 섹션
+                        path.moveTo(innerPoints[sectionIndex].x, innerPoints[sectionIndex].y)
+                        path.lineTo(outerPoints[sectionIndex].x, outerPoints[sectionIndex].y)
+                        path.lineTo(outerPoints[(sectionIndex + 1) % 6].x, outerPoints[(sectionIndex + 1) % 6].y)
+                        path.lineTo(innerPoints[(sectionIndex + 1) % 6].x, innerPoints[(sectionIndex + 1) % 6].y)
+                        path.close()
+                    }
+                    
+                    // 레이어별 투명도 조정 (웹과 유사하게)
+                    val paint = sectionPaints[sectionIndex]
+                    paint.alpha = (200 - layerIndex * 25).coerceIn(80, 200)
+                    
+                    canvas.drawPath(path, paint)
+                }
+            }
+        }
+    }
+
+    // 라벨 그리기
+    private fun drawLabels(canvas: Canvas, centerX: Float, centerY: Float) {
+        val labels = listOf("CPU", "GPU", "RAM", "STORAGE", "NETWORK", "HEALTH")
+        val values = listOf(
+            String.format("%.1f", metrics.cpu),
+            String.format("%.1f", metrics.gpu),
+            String.format("%.1f", metrics.ram),
+            String.format("%.1f", metrics.ssd),
+            String.format("%.1f", metrics.network),
+            String.format("%.1f", metrics.health)
+        )
+        
+        // 라벨 위치 (각 변의 중앙 바깥쪽, 새로운 크기에 맞게 조정)
+        val labelPositions = listOf(
+            PointF(centerX + 90f, centerY - 170f),     // CPU (오른쪽 위)
+            PointF(centerX + 190f, centerY - 30f),     // GPU (오른쪽)
+            PointF(centerX + 140f, centerY + 150f),    // RAM (오른쪽 아래)
+            PointF(centerX - 30f, centerY + 170f),     // STORAGE (아래, 왼쪽으로 이동)
+            PointF(centerX - 190f, centerY + 30f),     // NETWORK (왼쪽)
+            PointF(centerX - 90f, centerY - 150f)      // HEALTH (왼쪽 위)
+        )
+        
+        for (i in labels.indices) {
+            val pos = labelPositions[i]
+            
+            // 라벨 이름
+            canvas.drawText(labels[i], pos.x, pos.y, labelPaint)
+            
+            // 라벨 값
+            canvas.drawText(values[i], pos.x, pos.y + 35f, valuePaint)
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        
+        val centerX = width / 2f
+        val centerY = height / 2f
+        
+        // 배경을 투명하게 설정
+        canvas.drawColor(Color.TRANSPARENT)
+        
+        // 육각형 격자 그리기
+        drawHexagonGrid(canvas, centerX, centerY)
+        
+        // 데이터 섹션 그리기
+        drawDataSections(canvas, centerX, centerY)
+        
+        // 라벨 그리기
+        drawLabels(canvas, centerX, centerY)
+    }
+
+    // 메트릭 데이터 설정
+    fun setMetrics(newMetrics: ScoreMetrics) {
+        metrics = newMetrics
+        invalidate() // 다시 그리기
+    }
+
+    // 개별 메트릭 설정
+    fun setMetrics(cpu: Float, gpu: Float, ram: Float, ssd: Float, network: Float, health: Float) {
+        metrics = ScoreMetrics(cpu, gpu, ram, ssd, network, health)
+        invalidate()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val desiredWidth = 500  // 더 큰 크기로 변경
+        val desiredHeight = 500 // 더 큰 크기로 변경
+
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        val width = when (widthMode) {
+            MeasureSpec.EXACTLY -> widthSize
+            MeasureSpec.AT_MOST -> minOf(desiredWidth, widthSize)
+            else -> desiredWidth
+        }
+
+        val height = when (heightMode) {
+            MeasureSpec.EXACTLY -> heightSize
+            MeasureSpec.AT_MOST -> minOf(desiredHeight, heightSize)
+            else -> desiredHeight
+        }
+
+        setMeasuredDimension(width, height)
+    }
+}
