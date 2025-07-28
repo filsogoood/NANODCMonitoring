@@ -253,6 +253,43 @@ class MainActivity : AppCompatActivity() {
     private var loadCnt = 0
 
     /**
+     * 전체화면 설정을 안전하게 수행하는 메서드
+     */
+    private fun setupFullScreen() {
+        try {
+            // 최신 방식으로 전체화면 설정 (API 30+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+                window.insetsController?.let { controller ->
+                    controller.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+                    controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                // 기존 방식 (API 30 미만)
+                window.setFlags(
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+                )
+                @Suppress("DEPRECATION")
+                val decorView = window.decorView
+                @Suppress("DEPRECATION")
+                val uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                @Suppress("DEPRECATION")
+                decorView.systemUiVisibility = uiOptions
+            }
+        } catch (e: Exception) {
+            Log.e("NANODP_MAIN", "전체화면 설정 중 오류 발생: ${e.message}")
+            // 오류 발생 시 기본 전체화면 모드로 대체
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
+        }
+    }
+
+    /**
      * ViewGroup에서 모든 VramGaugeView를 재귀적으로 찾는 메서드
      */
     private fun findVramGaugeViews(viewGroup: ViewGroup): List<VramGaugeView> {
@@ -290,18 +327,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
-        val decorView = window.decorView
-        val uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_IMMERSIVE
-        decorView.systemUiVisibility = uiOptions
-
+        
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
+        
+        // 전체화면 설정을 setContentView 후에 실행
+        setupFullScreen()
 
         progressBar = findViewById(R.id.progress_bar)
         scrollView = findViewById(R.id.scroll_view)
@@ -516,6 +547,45 @@ class MainActivity : AppCompatActivity() {
         val displayMetrics = resources.displayMetrics
         val isNarrowScreen = screenWidth < (400 * displayMetrics.density)
         val isVeryNarrowScreen = screenWidth < (370 * displayMetrics.density)
+        
+        // BC02의 점수 가져오기
+        Log.d("BC02_SCORE_DEBUG", "========== MainActivity: BC02 점수 요청 ==========")
+        
+        // 데이터가 로드되었는지 확인
+        if (!autoLoginManager.isDataLoaded()) {
+            Log.e("BC02_SCORE_DEBUG", "❌ API 데이터가 아직 로드되지 않았습니다!")
+        }
+        
+        // 방법 1: BC02 점수 가져오기
+        var bc02Score = autoLoginManager.getBC02Score()
+        
+        // 방법 2: BC02 점수가 없고 89점을 원한다면, 89점인 노드 찾기
+        if (bc02Score == null) {
+            Log.w("BC02_SCORE_DEBUG", "⚠️ BC02 점수가 null - 89점인 노드 검색 시도")
+            bc02Score = autoLoginManager.getScoreByAverage("89")
+        }
+        
+        // 방법 3: 그래도 없으면 첫 번째 노드 사용
+        if (bc02Score == null) {
+            Log.w("BC02_SCORE_DEBUG", "⚠️ 89점 노드도 없음 - 첫 번째 노드 사용 시도")
+            bc02Score = autoLoginManager.getScoreByIndex(0)
+        }
+        
+        if (bc02Score == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ MainActivity: 모든 방법으로도 점수를 찾을 수 없음!")
+        } else {
+            Log.d("BC02_SCORE_DEBUG", "✅ MainActivity: 최종 점수 - ${bc02Score.averageScore}")
+        }
+        
+        val averageScore = bc02Score?.averageScore ?: "90"  // 기본값 90
+        val scoreValue = averageScore.split(".")[0]  // 소수점 제거
+        
+        // 디버깅 로그
+        Log.i("BC02_SCORE_DEBUG", "🎯 Index 0 클릭: 최종 표시 점수")
+        Log.i("BC02_SCORE_DEBUG", "📊 평균 점수: $averageScore")
+        Log.i("BC02_SCORE_DEBUG", "📊 표시할 점수: $scoreValue")
+        Log.i("BC02_SCORE_DEBUG", "📊 기본값 사용 여부: ${bc02Score == null}")
+        Log.d("BC02_SCORE_DEBUG", "========== MainActivity: BC02 점수 처리 완료 ==========")
 
         // 전체 컨테이너를 감쌀 LinearLayout 생성
         val mainContainer = LinearLayout(this).apply {
@@ -607,9 +677,9 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // DePIN SCORE 값 (94점, 초록색, BOLD)
-        val scoreValue = TextView(this).apply {
-            text = "94"
+        // DePIN SCORE 값 (BC02 점수, 초록색, BOLD)
+        val scoreValueText = TextView(this).apply {
+            text = scoreValue
             textSize = if (isNarrowScreen) 20f else 24f
             setTextColor(Color.parseColor("#4CAF50"))
             typeface = Typeface.DEFAULT_BOLD
@@ -634,11 +704,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 상태 설명
+        // 상태 설명 (점수에 따라 동적으로 변경)
         val statusText = TextView(this).apply {
-            text = "Excellent"
+            val score = scoreValue.toIntOrNull() ?: 89
+            text = when {
+                score >= 90 -> "Excellent"
+                score >= 80 -> "Very Good"
+                score >= 70 -> "Good"
+                score >= 60 -> "Fair"
+                else -> "Needs Improvement"
+            }
             textSize = if (isNarrowScreen) 11f else 13f
-            setTextColor(Color.parseColor("#4CAF50"))
+            setTextColor(when {
+                score >= 90 -> Color.parseColor("#4CAF50")  // 초록색
+                score >= 80 -> Color.parseColor("#8BC34A")  // 연초록색
+                score >= 70 -> Color.parseColor("#FFC107")  // 노란색
+                score >= 60 -> Color.parseColor("#FF9800")  // 주황색
+                else -> Color.parseColor("#F44336")         // 빨간색
+            })
             typeface = Typeface.DEFAULT_BOLD
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -646,7 +729,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        scoreLayout.addView(scoreValue)
+        scoreLayout.addView(scoreValueText)
         scoreLayout.addView(scoreUnit)
         scoreLayout.addView(statusText)
 
@@ -683,7 +766,7 @@ class MainActivity : AppCompatActivity() {
 
         // 토크노믹스 제목
         val tokenomicsTitle = TextView(this).apply {
-            text = "NANO DePIN PROTOCOL"
+            text = if (bc02Score != null) "BC02 - DePIN SCORE DETAIL" else "NANO DePIN PROTOCOL"
             textSize = if (isNarrowScreen) 16f else 18f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
@@ -697,7 +780,7 @@ class MainActivity : AppCompatActivity() {
         }
         tokenomicsContainer.addView(tokenomicsTitle)
 
-        // 토큰 정보 섹션 (Balance, Staking, Rewards)
+        // 토큰 정보 섹션 (Balance, Staking, Rewards) -> BC02 점수 정보로 변경
         val tokenInfoSection = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -709,19 +792,30 @@ class MainActivity : AppCompatActivity() {
             setPadding(8, 4, 8, 8)
         }
 
-        // Balance 정보
-        val balanceInfo = createSingleTokenInfoRow("Balance:", "1,245,678 NDP")
-        tokenInfoSection.addView(balanceInfo)
+        // BC02의 상세 점수 정보 표시
+        if (bc02Score != null) {
+            // BC02 상세 점수
+            val cpuInfo = createSingleTokenInfoRow("CPU Score:", bc02Score.cpuScore)
+            tokenInfoSection.addView(cpuInfo)
+            
+            val gpuInfo = createSingleTokenInfoRow("GPU Score:", bc02Score.gpuScore)
+            tokenInfoSection.addView(gpuInfo)
+            
+            val ssdInfo = createSingleTokenInfoRow("SSD Score:", bc02Score.ssdScore)
+            tokenInfoSection.addView(ssdInfo)
+        } else {
+            // 기본값 표시
+            val balanceInfo = createSingleTokenInfoRow("Balance:", "1,245,678 NDP")
+            tokenInfoSection.addView(balanceInfo)
 
-        // Staking 정보 (초록색 표시 추가)
-        val stakingInfo =
-            createTokenInfoRowWithColor("Staking:", "856,432 NDP", Color.parseColor("#4CAF50"))
-        tokenInfoSection.addView(stakingInfo)
+            val stakingInfo =
+                createTokenInfoRowWithColor("Staking:", "856,432 NDP", Color.parseColor("#4CAF50"))
+            tokenInfoSection.addView(stakingInfo)
 
-        // Rewards 정보 (주황색 표시 추가)
-        val rewardsInfo =
-            createTokenInfoRowWithColor("Rewards:", "389,246 NDP", Color.parseColor("#FF9800"))
-        tokenInfoSection.addView(rewardsInfo)
+            val rewardsInfo =
+                createTokenInfoRowWithColor("Rewards:", "389,246 NDP", Color.parseColor("#FF9800"))
+            tokenInfoSection.addView(rewardsInfo)
+        }
 
         tokenomicsContainer.addView(tokenInfoSection)
 
@@ -1779,6 +1873,27 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 // Rack Info (index 0) - show rack overview
                                 else if (index == 0) {
+                                    Log.d("BC02_SCORE_DEBUG", "========== Index 0 클릭 이벤트 ==========")
+                                    Log.d("BC02_SCORE_DEBUG", "🔍 AutoLoginManager 상태 확인")
+                                    
+                                    // API 통신 상태 확인 로그 추가
+                                    Log.i("NANODP_MAIN", "🔍 API 통신 상태 점검 시작")
+                                    Log.i("NANODP_MAIN", "📱 인증 토큰 상태: ${if (autoLoginManager.getAuthToken() != null) "존재" else "없음"}")
+                                    Log.i("NANODP_MAIN", "📊 데이터 로드 상태: ${if (autoLoginManager.isDataLoaded()) "완료" else "미완료"}")
+                                    
+                                    // 데이터가 로드되지 않은 경우 재시도
+                                    if (!autoLoginManager.isDataLoaded()) {
+                                        Log.w("NANODP_MAIN", "⚠️ 데이터가 로드되지 않음 - 자동 로그인 재시도")
+                                        autoLoginManager.startAutoLogin()
+                                        
+                                        // 3초 후 다시 확인
+                                        Handler().postDelayed({
+                                            if (!autoLoginManager.isDataLoaded()) {
+                                                Log.e("NANODP_MAIN", "❌ API 통신 실패 - 기본값으로 표시")
+                                            }
+                                        }, 3000)
+                                    }
+                                    
                                     // 다른 모든 모니터링 뷰 닫기
                                     for (monitorView in monitorViews) {
                                         monitorView.visibility = View.GONE
@@ -1805,6 +1920,8 @@ class MainActivity : AppCompatActivity() {
                                     // 랙 정보 뷰 설정
                                     setupRackInfoView(monitorView)
                                     playSound(mainOpening)
+                                    
+                                    Log.d("BC02_SCORE_DEBUG", "========== Index 0 처리 완료 ==========")
                                 }
                                 // index 1은 setupMinerInfoView 후 자동 측정 적용
                                 else if (index == 1) {

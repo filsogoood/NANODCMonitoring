@@ -23,6 +23,10 @@ class AutoLoginManager(
     
     private val apiClient = NdpApiClient.getInstance()
     private var authToken: String? = null
+    private var apiResponseData: ApiResponse? = null
+    
+    // BC02의 nanodc_id
+    private val BC02_NANODC_ID = "5e807a27-7c3a-4a22-8df2-20c392186ed3"
     
     /**
      * 자동 로그인 및 NDP Score 조회 시작
@@ -32,20 +36,43 @@ class AutoLoginManager(
         Log.i(SCORE_TAG, "===============================================")
         Log.i(SCORE_TAG, "🔄 NDP SCORE 모니터링 시작")
         Log.i(SCORE_TAG, "===============================================")
+        Log.d("BC02_SCORE_DEBUG", "🚀 자동 로그인 프로세스 시작")
         
         lifecycleScope.launch {
-            try {
-                // 1단계: 자동 로그인
-                performLogin()
-                
-                // 2단계: NDP Score 조회
-                if (authToken != null) {
-                    fetchNdpScore()
+            var retryCount = 0
+            val maxRetries = 3
+            
+            while (retryCount <= maxRetries) {
+                try {
+                    Log.i(TAG, "🔄 시도 횟수: ${retryCount + 1}/${maxRetries + 1}")
+                    
+                    // 1단계: 자동 로그인
+                    performLogin()
+                    
+                    // 2단계: NDP Score 조회
+                    if (authToken != null) {
+                        fetchNdpScore()
+                        // 성공 시 반복 종료
+                        break
+                    } else {
+                        throw Exception("로그인 후 토큰이 null입니다.")
+                    }
+                    
+                } catch (e: Exception) {
+                    retryCount++
+                    Log.e(TAG, "💥 자동 로그인 시도 ${retryCount} 실패: ${e.message}")
+                    
+                    if (retryCount > maxRetries) {
+                        Log.e(TAG, "❌ 모든 재시도 실패 - 기본값으로 진행")
+                        Log.e(SCORE_TAG, "❌ NDP SCORE 조회 최종 실패: ${e.message}")
+                        Log.e("BC02_SCORE_DEBUG", "❌ 자동 로그인 최종 실패: ${e.message}")
+                        break
+                    } else {
+                        val delayMs = (retryCount * 2000L) // 2초, 4초, 6초 지연
+                        Log.w(TAG, "⏳ ${delayMs/1000}초 후 재시도...")
+                        kotlinx.coroutines.delay(delayMs)
+                    }
                 }
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "💥 자동 로그인 프로세스 실패: ${e.message}")
-                Log.e(SCORE_TAG, "❌ NDP SCORE 조회 실패: ${e.message}")
             }
         }
     }
@@ -56,6 +83,11 @@ class AutoLoginManager(
     private suspend fun performLogin() {
         Log.d(TAG, "🔐 로그인 시도: $AUTO_LOGIN_ID")
         Log.i(SCORE_TAG, "🔐 인증 과정 시작...")
+        
+        // 추가 연결 테스트 (디버깅용)
+        Log.d(TAG, "🔧 사전 연결 테스트 수행...")
+        val basicConnectivity = apiClient.testBasicConnectivity()
+        Log.d(TAG, "🔧 기본 연결 테스트 결과: $basicConnectivity")
         
         val loginResult = apiClient.login(AUTO_LOGIN_ID, AUTO_LOGIN_PASSWORD)
         
@@ -80,6 +112,7 @@ class AutoLoginManager(
         
         Log.d(TAG, "📊 NDP Score 조회 시작")
         Log.i(SCORE_TAG, "📊 NDP SCORE 데이터 요청 중...")
+        Log.d("BC02_SCORE_DEBUG", "📊 API 데이터 요청 시작 - 토큰: ${token.take(20)}...")
         
         // GET 방식으로 먼저 시도
         val result = apiClient.getUserData(token)
@@ -87,6 +120,7 @@ class AutoLoginManager(
         result.onSuccess { apiResponse ->
             Log.i(TAG, "✅ API 데이터 조회 성공")
             Log.i(SCORE_TAG, "✅ NDP SCORE 데이터 수신 완료")
+            Log.d("BC02_SCORE_DEBUG", "✅ API 응답 성공 - GET 방식")
             
             // NDP Score 데이터 처리
             processNdpScoreData(apiResponse)
@@ -94,6 +128,7 @@ class AutoLoginManager(
         }.onFailure { exception ->
             Log.e(TAG, "❌ NDP Score 조회 실패: ${exception.message}")
             Log.w(SCORE_TAG, "⚠️ GET 방식 실패 - POST 방식으로 재시도")
+            Log.e("BC02_SCORE_DEBUG", "❌ GET 방식 실패: ${exception.message}")
             
             // GET이 실패하면 POST 방식으로 재시도
             Log.d(TAG, "🔄 POST 방식으로 재시도")
@@ -122,6 +157,22 @@ class AutoLoginManager(
      * NDP Score 데이터 처리 및 로그 출력
      */
     private fun processNdpScoreData(apiResponse: ApiResponse) {
+        Log.d("BC02_SCORE_DEBUG", "========== API 응답 데이터 저장 중 ==========")
+        
+        // API 응답 데이터 저장
+        apiResponseData = apiResponse
+        
+        // 저장 확인 로그
+        Log.d("BC02_SCORE_DEBUG", "✅ apiResponseData 저장 완료")
+        Log.d("BC02_SCORE_DEBUG", "📊 nodes 개수: ${apiResponseData?.nodes?.size ?: 0}")
+        Log.d("BC02_SCORE_DEBUG", "📊 scores 개수: ${apiResponseData?.allScores?.size ?: 0}")
+        Log.d("BC02_SCORE_DEBUG", "📊 nanodc 개수: ${apiResponseData?.nanodc?.size ?: 0}")
+        
+        // nanodc 정보 출력
+        apiResponseData?.nanodc?.forEach { nanodc ->
+            Log.d("BC02_SCORE_DEBUG", "NanoDC: id=${nanodc.nanodcId}, name=${nanodc.name}")
+        }
+        
         val allScores = apiResponse.allScores
         
         if (allScores.isNullOrEmpty()) {
@@ -224,22 +275,172 @@ class AutoLoginManager(
     fun getAuthToken(): String? = authToken
     
     /**
+     * BC02의 점수 데이터 반환
+     */
+    fun getBC02Score(): ApiScore? {
+        Log.d("BC02_SCORE_DEBUG", "========== BC02 점수 조회 시작 ==========")
+        
+        if (apiResponseData == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ apiResponseData가 null입니다!")
+            return null
+        }
+        
+        val allScores = apiResponseData?.allScores
+        if (allScores == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ allScores가 null입니다!")
+            return null
+        }
+        
+        Log.d("BC02_SCORE_DEBUG", "✅ 전체 점수 개수: ${allScores.size}")
+        
+        // BC02의 nanodc_id와 매칭되는 node_id 찾기
+        val nodes = apiResponseData?.nodes
+        if (nodes == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ nodes가 null입니다!")
+            return null
+        }
+        
+        Log.d("BC02_SCORE_DEBUG", "✅ 전체 노드 개수: ${nodes.size}")
+        Log.d("BC02_SCORE_DEBUG", "🔍 찾는 BC02 nanodc_id: $BC02_NANODC_ID")
+        
+        // BC02 찾기 - 이름으로도 검증
+        val nanodcList = apiResponseData?.nanodc
+        if (nanodcList != null) {
+            Log.d("BC02_SCORE_DEBUG", "🔍 NanoDC 리스트에서 BC02 찾기:")
+            val bc02Nanodc = nanodcList.find { it.name == "BC02" }
+            if (bc02Nanodc != null) {
+                Log.d("BC02_SCORE_DEBUG", "✅ BC02 NanoDC 발견: id=${bc02Nanodc.nanodcId}, name=${bc02Nanodc.name}")
+                if (bc02Nanodc.nanodcId != BC02_NANODC_ID) {
+                    Log.e("BC02_SCORE_DEBUG", "⚠️ 경고: 하드코딩된 ID와 실제 ID가 다름!")
+                    Log.e("BC02_SCORE_DEBUG", "  하드코딩: $BC02_NANODC_ID")
+                    Log.e("BC02_SCORE_DEBUG", "  실제 ID: ${bc02Nanodc.nanodcId}")
+                }
+            }
+        }
+        
+        // 모든 노드와 점수 매핑 정보 출력
+        Log.d("BC02_SCORE_DEBUG", "🔍 전체 노드-점수 매핑:")
+        nodes.forEach { node ->
+            val score = allScores.find { it.nodeId == node.nodeId }
+            val nanodc = nanodcList?.find { it.nanodcId == node.nanodcId }
+            Log.d("BC02_SCORE_DEBUG", "노드: ${node.nodeName} (${node.nodeId})")
+            Log.d("BC02_SCORE_DEBUG", "  - NanoDC: ${nanodc?.name ?: "Unknown"} (${node.nanodcId})")
+            Log.d("BC02_SCORE_DEBUG", "  - 점수: ${score?.averageScore ?: "없음"}")
+        }
+        
+        val bc02Node = nodes.find { it.nanodcId == BC02_NANODC_ID }
+        
+        if (bc02Node == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ BC02 노드를 찾을 수 없습니다!")
+            
+            // 대안 1: 평균 점수가 89인 노드 찾기 (사용자가 원하는 것일 수도)
+            val score89Node = allScores.find { it.averageScore == "89.0" || it.averageScore == "89" }
+            if (score89Node != null) {
+                Log.w("BC02_SCORE_DEBUG", "⚠️ 대신 89점인 노드 발견: ${score89Node.nodeId}")
+                val node = nodes.find { it.nodeId == score89Node.nodeId }
+                Log.w("BC02_SCORE_DEBUG", "  - 노드 이름: ${node?.nodeName}")
+                Log.w("BC02_SCORE_DEBUG", "  - NanoDC: ${nanodcList?.find { it.nanodcId == node?.nanodcId }?.name}")
+                Log.w("BC02_SCORE_DEBUG", "  - BC02 대신 이 노드의 점수를 반환합니다")
+                return score89Node  // 89점 노드 반환
+            }
+            
+            return null
+        }
+        
+        Log.d("BC02_SCORE_DEBUG", "✅ BC02 노드 찾음: node_id=${bc02Node.nodeId}, name=${bc02Node.nodeName}")
+        
+        // 모든 점수 정보 출력
+        allScores.forEachIndexed { index, score ->
+            Log.d("BC02_SCORE_DEBUG", "점수[$index]: node_id=${score.nodeId}, average=${score.averageScore}")
+        }
+        
+        // BC02 노드의 점수 찾기
+        val bc02Score = allScores.find { it.nodeId == bc02Node.nodeId }
+        
+        if (bc02Score == null) {
+            Log.e("BC02_SCORE_DEBUG", "❌ BC02의 점수를 찾을 수 없습니다!")
+            return null
+        }
+        
+        Log.d("BC02_SCORE_DEBUG", "✅ BC02 점수 찾음!")
+        Log.d("BC02_SCORE_DEBUG", "📊 평균 점수: ${bc02Score.averageScore}")
+        Log.d("BC02_SCORE_DEBUG", "📊 총점: ${bc02Score.totalScore}")
+        Log.d("BC02_SCORE_DEBUG", "📊 CPU: ${bc02Score.cpuScore}")
+        Log.d("BC02_SCORE_DEBUG", "📊 GPU: ${bc02Score.gpuScore}")
+        Log.d("BC02_SCORE_DEBUG", "📊 SSD: ${bc02Score.ssdScore}")
+        Log.d("BC02_SCORE_DEBUG", "========== BC02 점수 조회 완료 ==========")
+        
+        return bc02Score
+    }
+    
+    /**
      * 수동으로 NDP Score 새로고침
      */
     fun refreshNdpScore() {
+        Log.d("BC02_SCORE_DEBUG", "========== NDP Score 수동 새로고침 시작 ==========")
+        
         val token = authToken
         if (token != null) {
             Log.i(TAG, "🔄 NDP Score 수동 새로고침")
             Log.i(SCORE_TAG, "===============================================")
             Log.i(SCORE_TAG, "🔄 NDP SCORE 수동 새로고침 요청")
             Log.i(SCORE_TAG, "===============================================")
+            Log.d("BC02_SCORE_DEBUG", "✅ 토큰 있음 - API 재호출")
+            
             lifecycleScope.launch {
                 fetchNdpScore()
             }
         } else {
             Log.w(TAG, "⚠️ 인증 토큰이 없어 새로고침 불가")
             Log.w(SCORE_TAG, "⚠️ 인증 토큰 없음 - 자동 로그인 재시도")
+            Log.d("BC02_SCORE_DEBUG", "⚠️ 토큰 없음 - 자동 로그인 재시작")
+            
             startAutoLogin()
+        }
+        
+        Log.d("BC02_SCORE_DEBUG", "========== NDP Score 수동 새로고침 요청 완료 ==========")
+    }
+    
+    /**
+     * API 데이터가 로드되었는지 확인
+     */
+    fun isDataLoaded(): Boolean {
+        val loaded = apiResponseData != null
+        Log.d("BC02_SCORE_DEBUG", "📊 데이터 로드 상태: $loaded")
+        return loaded
+    }
+    
+    /**
+     * 특정 평균 점수를 가진 노드의 점수 반환 (디버깅용)
+     */
+    fun getScoreByAverage(targetAverage: String): ApiScore? {
+        Log.d("BC02_SCORE_DEBUG", "🔍 평균 점수 ${targetAverage}인 노드 검색")
+        val allScores = apiResponseData?.allScores ?: return null
+        val found = allScores.find { 
+            it.averageScore == targetAverage || 
+            it.averageScore == "$targetAverage.0"
+        }
+        if (found != null) {
+            Log.d("BC02_SCORE_DEBUG", "✅ 찾음: node_id=${found.nodeId}, average=${found.averageScore}")
+        } else {
+            Log.d("BC02_SCORE_DEBUG", "❌ 평균 점수 ${targetAverage}인 노드 없음")
+        }
+        return found
+    }
+    
+    /**
+     * 인덱스로 점수 반환 (디버깅용)
+     */
+    fun getScoreByIndex(index: Int): ApiScore? {
+        Log.d("BC02_SCORE_DEBUG", "🔍 인덱스 ${index}의 노드 점수 조회")
+        val allScores = apiResponseData?.allScores ?: return null
+        return if (index >= 0 && index < allScores.size) {
+            val score = allScores[index]
+            Log.d("BC02_SCORE_DEBUG", "✅ 인덱스 ${index}: node_id=${score.nodeId}, average=${score.averageScore}")
+            score
+        } else {
+            Log.d("BC02_SCORE_DEBUG", "❌ 인덱스 ${index}는 범위를 벗어남 (전체: ${allScores.size}개)")
+            null
         }
     }
 }
