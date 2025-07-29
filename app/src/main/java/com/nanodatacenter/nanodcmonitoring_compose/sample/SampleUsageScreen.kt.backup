@@ -1,0 +1,144 @@
+package com.nanodatacenter.nanodcmonitoring_compose.sample
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
+import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
+import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.MonitoringImageGrid
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.MonitoringImageList
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.MonitoringImageRow
+import com.nanodatacenter.nanodcmonitoring_compose.util.ImageConfigurationHelper
+
+/**
+ * 다양한 사용법을 보여주는 샘플 화면
+ */
+@Composable
+fun SampleUsageScreen() {
+    var selectedDeviceType by remember { mutableStateOf(DeviceType.DEFAULT) }
+    var selectedLayout by remember { mutableStateOf("List") }
+    
+    // 초기 설정 적용
+    LaunchedEffect(Unit) {
+        ImageConfigurationHelper.applyAllConfigurations()
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // 기기 타입 선택
+        DeviceTypeSelector(
+            selectedDeviceType = selectedDeviceType,
+            onDeviceTypeSelected = { 
+                selectedDeviceType = it
+                ImageOrderManager.getInstance().setCurrentDeviceType(it)
+            }
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 레이아웃 타입 선택
+        LayoutTypeSelector(
+            selectedLayout = selectedLayout,
+            onLayoutSelected = { selectedLayout = it }
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 선택된 레이아웃으로 이미지 표시
+        when (selectedLayout) {
+            "List" -> MonitoringImageList(
+                deviceType = selectedDeviceType,
+                modifier = Modifier.weight(1f)
+            )
+            "Grid" -> MonitoringImageGrid(
+                deviceType = selectedDeviceType,
+                columns = 2,
+                modifier = Modifier.weight(1f)
+            )
+            "Row" -> MonitoringImageRow(
+                deviceType = selectedDeviceType,
+                itemWidth = 250,
+                modifier = Modifier.height(250.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun DeviceTypeSelector(
+    selectedDeviceType: DeviceType,
+    onDeviceTypeSelected: (DeviceType) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("기기 타입 선택", style = MaterialTheme.typography.titleMedium)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {                DeviceType.values().forEach { deviceType ->
+                    FilterChip(
+                        onClick = { onDeviceTypeSelected(deviceType) },
+                        label = { Text(deviceType.displayName) },
+                        selected = selectedDeviceType == deviceType
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LayoutTypeSelector(
+    selectedLayout: String,
+    onLayoutSelected: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("레이아웃 타입 선택", style = MaterialTheme.typography.titleMedium)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("List", "Grid", "Row").forEach { layout ->
+                    FilterChip(
+                        onClick = { onLayoutSelected(layout) },
+                        label = { Text(layout) },
+                        selected = selectedLayout == layout
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SampleUsageScreenPreview() {
+    MaterialTheme {
+        SampleUsageScreen()
+    }
+}
