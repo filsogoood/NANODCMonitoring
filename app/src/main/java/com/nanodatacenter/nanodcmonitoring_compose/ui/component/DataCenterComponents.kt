@@ -8,7 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -19,7 +22,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
 
 /**
  * 기본적으로 모든 이미지가 간격 없이 붙어서 표시되는 이미지 컴포넌트
- * 간단하고 일관성 있는 표시 방식
+ * 특정 이미지들은 높이를 90%로 조정하여 간격 없이 표시
  */
 @Composable
 fun SeamlessImageItem(
@@ -27,14 +30,50 @@ fun SeamlessImageItem(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth
 ) {
-    Image(
-        painter = painterResource(id = imageType.drawableRes),
-        contentDescription = imageType.description,
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),  // 높이는 이미지 내용에 맞게
-        contentScale = contentScale
-    )
+    // 높이를 조정할 이미지 타입들 정의
+    val shouldReduceHeight = when (imageType) {
+        ImageType.DEEPSEEK,
+        ImageType.DEEPSEEK_NONE,
+        ImageType.AETHIR,
+        ImageType.AETHIR_NONE,
+        ImageType.FILECOIN,
+        ImageType.FILECOIN_NONE_1,
+        ImageType.FILECOIN_NONE_2 -> true
+        else -> false
+    }
+    
+    if (shouldReduceHeight) {
+        // scale과 layout을 결합하여 이미지를 90%로 축소하고 레이아웃 공간도 함께 조정
+        Image(
+            painter = painterResource(id = imageType.drawableRes),
+            contentDescription = imageType.description,
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .scale(scaleY = 0.9f, scaleX = 1f)  // 세로만 90%로 축소
+                .layout { measurable, constraints ->
+                    // 축소된 이미지를 측정
+                    val placeable = measurable.measure(constraints)
+                    // 레이아웃 높이를 90%로 조정하여 빈 공간 제거
+                    val adjustedHeight = (placeable.height * 0.9f).toInt()
+                    layout(placeable.width, adjustedHeight) {
+                        // 축소된 이미지를 중앙에 배치
+                        placeable.placeRelative(0, 0)
+                    }
+                },
+            contentScale = contentScale
+        )
+    } else {
+        // 일반 이미지는 원본 크기
+        Image(
+            painter = painterResource(id = imageType.drawableRes),
+            contentDescription = imageType.description,
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            contentScale = contentScale
+        )
+    }
 }
 
 /**
@@ -166,36 +205,6 @@ fun OriginalSizeDataCenterScreen(
                 modifier = Modifier.fillParentMaxWidth(),  // LazyColumn 내에서 전체 너비 사용
                 contentScale = ContentScale.FillWidth
             )
-        }
-    }
-}
-
-/**
- * 특별한 경우에만 사용하는 커스텀 간격 이미지 컴포넌트
- * 기본적으로는 사용하지 않고, 특수한 요구사항이 있을 때만 사용
- */
-@Composable
-fun CustomSpacedImageItem(
-    imageType: ImageType,
-    topSpacing: androidx.compose.ui.unit.Dp = 0.dp,
-    bottomSpacing: androidx.compose.ui.unit.Dp = 0.dp,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.FillWidth
-) {
-    Column(
-        modifier = modifier
-    ) {
-        if (topSpacing > 0.dp) {
-            Spacer(modifier = Modifier.height(topSpacing))
-        }
-        
-        SeamlessImageItem(
-            imageType = imageType,
-            contentScale = contentScale
-        )
-        
-        if (bottomSpacing > 0.dp) {
-            Spacer(modifier = Modifier.height(bottomSpacing))
         }
     }
 }

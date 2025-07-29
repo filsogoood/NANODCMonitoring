@@ -34,6 +34,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
 /**
  * 단일 모니터링 이미지를 표시하는 컴포넌트
  * 원본 크기 유지 및 다양한 스케일링 모드를 지원
+ * 이미지 크기에 따라 Card 높이가 동적으로 조정됨
  */
 @Composable
 fun MonitoringImageItem(
@@ -41,7 +42,7 @@ fun MonitoringImageItem(
     modifier: Modifier = Modifier,
     showDescription: Boolean = false,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.ORIGINAL,
-    useFixedHeight: Boolean = true,
+    useFixedHeight: Boolean = false,  // 기본값을 false로 변경
     fixedHeight: Int = 180,
     onClick: ((ImageType) -> Unit)? = null
 ) {
@@ -62,13 +63,7 @@ fun MonitoringImageItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .let { mod ->
-                if (useFixedHeight) {
-                    mod.height((if (showDescription) fixedHeight + 50 else fixedHeight).dp)
-                } else {
-                    mod.wrapContentHeight()
-                }
-            }
+            .wrapContentHeight()  // 항상 컨텐츠 높이에 맞게 조정
             .let { mod ->
                 onClick?.let { clickHandler ->
                     mod.clickable { clickHandler(imageType) }
@@ -78,30 +73,45 @@ fun MonitoringImageItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),  // Column도 컨텐츠 높이에 맞게 조정
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 원본 크기 이미지 표시를 위한 스크롤 가능한 컨테이너
+            // 이미지 컨테이너
             Box(
-                modifier = if (showDescription) {
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                } else {
-                    Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()  // 높이를 컨텐츠에 맞게 조정
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
             ) {
                 if (finalScaleMode == ImageScaleUtil.ScaleMode.ORIGINAL) {
                     // 원본 크기일 때는 스크롤 가능하게 처리
-                    Column(
-                        modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    if (useFixedHeight) {
+                        // 고정 높이를 원하는 경우에만 스크롤 컨테이너 사용
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(fixedHeight.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .verticalScroll(rememberScrollState())
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Image(
+                                    painter = painterResource(id = imageType.drawableRes),
+                                    contentDescription = imageType.description,
+                                    modifier = Modifier.wrapContentSize(),
+                                    contentScale = contentScale
+                                )
+                            }
+                        }
+                    } else {
+                        // 고정 높이를 사용하지 않는 경우 이미지 크기에 맞게 표시
                         Image(
                             painter = painterResource(id = imageType.drawableRes),
                             contentDescription = imageType.description,
@@ -110,11 +120,13 @@ fun MonitoringImageItem(
                         )
                     }
                 } else {
-                    // 다른 스케일링 모드일 때는 기존 방식 유지
+                    // 다른 스케일링 모드일 때
                     Image(
                         painter = painterResource(id = imageType.drawableRes),
                         contentDescription = imageType.description,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),  // 높이는 컨텐츠에 맞게
                         contentScale = contentScale
                     )
                 }
@@ -145,7 +157,7 @@ fun MonitoringImageList(
     modifier: Modifier = Modifier,
     showDescriptions: Boolean = false,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.ORIGINAL,
-    useFixedHeight: Boolean = true,
+    useFixedHeight: Boolean = false,  // 기본값을 false로 변경
     fixedHeight: Int = 180,
     onImageClick: ((ImageType) -> Unit)? = null
 ) {
@@ -181,7 +193,7 @@ fun MonitoringImageRow(
     itemWidth: Int = 250,
     showDescriptions: Boolean = false,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.ORIGINAL,
-    useFixedHeight: Boolean = true,
+    useFixedHeight: Boolean = false,  // 기본값을 false로 변경
     fixedHeight: Int = 180,
     onImageClick: ((ImageType) -> Unit)? = null
 ) {
@@ -218,7 +230,7 @@ fun MonitoringImageGrid(
     columns: Int = 2,
     showDescriptions: Boolean = false,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.ORIGINAL,
-    useFixedHeight: Boolean = true,
+    useFixedHeight: Boolean = false,  // 기본값을 false로 변경
     fixedHeight: Int = 180,
     onImageClick: ((ImageType) -> Unit)? = null
 ) {
