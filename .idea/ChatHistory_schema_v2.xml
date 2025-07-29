@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChatHistoryState">
+    <option name="serializedSessions">
+      <map>
+        <entry key="bd08e030-b68d-4ea4-ad85-3f7a9b2943a6" value="{&quot;id&quot;:&quot;bd08e030-b68d-4ea4-ad85-3f7a9b2943a6&quot;,&quot;name&quot;:&quot;GitHub 프로젝트 연결 요청 (barnum167/NANODCMonitoring_Compse_AOS)&quot;,&quot;timestamp&quot;:1753766569096,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;\u003cuser_query\u003e\nhttps://github.com/barnum167/NANODCMonitoring_Compse_AOS.git\n\n해당 프로젝트 여기로 연결해서 커밋해줘\n\u003c/user_query\u003e&quot;}]}]}" />
+      </map>
+    </option>
+  </component>
+</project>
