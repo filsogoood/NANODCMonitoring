@@ -1,6 +1,7 @@
 package com.nanodatacenter.nanodcmonitoring_compose
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -16,25 +17,53 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
+import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.ui.component.DataCenterMonitoringScreen
 import com.nanodatacenter.nanodcmonitoring_compose.ui.theme.DataCenterTheme
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageConfigurationHelper
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    
+    private val repository = NanoDcRepository()
+    
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val TEST_NANODC_ID = "7b863981-8390-4990-98ad-4894407b8e99"
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         // 전체화면 모드 설정
         setupFullScreenMode()
         
+        // API 연결 테스트 실행
+        testApiConnection()
+        
         enableEdgeToEdge()
         
         setContent {
             DataCenterTheme {
                 MonitoringApp()
+            }
+        }
+    }
+    
+    /**
+     * API 연결 테스트 실행
+     */
+    private fun testApiConnection() {
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "🚀 Starting API connection test...")
+                repository.testApiConnection(TEST_NANODC_ID)
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ API connection test failed with exception: ${e.message}", e)
             }
         }
     }
