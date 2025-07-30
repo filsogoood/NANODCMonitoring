@@ -1,5 +1,6 @@
 package com.nanodatacenter.nanodcmonitoring_compose.ui.component
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -31,12 +32,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
+import com.nanodatacenter.nanodcmonitoring_compose.manager.AdminAccessManager
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
@@ -46,7 +49,8 @@ import kotlinx.coroutines.launch
 /**
  * 클릭 가능한 이미지 아이템 컴포넌트
  * 첫 번째 이미지(index 0) 클릭 시 스코어 카드를 표시합니다.
- * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
+ * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun ClickableImageItem(
@@ -59,29 +63,52 @@ fun ClickableImageItem(
     var scoreData by remember { mutableStateOf<Score?>(null) }
     
     val repository = remember { NanoDcRepository() }
+    val adminManager = remember { AdminAccessManager.getInstance() }
+    val context = LocalContext.current
+    
+    // 토스트 메시지 표시
+    LaunchedEffect(adminManager.shouldShowToast) {
+        if (adminManager.shouldShowToast) {
+            Toast.makeText(context, adminManager.toastMessage, Toast.LENGTH_SHORT).show()
+            adminManager.onToastShown()
+        }
+    }
     
     Column(modifier = modifier) {
         // 이미지 표시 (클릭 가능 여부에 따라 동작 분기)
-        if (imageType.isClickable) {
-            // 클릭 가능한 이미지: 기존 로직 유지
-            SeamlessImageItem(
-                imageType = imageType,
-                modifier = Modifier.clickable { 
-                    isExpanded = !isExpanded
-                },
-                contentScale = contentScale
-            )
-        } else {
-            // 클릭 불가능한 이미지: 클릭 이벤트 없이 이미지만 표시
-            SeamlessImageItem(
-                imageType = imageType,
-                modifier = Modifier,  // clickable 없음
-                contentScale = contentScale
-            )
+        when {
+            imageType.isAdminAccess -> {
+                // 관리자 접근 이미지: LOGO_ZETACUBE 8번 클릭 기능
+                SeamlessImageItem(
+                    imageType = imageType,
+                    modifier = Modifier.clickable { 
+                        adminManager.handleLogoClick()
+                    },
+                    contentScale = contentScale
+                )
+            }
+            imageType.showsInfoCard -> {
+                // 일반 클릭 가능한 이미지: 기존 로직 유지
+                SeamlessImageItem(
+                    imageType = imageType,
+                    modifier = Modifier.clickable { 
+                        isExpanded = !isExpanded
+                    },
+                    contentScale = contentScale
+                )
+            }
+            else -> {
+                // 클릭 불가능한 이미지: 클릭 이벤트 없이 이미지만 표시
+                SeamlessImageItem(
+                    imageType = imageType,
+                    modifier = Modifier,  // clickable 없음
+                    contentScale = contentScale
+                )
+            }
         }
         
-        // 확장 정보 카드 (클릭 가능한 이미지에만 표시)
-        if (imageType.isClickable) {
+        // 확장 정보 카드 (일반 클릭 가능한 이미지에만 표시)
+        if (imageType.showsInfoCard) {
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically(),
@@ -105,6 +132,18 @@ fun ClickableImageItem(
                 }
             }
         }
+    }
+    
+    // 관리자 다이얼로그 표시
+    if (imageType.isAdminAccess) {
+        AdminAccessDialog(
+            isVisible = adminManager.showAdminDialog,
+            onDismiss = { adminManager.dismissAdminDialog() },
+            onAdminAccess = {
+                // 추후 관리자 메뉴 확장 시 사용
+                Toast.makeText(context, "관리자 메뉴 접근", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 }
 
@@ -204,7 +243,8 @@ fun SeamlessImageItem(
  * 순수 이미지만 표시하는 컴포넌트 (카드, 박스 없음)
  * 원본 크기 및 다양한 스케일링 모드 지원
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
- * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
+ * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun PureImageItem(
@@ -257,7 +297,8 @@ fun DataCenterMonitoringScreen(
  * 원본 크기로 이미지를 표시하는 컴포넌트 (간격 없음)
  * 스크롤 가능하며 모든 이미지가 완전히 붙어서 표시됨
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
- * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
+ * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 private fun SeamlessOriginalSizeContent(
@@ -315,7 +356,8 @@ private fun SeamlessFitScreenContent(
  * 원본 크기 이미지들을 연속으로 표시하는 전체 화면 모니터링 컴포넌트
  * LazyColumn 사용으로 성능 최적화하면서 간격 없이 표시
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
- * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
+ * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(

@@ -11,6 +11,7 @@ NANO DC Monitoring Compose는 안드로이드 Jetpack Compose를 사용하여 �
 - 🛡️ **타입 안전성**: Kotlin Enum을 통한 컴파일 타임 안전성 보장
 - 🔄 **재사용 가능한 컴포넌트**: 클린코드 원칙에 따른 모듈화된 설계
 - ⚡ **런타임 변경**: 앱 실행 중에도 설정 변경 가능
+- 🔐 **관리자 접근**: LOGO_ZETACUBE 8번 클릭으로 관리자 기능 접근
 
 ## 🎯 이미지 순서 (기본 설정)
 현재 설정된 기본 이미지 순서는 다음과 같습니다:
@@ -41,9 +42,11 @@ app/src/main/java/com/nanodatacenter/nanodcmonitoring_compose/
 │   ├── ImageType.kt              # 이미지 타입 정의 (Enum)
 │   └── ImageConfiguration.kt     # 기기별 설정 데이터 클래스
 ├── manager/
-│   └── ImageOrderManager.kt      # 이미지 순서 관리 (Singleton)
+│   ├── ImageOrderManager.kt      # 이미지 순서 관리 (Singleton)
+│   └── AdminAccessManager.kt     # 관리자 접근 기능 관리 (Singleton)
 ├── ui/component/
-│   └── MonitoringImageComponents.kt  # 재사용 가능한 UI 컴포넌트
+│   ├── DataCenterComponents.kt   # 데이터센터 모니터링 UI 컴포넌트
+│   └── AdminComponents.kt        # 관리자 접근 UI 컴포넌트
 ├── util/
 │   └── ImageConfigurationHelper.kt   # 설정 생성 헬퍼
 ├── sample/
@@ -104,6 +107,43 @@ MonitoringImageGrid(
 val manager = ImageOrderManager.getInstance()
 manager.setCurrentDeviceType(DeviceType.DEVICE_A)  // 기기 A 순서로 변경
 ```
+
+## 🔐 관리자 접근 기능
+
+### LOGO_ZETACUBE 클릭 시 관리자 기능
+LOGO_ZETACUBE 이미지를 8번 클릭하면 관리자 팝업이 나타납니다.
+
+#### 기능 상세
+- **3번 터치 후**: "X번 더 터치하면 관리자 팝업이 나옵니다" 토스트 메시지 표시
+- **8번 터치 완료**: 관리자 접근 다이얼로그 표시
+- **카운트 리셋**: 관리자 팝업이 표시되면 클릭 카운트 자동 리셋
+
+#### 구현 특징
+- **확장 가능한 구조**: `AdminAccessManager`를 통한 중앙화된 관리
+- **타입 안전성**: `ImageType.isAdminAccess` 프로퍼티로 관리자 접근 이미지 식별
+- **상태 관리**: Compose state를 활용한 반응형 UI
+- **사용자 피드백**: 토스트 메시지로 진행 상황 안내
+
+#### 사용 예시
+```kotlin
+// AdminAccessManager 인스턴스 가져오기
+val adminManager = AdminAccessManager.getInstance()
+
+// 현재 클릭 횟수 확인
+val currentClicks = adminManager.clickCount
+
+// 수동으로 관리자 기능 초기화 (필요시)
+adminManager.reset()
+
+// 디버그 정보 확인
+val debugInfo = adminManager.getDebugInfo()
+```
+
+#### 확장 가능성
+- **관리자 메뉴 추가**: `onAdminAccess` 콜백을 통해 추가 기능 구현 가능
+- **다른 이미지 지원**: `ImageType.ADMIN_ACCESS_TYPES`에 새로운 이미지 추가 가능
+- **클릭 횟수 조정**: `REQUIRED_CLICKS_FOR_ADMIN` 상수로 필요 클릭 횟수 변경 가능
+- **토스트 임계점 조정**: `TOAST_START_THRESHOLD` 상수로 토스트 시작 지점 변경 가능
 
 ## 🔧 기기 설정 커스터마이징
 
