@@ -108,6 +108,11 @@ fun ClickableImageItem(
         
         // 확장 정보 카드 (일반 클릭 가능한 이미지에만 표시)
         if (imageType.showsInfoCard) {
+            // 커스텀 스케일 이미지의 경우 카드 겹침 방지를 위한 여백 추가
+            if (ImageScaleUtil.hasCustomScale(imageType)) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically(),
@@ -220,7 +225,7 @@ fun InfoRow(
 /**
  * 기본적으로 모든 이미지가 간격 없이 붙어서 표시되는 이미지 컴포넌트
  * 모든 이미지가 동일한 방식으로 표시되어 카드 레이아웃 문제를 방지
- * 특정 이미지 타입들에 대해서는 위아래만 95% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
+ * 특정 이미지 타입들에 대해서는 위아래만 90% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
  */
 @Composable
 fun SeamlessImageItem(
@@ -314,7 +319,7 @@ fun DataCenterMonitoringScreen(
 /**
  * 원본 크기로 이미지를 표시하는 컴포넌트 (간격 없음)
  * 스크롤 가능하며 모든 이미지가 완전히 붙어서 표시됨
- * 특정 이미지 타입들에 대해서는 위아래만 95% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
+ * 특정 이미지 타입들에 대해서는 위아래만 90% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
@@ -343,7 +348,7 @@ private fun SeamlessOriginalSizeContent(
 /**
  * 화면에 맞춰 이미지 크기를 조정하는 컴포넌트 (간격 없음)
  * 모든 이미지가 한 화면에 표시됨
- * 특정 이미지 타입들에 대해서는 위아래만 95% 높이를 적용하면서 레이아웃 공간도 함께 조정하여 간격 제거
+ * 특정 이미지 타입들에 대해서는 위아래만 90% 높이를 적용하면서 레이아웃 공간도 함께 조정하여 간격 제거
  */
 @Composable
 private fun SeamlessFitScreenContent(
@@ -362,7 +367,7 @@ private fun SeamlessFitScreenContent(
         verticalArrangement = Arrangement.spacedBy(0.dp)  // 명시적으로 간격 0 설정
     ) {
         imageOrder.forEachIndexed { index, imageType ->
-            // 특정 이미지 타입들에 대해서는 95% 높이 적용하되 레이아웃 공간도 함께 조정
+            // 특정 이미지 타입들에 대해서는 90% 높이 적용하되 레이아웃 공간도 함께 조정
             val adjustedHeight = if (ImageScaleUtil.hasCustomScale(imageType)) {
                 (baseImageHeight * ImageScaleUtil.getImageScaleFactor(imageType)).toInt()
             } else {
@@ -382,7 +387,7 @@ private fun SeamlessFitScreenContent(
 /**
  * 원본 크기 이미지들을 연속으로 표시하는 전체 화면 모니터링 컴포넌트
  * LazyColumn 사용으로 성능 최적화하면서 간격 없이 표시
- * 특정 이미지 타입들에 대해서는 위아래만 95% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
+ * 특정 이미지 타입들에 대해서는 위아래만 90% 크기로 조정하면서 레이아웃 공간도 함께 조정하여 간격 제거
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.

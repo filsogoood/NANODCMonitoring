@@ -12,7 +12,7 @@ data class ImageConfiguration(
         /**
          * 기본 이미지 순서 (요청사항 기준)
          * 
-         * 참고: 다음 이미지들은 ImageScaleUtil에서 95% 스케일이 적용됨:
+         * 참고: 다음 이미지들은 ImageScaleUtil에서 90% 스케일이 적용됨:
          * - DEEPSEEK
          * - DEEPSEEK_NONE
          * - AETHIR

@@ -18,7 +18,7 @@ class NanoDcRepository {
     
     companion object {
         private const val TAG = "NanoDcRepository"
-        private const val DEFAULT_NANODC_ID = "7b863981-8390-4990-98ad-4894407b8e99"
+        private const val DEFAULT_NANODC_ID = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
     }
     
     /**

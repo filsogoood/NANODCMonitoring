@@ -10,7 +10,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
  * 사용 예시:
  * ```kotlin
  * // 특정 이미지 타입의 스케일 팩터 가져오기
- * val scale = ImageScaleUtil.getImageScaleFactor(ImageType.DEEPSEEK) // returns 0.95f
+ * val scale = ImageScaleUtil.getImageScaleFactor(ImageType.DEEPSEEK) // returns 0.9f
  * 
  * // 이미지 타입이 커스텀 스케일을 사용하는지 확인
  * if (ImageScaleUtil.hasCustomScale(imageType)) {
@@ -44,21 +44,21 @@ object ImageScaleUtil {
      * 
      * 새로운 이미지 타입에 커스텀 스케일을 추가하려면:
      * 1. 아래 Map에 ImageType과 스케일 팩터(Float) 추가
-     * 2. 0.95f = 95% 크기, 1.2f = 120% 크기 등으로 설정
+     * 2. 0.9f = 90% 크기, 1.2f = 120% 크기 등으로 설정
      * 
-     * 현재 95% 스케일 적용 이미지들:
+     * 현재 90% 스케일 적용 이미지들:
      * - DEEPSEEK 계열 (DEEPSEEK, DEEPSEEK_NONE)
      * - AETHIR 계열 (AETHIR, AETHIR_NONE)
      * - FILECOIN 계열 (FILECOIN, FILECOIN_NONE_1, FILECOIN_NONE_2)
      */
     private val CUSTOM_SCALE_MAP = mapOf(
-        ImageType.DEEPSEEK to 0.95f,
-        ImageType.DEEPSEEK_NONE to 0.95f,
-        ImageType.AETHIR to 0.95f,
-        ImageType.AETHIR_NONE to 0.95f,
-        ImageType.FILECOIN to 0.95f,
-        ImageType.FILECOIN_NONE_1 to 0.95f,
-        ImageType.FILECOIN_NONE_2 to 0.95f
+        ImageType.DEEPSEEK to 0.9f,
+        ImageType.DEEPSEEK_NONE to 0.9f,
+        ImageType.AETHIR to 0.9f,
+        ImageType.AETHIR_NONE to 0.9f,
+        ImageType.FILECOIN to 0.9f,
+        ImageType.FILECOIN_NONE_1 to 0.9f,
+        ImageType.FILECOIN_NONE_2 to 0.9f
     )
     
     /**
