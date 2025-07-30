@@ -2,6 +2,7 @@ package com.nanodatacenter.nanodcmonitoring_compose.data
 
 /**
  * 기기별 이미지 순서 설정을 관리하는 데이터 클래스
+ * TODO: 향후 확장 시 이미지별 스케일 설정도 포함할 수 있도록 구조 설계
  */
 data class ImageConfiguration(
     val deviceType: DeviceType,
@@ -10,6 +11,15 @@ data class ImageConfiguration(
     companion object {
         /**
          * 기본 이미지 순서 (요청사항 기준)
+         * 
+         * 참고: 다음 이미지들은 ImageScaleUtil에서 95% 스케일이 적용됨:
+         * - DEEPSEEK
+         * - DEEPSEEK_NONE
+         * - AETHIR
+         * - AETHIR_NONE
+         * - FILECOIN
+         * - FILECOIN_NONE_1
+         * - FILECOIN_NONE_2
          */
         val DEFAULT_ORDER = listOf(
             ImageType.NDP_INFO,
