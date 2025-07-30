@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 /**
  * 클릭 가능한 이미지 아이템 컴포넌트
  * 첫 번째 이미지(index 0) 클릭 시 스코어 카드를 표시합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun ClickableImageItem(
@@ -60,36 +61,48 @@ fun ClickableImageItem(
     val repository = remember { NanoDcRepository() }
     
     Column(modifier = modifier) {
-        // 기존 이미지 (클릭 가능하게 변경)
-        SeamlessImageItem(
-            imageType = imageType,
-            modifier = Modifier.clickable { 
-                isExpanded = !isExpanded
-            },
-            contentScale = contentScale
-        )
+        // 이미지 표시 (클릭 가능 여부에 따라 동작 분기)
+        if (imageType.isClickable) {
+            // 클릭 가능한 이미지: 기존 로직 유지
+            SeamlessImageItem(
+                imageType = imageType,
+                modifier = Modifier.clickable { 
+                    isExpanded = !isExpanded
+                },
+                contentScale = contentScale
+            )
+        } else {
+            // 클릭 불가능한 이미지: 클릭 이벤트 없이 이미지만 표시
+            SeamlessImageItem(
+                imageType = imageType,
+                modifier = Modifier,  // clickable 없음
+                contentScale = contentScale
+            )
+        }
         
-        // 확장 정보 카드 (애니메이션과 함께)
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            if (imageIndex == 0) {
-                // 첫 번째 이미지인 경우 스코어 카드 표시
-                LaunchedEffect(Unit) {
-                    // 스코어 데이터 로드
-                    try {
-                        scoreData = repository.getScoreForFirstImage()
-                    } catch (e: Exception) {
-                        // API 실패 시에도 기본값으로 표시
-                        scoreData = null
+        // 확장 정보 카드 (클릭 가능한 이미지에만 표시)
+        if (imageType.isClickable) {
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                if (imageIndex == 0) {
+                    // 첫 번째 이미지인 경우 스코어 카드 표시
+                    LaunchedEffect(Unit) {
+                        // 스코어 데이터 로드
+                        try {
+                            scoreData = repository.getScoreForFirstImage()
+                        } catch (e: Exception) {
+                            // API 실패 시에도 기본값으로 표시
+                            scoreData = null
+                        }
                     }
+                    ExpandedScoreCard(score = scoreData)
+                } else {
+                    // 다른 이미지는 기존 확장 정보 표시
+                    ExpandedInfoCard(imageType = imageType)
                 }
-                ExpandedScoreCard(score = scoreData)
-            } else {
-                // 다른 이미지는 기존 확장 정보 표시
-                ExpandedInfoCard(imageType = imageType)
             }
         }
     }
@@ -190,7 +203,8 @@ fun SeamlessImageItem(
 /**
  * 순수 이미지만 표시하는 컴포넌트 (카드, 박스 없음)
  * 원본 크기 및 다양한 스케일링 모드 지원
- * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun PureImageItem(
@@ -242,7 +256,8 @@ fun DataCenterMonitoringScreen(
 /**
  * 원본 크기로 이미지를 표시하는 컴포넌트 (간격 없음)
  * 스크롤 가능하며 모든 이미지가 완전히 붙어서 표시됨
- * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 private fun SeamlessOriginalSizeContent(
@@ -299,7 +314,8 @@ private fun SeamlessFitScreenContent(
 /**
  * 원본 크기 이미지들을 연속으로 표시하는 전체 화면 모니터링 컴포넌트
  * LazyColumn 사용으로 성능 최적화하면서 간격 없이 표시
- * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
+ * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않습니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(

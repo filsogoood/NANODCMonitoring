@@ -36,5 +36,30 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
         fun fromDrawableRes(@DrawableRes drawableRes: Int): ImageType? {
             return values().find { it.drawableRes == drawableRes }
         }
+        
+        /**
+         * 클릭 시 카드를 표시하지 않을 이미지 타입들
+         * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭해도 카드가 나오지 않음
+         */
+        private val NON_CLICKABLE_TYPES = setOf(
+            SUPRA_NONE_1,
+            SUPRA_NONE_2,
+            SUPRA_NONE_3,
+            DEEPSEEK_NONE,
+            AETHIR_NONE,
+            FILECOIN_NONE_1,
+            FILECOIN_NONE_2,
+            SWITCH_100G,
+            UPS_CONTROLLER,
+            LOGO_ZETACUBE
+        )
     }
+    
+    /**
+     * 해당 이미지 타입이 클릭 가능한지 확인합니다.
+     * None이 붙은 이미지들, 100G Switch, UPS Controller, ZetaCube Logo는 클릭 불가능합니다.
+     * 위치가 변경되어도 타입 기반으로 판단하므로 일관성이 보장됩니다.
+     */
+    val isClickable: Boolean
+        get() = this !in NON_CLICKABLE_TYPES
 }
