@@ -1,6 +1,7 @@
 package com.nanodatacenter.nanodcmonitoring_compose.network.api
 
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.ApiResponse
+import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -19,4 +20,24 @@ interface NanoDcApiService {
     suspend fun getUserData(
         @Query("nanodc_id") nanodcId: String
     ): Response<ApiResponse>
+    
+    /**
+     * 스코어 데이터 조회 API
+     * @param nodeId 노드 ID
+     * @return 스코어 데이터
+     */
+    @GET("/api/scores")
+    suspend fun getScore(
+        @Query("node_id") nodeId: String
+    ): Response<Score>
+    
+    /**
+     * 특정 NanoDC의 스코어 데이터 조회 API
+     * @param nanodcId NanoDC ID
+     * @return 스코어 데이터
+     */
+    @GET("/api/scores/nanodc")
+    suspend fun getScoreByNanoDcId(
+        @Query("nanodc_id") nanodcId: String
+    ): Response<Score>
 }

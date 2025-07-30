@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,26 +38,33 @@ import androidx.compose.ui.unit.sp
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
+import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
+import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
+import kotlinx.coroutines.launch
 
 /**
  * 클릭 가능한 이미지 아이템 컴포넌트
- * 클릭 시 확장 정보를 보여줍니다.
+ * 첫 번째 이미지(index 0) 클릭 시 스코어 카드를 표시합니다.
  */
 @Composable
 fun ClickableImageItem(
     imageType: ImageType,
+    imageIndex: Int = -1,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    var scoreData by remember { mutableStateOf<Score?>(null) }
+    
+    val repository = remember { NanoDcRepository() }
     
     Column(modifier = modifier) {
         // 기존 이미지 (클릭 가능하게 변경)
         SeamlessImageItem(
             imageType = imageType,
             modifier = Modifier.clickable { 
-                isExpanded = !isExpanded 
+                isExpanded = !isExpanded
             },
             contentScale = contentScale
         )
@@ -66,7 +75,22 @@ fun ClickableImageItem(
             enter = expandVertically(),
             exit = shrinkVertically()
         ) {
-            ExpandedInfoCard(imageType = imageType)
+            if (imageIndex == 0) {
+                // 첫 번째 이미지인 경우 스코어 카드 표시
+                LaunchedEffect(Unit) {
+                    // 스코어 데이터 로드
+                    try {
+                        scoreData = repository.getScoreForFirstImage()
+                    } catch (e: Exception) {
+                        // API 실패 시에도 기본값으로 표시
+                        scoreData = null
+                    }
+                }
+                ExpandedScoreCard(score = scoreData)
+            } else {
+                // 다른 이미지는 기존 확장 정보 표시
+                ExpandedInfoCard(imageType = imageType)
+            }
         }
     }
 }
@@ -166,11 +190,12 @@ fun SeamlessImageItem(
 /**
  * 순수 이미지만 표시하는 컴포넌트 (카드, 박스 없음)
  * 원본 크기 및 다양한 스케일링 모드 지원
- * 클릭 시 확장 정보를 보여줍니다.
+ * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  */
 @Composable
 fun PureImageItem(
     imageType: ImageType,
+    imageIndex: Int = -1,
     modifier: Modifier = Modifier,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH
 ) {
@@ -178,6 +203,7 @@ fun PureImageItem(
 
     ClickableImageItem(
         imageType = imageType,
+        imageIndex = imageIndex,
         modifier = modifier,
         contentScale = contentScale
     )
@@ -216,7 +242,7 @@ fun DataCenterMonitoringScreen(
 /**
  * 원본 크기로 이미지를 표시하는 컴포넌트 (간격 없음)
  * 스크롤 가능하며 모든 이미지가 완전히 붙어서 표시됨
- * 클릭 시 확장 정보를 보여줍니다.
+ * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  */
 @Composable
 private fun SeamlessOriginalSizeContent(
@@ -229,9 +255,10 @@ private fun SeamlessOriginalSizeContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top  // 간격 없이 위부터 차례로 배치
     ) {
-        imageOrder.forEach { imageType ->
+        imageOrder.forEachIndexed { index, imageType ->
             ClickableImageItem(
                 imageType = imageType,
+                imageIndex = index,
                 contentScale = ContentScale.FillWidth
             )
         }
@@ -258,9 +285,10 @@ private fun SeamlessFitScreenContent(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top  // 간격 없이 위부터 차례로 배치
     ) {
-        imageOrder.forEach { imageType ->
+        imageOrder.forEachIndexed { index, imageType ->
             PureImageItem(
                 imageType = imageType,
+                imageIndex = index,
                 modifier = Modifier.height(imageHeight.dp),
                 scaleMode = scaleMode
             )
@@ -271,7 +299,7 @@ private fun SeamlessFitScreenContent(
 /**
  * 원본 크기 이미지들을 연속으로 표시하는 전체 화면 모니터링 컴포넌트
  * LazyColumn 사용으로 성능 최적화하면서 간격 없이 표시
- * 클릭 시 확장 정보를 보여줍니다.
+ * 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(
@@ -286,12 +314,13 @@ fun OriginalSizeDataCenterScreen(
         verticalArrangement = Arrangement.spacedBy(0.dp),  // 명시적으로 간격 0 설정
         contentPadding = PaddingValues(0.dp)  // 패딩도 0으로 설정
     ) {
-        items(
+        itemsIndexed(
             items = imageOrder,
-            key = { imageType -> imageType.name }  // 성능 최적화를 위한 key 설정
-        ) { imageType ->
+            key = { _, imageType -> imageType.name }  // 성능 최적화를 위한 key 설정
+        ) { index, imageType ->
             ClickableImageItem(
                 imageType = imageType,
+                imageIndex = index,
                 modifier = Modifier.fillParentMaxWidth(),  // LazyColumn 내에서 전체 너비 사용
                 contentScale = ContentScale.FillWidth
             )
