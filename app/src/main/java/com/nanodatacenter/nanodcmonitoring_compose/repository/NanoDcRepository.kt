@@ -46,6 +46,9 @@ class NanoDcRepository private constructor() {
     private val _lastRefreshTime = MutableStateFlow(0L)
     val lastRefreshTime: StateFlow<Long> = _lastRefreshTime.asStateFlow()
     
+    // 현재 활성 nanoDcId 추적
+    private var currentNanoDcId: String? = null
+    
     companion object {
         private const val TAG = "NanoDcRepository"
         private const val DEFAULT_NANODC_ID = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
@@ -341,12 +344,73 @@ class NanoDcRepository private constructor() {
                 Log.d(TAG, "📊 Using standard getUserData API to retrieve NDP transaction data")
                 
                 val userData = getUserData(nanodcId)
-                val transactions = userData?.ndpListFiltered ?: emptyList()
+                
+                // 🔍 더 자세한 디버깅 정보 추가
+                Log.d(TAG, "🔍 Raw NDP data analysis for nanodcId: $nanodcId")
+                Log.d(TAG, "📦 UserData available: ${userData != null}")
+                
+                userData?.let { data ->
+                    Log.d(TAG, "📊 Raw ndpList size: ${data.ndpList?.size ?: 0}")
+                    Log.d(TAG, "📊 Raw ndpListFiltered size: ${data.ndpListFiltered?.size ?: 0}")
+                    
+                    // ndpList 내용 확인
+                    data.ndpList?.let { ndpList ->
+                        Log.d(TAG, "🔍 Found ndpList with ${ndpList.size} transactions:")
+                        ndpList.forEachIndexed { index, transaction ->
+                            Log.d(TAG, "🔍 ndpList Transaction $index:")
+                            Log.d(TAG, "   ID: ${transaction.id}")
+                            Log.d(TAG, "   Node ID: ${transaction.nodeId}")
+                            Log.d(TAG, "   Amount: ${transaction.amount}")
+                        }
+                    }
+                    
+                    // ndpListFiltered 내용 확인
+                    data.ndpListFiltered?.let { ndpListFiltered ->
+                        Log.d(TAG, "🔍 Found ndpListFiltered with ${ndpListFiltered.size} transactions:")
+                        ndpListFiltered.forEachIndexed { index, transaction ->
+                            Log.d(TAG, "🔍 ndpListFiltered Transaction $index:")
+                            Log.d(TAG, "   ID: ${transaction.id}")
+                            Log.d(TAG, "   Node ID: ${transaction.nodeId}")
+                            Log.d(TAG, "   Amount: ${transaction.amount}")
+                        }
+                    }
+                    
+                    // 다른 잠재적 NDP 데이터 확인
+                    if (data.ndpListFiltered.isNullOrEmpty() && data.ndpList.isNullOrEmpty()) {
+                        Log.w(TAG, "⚠️ Both ndpList and ndpListFiltered are empty or null!")
+                        Log.d(TAG, "🔍 No NDP transaction data available")
+                    }
+                } ?: run {
+                    Log.e(TAG, "❌ UserData is null for nanodcId: $nanodcId")
+                }
+                
+                // NDP 트랜잭션 우선순위: ndpListFiltered -> ndpList -> 빈 목록
+                val transactions = userData?.let { data ->
+                    when {
+                        !data.ndpListFiltered.isNullOrEmpty() -> {
+                            Log.d(TAG, "✅ Using ndpListFiltered (${data.ndpListFiltered?.size} transactions)")
+                            data.ndpListFiltered ?: emptyList()
+                        }
+                        !data.ndpList.isNullOrEmpty() -> {
+                            Log.d(TAG, "✅ Using ndpList as fallback (${data.ndpList?.size} transactions)")
+                            data.ndpList ?: emptyList()
+                        }
+                        else -> {
+                            Log.w(TAG, "⚠️ No NDP transactions available in userData")
+                            emptyList()
+                        }
+                    }
+                } ?: run {
+                    Log.w(TAG, "⚠️ No NDP transactions available - userData is null")
+                    emptyList()
+                }
                 
                 Log.d(TAG, "✅ Successfully extracted ${transactions.size} NDP transactions from user data")
                 if (transactions.isNotEmpty()) {
                     val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
                     Log.d(TAG, "💰 Total NDP amount from user data: $totalAmount")
+                } else {
+                    Log.w(TAG, "⚠️ No NDP transactions found for nanodcId: $nanodcId")
                 }
                 
                 transactions
@@ -463,7 +527,7 @@ class NanoDcRepository private constructor() {
         }
         
         // NDP Transactions 로그
-        response.ndpListFiltered.forEach { transaction ->
+        response.ndpListFiltered?.forEach { transaction ->
             Log.d(TAG, "💰 Transaction - Node: ${transaction.nodeId}")
             Log.d(TAG, "   Amount: ${transaction.amount}")
             Log.d(TAG, "   From: ${transaction.from}")
@@ -479,10 +543,19 @@ class NanoDcRepository private constructor() {
      * @param nanodcId NanoDC ID (기본값 사용 가능)
      */
     fun startAutoRefresh(nanodcId: String = DEFAULT_NANODC_ID) {
+        // 현재 동일한 nanoDcId로 이미 실행 중인지 확인
+        if (currentNanoDcId == nanodcId && autoRefreshJob?.isActive == true) {
+            Log.d(TAG, "🔄 Auto refresh already running for nanoDcId: $nanodcId")
+            return
+        }
+        
         // 기존 자동 갱신 작업이 있으면 취소
         stopAutoRefresh()
         
-        Log.d(TAG, "🔄 Starting auto refresh every ${AUTO_REFRESH_INTERVAL / 1000} seconds")
+        // 현재 nanoDcId 설정
+        currentNanoDcId = nanodcId
+        
+        Log.d(TAG, "🔄 Starting auto refresh every ${AUTO_REFRESH_INTERVAL / 1000} seconds for nanoDcId: $nanodcId")
         
         autoRefreshJob = repositoryScope.launch {
             try {
@@ -515,9 +588,18 @@ class NanoDcRepository private constructor() {
      * 자동 데이터 갱신 중지
      */
     fun stopAutoRefresh() {
-        autoRefreshJob?.cancel()
+        autoRefreshJob?.let { job ->
+            if (job.isActive) {
+                job.cancel()
+                Log.d(TAG, "⏹️ Auto refresh stopped - job cancelled for nanoDcId: $currentNanoDcId")
+            } else {
+                Log.d(TAG, "⏹️ Auto refresh job was already inactive for nanoDcId: $currentNanoDcId")
+            }
+        } ?: run {
+            Log.d(TAG, "⏹️ No auto refresh job to stop")
+        }
         autoRefreshJob = null
-        Log.d(TAG, "⏹️ Auto refresh stopped")
+        currentNanoDcId = null
     }
     
     /**
@@ -563,6 +645,13 @@ class NanoDcRepository private constructor() {
     suspend fun manualRefresh(nanodcId: String = DEFAULT_NANODC_ID) {
         Log.d(TAG, "🔄 Manual refresh requested")
         refreshData(nanodcId)
+    }
+    
+    /**
+     * 현재 활성 nanoDcId 반환
+     */
+    fun getCurrentNanoDcId(): String? {
+        return currentNanoDcId
     }
     
     /**

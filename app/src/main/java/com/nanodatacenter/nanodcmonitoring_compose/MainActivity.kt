@@ -81,25 +81,44 @@ class MainActivity : ComponentActivity() {
     private fun handleDataCenterChange(dataCenter: DataCenterType) {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "🔄 Changing data center to: ${dataCenter.displayName}")
+                Log.d(TAG, "🔄 Changing data center to: ${dataCenter.displayName} (${dataCenter.nanoDcId})")
                 
-                // 기존 자동 갱신 중지
+                // 1. 기존 자동 갱신 완전히 중지
+                Log.d(TAG, "🛑 Stopping existing auto refresh...")
                 repository.stopAutoRefresh()
                 
-                // 코루틴이 완전히 정리될 시간을 줌 (취소 처리 완료 대기)
-                kotlinx.coroutines.delay(100)
+                // 2. 코루틴이 완전히 정리될 시간을 충분히 줌 (취소 처리 완료 대기)
+                kotlinx.coroutines.delay(500) // 100ms -> 500ms로 증가
                 
-                // 새 데이터센터 설정 저장
+                // 3. 새 데이터센터 설정 저장
+                Log.d(TAG, "💾 Saving new data center configuration...")
                 deviceConfigManager.setSelectedDataCenter(dataCenter)
                 
-                // 새 데이터센터로 API 연결 테스트 및 자동 갱신 시작
+                // 4. 저장된 설정 확인
+                val savedDataCenter = deviceConfigManager.getSelectedDataCenter()
+                Log.d(TAG, "✅ Saved data center: ${savedDataCenter.displayName} (${savedDataCenter.nanoDcId})")
+                
+                // 5. 새 데이터센터로 API 연결 테스트
+                Log.d(TAG, "🧪 Testing API connection with new data center...")
                 testApiConnection(dataCenter.nanoDcId)
+                
+                // 6. 새 데이터센터로 자동 갱신 시작
+                Log.d(TAG, "🚀 Starting auto refresh with new data center...")
                 startAutoDataRefresh(dataCenter.nanoDcId)
                 
-                Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName}")
+                Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName} (${dataCenter.nanoDcId})")
                 
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Failed to change data center: ${e.message}", e)
+                
+                // 실패한 경우 기존 설정으로 복구 시도
+                try {
+                    val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
+                    Log.d(TAG, "🔄 Attempting to restore with current data center: ${currentDataCenter.displayName}")
+                    startAutoDataRefresh(currentDataCenter.nanoDcId)
+                } catch (restoreException: Exception) {
+                    Log.e(TAG, "❌ Failed to restore data center: ${restoreException.message}", restoreException)
+                }
             }
         }
     }
@@ -118,6 +137,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 Log.d(TAG, "🚀 Starting API connection test for: $nanoDcId")
+                Log.d(TAG, "📊 Repository current nanoDcId: ${repository.getCurrentNanoDcId()}")
                 repository.testApiConnection(nanoDcId)
             } catch (e: Exception) {
                 Log.e(TAG, "❌ API connection test failed with exception: ${e.message}", e)
@@ -131,7 +151,9 @@ class MainActivity : ComponentActivity() {
      */
     private fun startAutoDataRefresh(nanoDcId: String = getCurrentDataCenter().nanoDcId) {
         Log.d(TAG, "🔄 Starting automatic data refresh for: $nanoDcId")
+        Log.d(TAG, "📊 Repository current nanoDcId before start: ${repository.getCurrentNanoDcId()}")
         repository.startAutoRefresh(nanoDcId)
+        Log.d(TAG, "📊 Repository current nanoDcId after start: ${repository.getCurrentNanoDcId()}")
     }
     
     /**

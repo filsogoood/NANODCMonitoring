@@ -26,12 +26,14 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nanodatacenter.nanodcmonitoring_compose.R
+import com.nanodatacenter.nanodcmonitoring_compose.config.DeviceConfigurationManager
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.*
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
@@ -749,18 +751,23 @@ private fun NodeInfoRow(
 @Composable
 fun NodeBasedMonitoringScreen(
     modifier: Modifier = Modifier,
-    nanoDcId: String = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
+    nanoDcId: String? = null
 ) {
     val repository = remember { NanoDcRepository.getInstance() }
     val apiResponse by repository.apiResponseState.collectAsState()
     val isLoading by repository.isLoading.collectAsState()
     
+    // 현재 nanoDcId 결정 (매개변수로 받거나 DeviceConfigurationManager에서 가져오기)
+    val context = LocalContext.current
+    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    val currentNanoDcId = nanoDcId ?: deviceConfigManager.getSelectedDataCenter().nanoDcId
+    
     // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
-    LaunchedEffect(nanoDcId) {
+    LaunchedEffect(currentNanoDcId) {
         // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
         if (repository.apiResponseState.value == null) {
             android.util.Log.d("NodeBasedMonitoringScreen", "🔄 Ensuring auto refresh is active...")
-            repository.startAutoRefresh(nanoDcId)
+            repository.startAutoRefresh(currentNanoDcId)
         }
     }
     

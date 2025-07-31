@@ -15,8 +15,11 @@ data class ApiResponse(
     @SerializedName("scores")
     val scores: List<Score>,
     
+    @SerializedName("ndpList")
+    val ndpList: List<NdpTransaction>? = null,
+    
     @SerializedName("ndpListFiltered")
-    val ndpListFiltered: List<NdpTransaction>,
+    val ndpListFiltered: List<NdpTransaction>? = null,
     
     @SerializedName("nanodc")
     val nanodc: List<NanoDc>,

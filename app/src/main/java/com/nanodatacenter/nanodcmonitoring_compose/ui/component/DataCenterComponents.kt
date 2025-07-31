@@ -76,7 +76,8 @@ fun ClickableImageItem(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
     apiResponse: ApiResponse? = null,
-    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null,
+    nanoDcId: String? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var scoreData by remember { mutableStateOf<Score?>(null) }
@@ -84,6 +85,10 @@ fun ClickableImageItem(
     val repository = remember { NanoDcRepository.getInstance() }
     val adminManager = remember { AdminAccessManager.getInstance() }
     val context = LocalContext.current
+    
+    // 현재 nanoDcId 결정 (매개변수로 받거나 DeviceConfigurationManager에서 가져오기)
+    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    val currentNanoDcId = nanoDcId ?: deviceConfigManager.getSelectedDataCenter().nanoDcId
     
     // 토스트 메시지 표시
     LaunchedEffect(adminManager.shouldShowToast) {
@@ -141,10 +146,10 @@ fun ClickableImageItem(
                 when {
                     // 이미지 타입별 처리를 먼저 확인 (우선순위)
                     imageType == ImageType.NDP_INFO -> {
-                        // NDP 트랜잭션 정보 로드 및 표시
+                        // NDP 트랜잭션 정보 로드 및 표시 (현재 선택된 데이터센터 사용)
                         NdpTransactionContainer(
                             nodeId = null, // 전체 트랜잭션 표시
-                            nanodcId = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
+                            nanodcId = currentNanoDcId
                         )
                     }
                     // NODE_INFO_AETHIR 이미지의 경우 Aethir 노드 정보 표시
@@ -568,7 +573,8 @@ fun PureImageItem(
     modifier: Modifier = Modifier,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH,
     apiResponse: ApiResponse? = null,
-    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null,
+    nanoDcId: String? = null
 ) {
     val contentScale = ImageScaleUtil.getContentScale(scaleMode)
 
@@ -578,7 +584,8 @@ fun PureImageItem(
         modifier = modifier,
         contentScale = contentScale,
         apiResponse = apiResponse,
-        onDataCenterChanged = onDataCenterChanged
+        onDataCenterChanged = onDataCenterChanged,
+        nanoDcId = nanoDcId
     )
 }
 
@@ -606,12 +613,12 @@ fun DataCenterMonitoringScreen(
     // 현재 선택된 데이터센터 가져오기
     val context = LocalContext.current
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
     
     // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
     LaunchedEffect(Unit) {
         // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
         if (repository.apiResponseState.value == null) {
-            val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
             android.util.Log.d("DataCenterMonitoringScreen", "🔄 Ensuring auto refresh is active with: $currentNanoDcId")
             repository.startAutoRefresh(currentNanoDcId)
         }
@@ -623,7 +630,8 @@ fun DataCenterMonitoringScreen(
             imageOrder = imageOrder,
             modifier = modifier,
             apiResponse = apiResponse,
-            onDataCenterChanged = onDataCenterChanged
+            onDataCenterChanged = onDataCenterChanged,
+            nanoDcId = currentNanoDcId
         )
     } else {
         // 기존 방식: 화면에 맞춰 이미지 크기 조정
@@ -632,7 +640,8 @@ fun DataCenterMonitoringScreen(
             scaleMode = scaleMode,
             modifier = modifier,
             apiResponse = apiResponse,
-            onDataCenterChanged = onDataCenterChanged
+            onDataCenterChanged = onDataCenterChanged,
+            nanoDcId = currentNanoDcId
         )
     }
 }
@@ -645,7 +654,8 @@ private fun SeamlessOriginalSizeContent(
     imageOrder: List<ImageType>,
     modifier: Modifier = Modifier,
     apiResponse: ApiResponse? = null,
-    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null,
+    nanoDcId: String? = null
 ) {
     Column(
         modifier = modifier
@@ -659,7 +669,8 @@ private fun SeamlessOriginalSizeContent(
                 imageIndex = index,
                 contentScale = ContentScale.FillWidth,
                 apiResponse = apiResponse,
-                onDataCenterChanged = onDataCenterChanged
+                onDataCenterChanged = onDataCenterChanged,
+                nanoDcId = nanoDcId
             )
         }
     }
@@ -674,7 +685,8 @@ private fun SeamlessFitScreenContent(
     scaleMode: ImageScaleUtil.ScaleMode,
     modifier: Modifier = Modifier,
     apiResponse: ApiResponse? = null,
-    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null,
+    nanoDcId: String? = null
 ) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp
@@ -700,7 +712,8 @@ private fun SeamlessFitScreenContent(
                 modifier = Modifier.height(adjustedHeight.dp),
                 scaleMode = scaleMode,
                 apiResponse = apiResponse,
-                onDataCenterChanged = onDataCenterChanged
+                onDataCenterChanged = onDataCenterChanged,
+                nanoDcId = nanoDcId
             )
         }
     }
@@ -717,13 +730,18 @@ fun OriginalSizeDataCenterScreen(
     val imageOrderManager = ImageOrderManager.getInstance()
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
     
+    // 현재 선택된 데이터센터 가져오기
+    val context = LocalContext.current
+    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
+    
     // API 데이터 로드
     val repository = remember { NanoDcRepository.getInstance() }
     var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
     
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentNanoDcId) {
         try {
-            apiResponse = repository.getUserData("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
+            apiResponse = repository.getUserData(currentNanoDcId)
         } catch (e: Exception) {
             // 에러 처리 - 로그만 남기고 계속 진행
             android.util.Log.e("OriginalSizeDataCenterScreen", "Failed to load API data", e)
