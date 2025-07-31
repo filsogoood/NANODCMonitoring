@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -77,7 +78,7 @@ fun ClickableImageItem(
     var isExpanded by remember { mutableStateOf(false) }
     var scoreData by remember { mutableStateOf<Score?>(null) }
     
-    val repository = remember { NanoDcRepository() }
+    val repository = remember { NanoDcRepository.getInstance() }
     val adminManager = remember { AdminAccessManager.getInstance() }
     val context = LocalContext.current
     
@@ -583,16 +584,17 @@ fun DataCenterMonitoringScreen(
     val imageOrderManager = ImageOrderManager.getInstance()
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
     
-    // API 데이터 로드
-    val repository = remember { NanoDcRepository() }
-    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
+    // API 데이터 로드 - StateFlow를 통한 자동 갱신 데이터 구독
+    val repository = remember { NanoDcRepository.getInstance() }
+    val apiResponse by repository.apiResponseState.collectAsState()
+    val isLoading by repository.isLoading.collectAsState()
     
+    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
     LaunchedEffect(Unit) {
-        try {
-            apiResponse = repository.getUserData("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
-        } catch (e: Exception) {
-            // 에러 처리 - 로그만 남기고 계속 진행
-            android.util.Log.e("DataCenterMonitoringScreen", "Failed to load API data", e)
+        // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
+        if (repository.apiResponseState.value == null) {
+            android.util.Log.d("DataCenterMonitoringScreen", "🔄 Ensuring auto refresh is active...")
+            repository.startAutoRefresh("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
         }
     }
 
@@ -691,7 +693,7 @@ fun OriginalSizeDataCenterScreen(
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
     
     // API 데이터 로드
-    val repository = remember { NanoDcRepository() }
+    val repository = remember { NanoDcRepository.getInstance() }
     var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
     
     LaunchedEffect(Unit) {
@@ -2329,7 +2331,7 @@ fun NdpTransactionContainer(
     nanodcId: String,
     modifier: Modifier = Modifier
 ) {
-    val repository = remember { NanoDcRepository() }
+    val repository = remember { NanoDcRepository.getInstance() }
     var ndpTransactions by remember { mutableStateOf<List<NdpTransaction>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }

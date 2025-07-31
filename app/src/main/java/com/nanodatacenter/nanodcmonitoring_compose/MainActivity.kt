@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     
-    private val repository = NanoDcRepository()
+    private val repository = NanoDcRepository.getInstance()
     
     companion object {
         private const val TAG = "MainActivity"
@@ -42,8 +42,9 @@ class MainActivity : ComponentActivity() {
         // 전체화면 모드 설정
         setupFullScreenMode()
         
-        // API 연결 테스트 실행
+        // API 연결 테스트 및 자동 갱신 시작
         testApiConnection()
+        startAutoDataRefresh()
         
         enableEdgeToEdge()
         
@@ -66,6 +67,15 @@ class MainActivity : ComponentActivity() {
                 Log.e(TAG, "❌ API connection test failed with exception: ${e.message}", e)
             }
         }
+    }
+    
+    /**
+     * 자동 데이터 갱신 시작
+     * 20초마다 백그라운드에서 데이터를 갱신합니다
+     */
+    private fun startAutoDataRefresh() {
+        Log.d(TAG, "🔄 Starting automatic data refresh...")
+        repository.startAutoRefresh(TEST_NANODC_ID)
     }
     
     /**
@@ -109,6 +119,13 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) {
             setupFullScreenMode()
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Repository 정리 (자동 갱신 중지 및 리소스 해제)
+        repository.cleanup()
+        Log.d(TAG, "MainActivity destroyed, resources cleaned up")
     }
 }
 

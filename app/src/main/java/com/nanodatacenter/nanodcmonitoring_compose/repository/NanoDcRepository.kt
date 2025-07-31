@@ -7,18 +7,59 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.ApiResponse
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 /**
  * NanoDC 데이터 레포지토리
  * API 호출을 관리하고 데이터를 처리하는 클래스
+ * 20초마다 자동으로 데이터를 갱신하는 기능 제공
+ * Singleton 패턴으로 앱 전체에서 하나의 인스턴스를 공유
  */
-class NanoDcRepository {
+class NanoDcRepository private constructor() {
     
     private val apiService: NanoDcApiService = RetrofitClient.nanoDcApiService
+    
+    // 코루틴 스코프 - 자동 갱신을 위한 백그라운드 작업용
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // 자동 갱신 작업을 위한 Job
+    private var autoRefreshJob: Job? = null
+    
+    // API 응답 데이터를 위한 StateFlow
+    private val _apiResponseState = MutableStateFlow<ApiResponse?>(null)
+    val apiResponseState: StateFlow<ApiResponse?> = _apiResponseState.asStateFlow()
+    
+    // 로딩 상태를 위한 StateFlow
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    
+    // 마지막 갱신 시간
+    private val _lastRefreshTime = MutableStateFlow(0L)
+    val lastRefreshTime: StateFlow<Long> = _lastRefreshTime.asStateFlow()
     
     companion object {
         private const val TAG = "NanoDcRepository"
         private const val DEFAULT_NANODC_ID = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
+        private const val AUTO_REFRESH_INTERVAL = 20_000L // 20초
+        
+        @Volatile
+        private var INSTANCE: NanoDcRepository? = null
+        
+        /**
+         * Singleton 인스턴스 반환
+         */
+        fun getInstance(): NanoDcRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: NanoDcRepository().also { INSTANCE = it }
+            }
+        }
     }
     
     /**
@@ -406,5 +447,91 @@ class NanoDcRepository {
             Log.d(TAG, "   Hash: ${transaction.txHash}")
             Log.d(TAG, "   Date: ${transaction.date}")
         }
+    }
+    
+    /**
+     * 자동 데이터 갱신 시작
+     * 20초마다 백그라운드에서 API 데이터를 가져와서 StateFlow를 업데이트
+     * @param nanodcId NanoDC ID (기본값 사용 가능)
+     */
+    fun startAutoRefresh(nanodcId: String = DEFAULT_NANODC_ID) {
+        // 기존 자동 갱신 작업이 있으면 취소
+        stopAutoRefresh()
+        
+        Log.d(TAG, "🔄 Starting auto refresh every ${AUTO_REFRESH_INTERVAL / 1000} seconds")
+        
+        autoRefreshJob = repositoryScope.launch {
+            // 즉시 첫 번째 데이터 로드
+            refreshData(nanodcId)
+            
+            while (true) {
+                try {
+                    delay(AUTO_REFRESH_INTERVAL)
+                    refreshData(nanodcId)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Auto refresh error: ${e.message}", e)
+                    // 에러가 발생해도 계속 시도 (백그라운드에서 조용히 처리)
+                }
+            }
+        }
+    }
+    
+    /**
+     * 자동 데이터 갱신 중지
+     */
+    fun stopAutoRefresh() {
+        autoRefreshJob?.cancel()
+        autoRefreshJob = null
+        Log.d(TAG, "⏹️ Auto refresh stopped")
+    }
+    
+    /**
+     * 데이터 새로고침
+     * StateFlow를 업데이트하여 UI가 자동으로 갱신되도록 함
+     * @param nanodcId NanoDC ID
+     */
+    private suspend fun refreshData(nanodcId: String) {
+        try {
+            // 로딩 상태 시작 (UI에 미세한 로딩 표시 가능하지만 차단하지 않음)
+            _isLoading.value = true
+            
+            Log.d(TAG, "🔄 Refreshing data silently in background...")
+            
+            // 백그라운드에서 조용히 데이터 가져오기
+            val newData = getUserData(nanodcId)
+            
+            if (newData != null) {
+                // 새 데이터로 StateFlow 업데이트
+                _apiResponseState.value = newData
+                _lastRefreshTime.value = System.currentTimeMillis()
+                Log.d(TAG, "✅ Data refreshed successfully in background")
+            } else {
+                Log.w(TAG, "⚠️ Failed to refresh data, keeping existing data")
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error during data refresh: ${e.message}", e)
+            // 에러가 발생해도 기존 데이터는 유지
+        } finally {
+            _isLoading.value = false
+        }
+    }
+    
+    /**
+     * 수동으로 데이터 새로고침 (사용자가 요청한 경우)
+     * @param nanodcId NanoDC ID
+     */
+    suspend fun manualRefresh(nanodcId: String = DEFAULT_NANODC_ID) {
+        Log.d(TAG, "🔄 Manual refresh requested")
+        refreshData(nanodcId)
+    }
+    
+    /**
+     * Repository 정리 (메모리 누수 방지)
+     * Activity/Fragment의 생명주기에 맞춰 호출해야 함
+     */
+    fun cleanup() {
+        stopAutoRefresh()
+        Log.d(TAG, "🧹 Repository cleaned up")
     }
 }

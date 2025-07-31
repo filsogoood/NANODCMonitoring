@@ -751,20 +751,16 @@ fun NodeBasedMonitoringScreen(
     modifier: Modifier = Modifier,
     nanoDcId: String = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
 ) {
-    val repository = remember { NanoDcRepository() }
-    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    val repository = remember { NanoDcRepository.getInstance() }
+    val apiResponse by repository.apiResponseState.collectAsState()
+    val isLoading by repository.isLoading.collectAsState()
     
-    // API 데이터 로드
+    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
     LaunchedEffect(nanoDcId) {
-        launch {
-            try {
-                apiResponse = repository.getUserData(nanoDcId)
-            } catch (e: Exception) {
-                // 에러 처리
-            } finally {
-                isLoading = false
-            }
+        // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
+        if (repository.apiResponseState.value == null) {
+            android.util.Log.d("NodeBasedMonitoringScreen", "🔄 Ensuring auto refresh is active...")
+            repository.startAutoRefresh(nanoDcId)
         }
     }
     
