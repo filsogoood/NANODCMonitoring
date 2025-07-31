@@ -174,7 +174,7 @@ fun ClickableImageItem(
                                             // 첫 번째 카드: 헤더 정보
                                             NodeInfoHeaderCard()
                                             
-                                            // 분리된 카드들: Miner Overview, Adjusted Power, Blocks Won
+                                            // 분리된 카드들: Miner Overview, Adjusted Power
                                             NodeSeparateCards(
                                                 node = node,
                                                 hardwareSpec = hardwareSpec,
@@ -780,15 +780,6 @@ fun NodeMiningDashboard(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // 마이닝 데이터 섹션
-            NodeMiningDataSection(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage,
-                timeRange = selectedTimeRange
-            )
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
             // 하드웨어 사용량 섹션
             if (hardwareSpec != null && nodeUsage != null) {
                 Text(
@@ -870,13 +861,6 @@ fun NodeMiningDashboardWithoutHeader(
             }
             
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // 마이닝 데이터 섹션
-            NodeMiningDataSection(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage,
-                timeRange = "24 hour"
-            )
         }
     }
 }
@@ -902,17 +886,6 @@ fun NodeInfoHeaderCard() {
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 제목
-            Text(
-                text = "GY01 FILECOIN NODE INFO",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
             // Address 정보
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -920,15 +893,18 @@ fun NodeInfoHeaderCard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Address: ",
-                    fontSize = 14.sp,
-                    color = Color(0xFF9CA3AF)
+                    text = "GY01 ADDRESS: ",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = "f03132919",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -1193,42 +1169,7 @@ fun NodePowerInfoItem(
     }
 }
 
-/**
- * 노드 마이닝 데이터 섹션
- */
-@Composable
-fun NodeMiningDataSection(
-    hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?,
-    timeRange: String
-) {
-    Text(
-        text = "Blocks Won",
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        modifier = Modifier.padding(bottom = 12.dp)
-    )
-    
-    // Blocks Won 통계
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        NodeMiningStatCard(
-            modifier = Modifier.weight(1f),
-            title = "Blocks Mined", 
-            value = "4",
-            subtitle = "Win Count: 4"
-        )
-        NodeMiningStatCard(
-            modifier = Modifier.weight(1f),
-            title = "Rewards (Ratio)",
-            value = "21.9142 FIL",
-            subtitle = "(0.03%)"
-        )
-    }
-}
+
 
 /**
  * 노드 마이닝 통계 카드
@@ -1393,7 +1334,7 @@ fun HardwareUsageBar(
 }
 
 /**
- * NODE_INFO용 분리된 카드들 (Miner Overview, Adjusted Power, Blocks Won)
+ * NODE_INFO용 분리된 카드들 (Miner Overview, Adjusted Power)
  */
 @Composable
 fun NodeSeparateCards(
@@ -1414,12 +1355,6 @@ fun NodeSeparateCards(
         
         // Adjusted Power 카드
         NodeAdjustedPowerCard(
-            hardwareSpec = hardwareSpec,
-            nodeUsage = nodeUsage
-        )
-        
-        // Blocks Won 카드
-        NodeBlocksWonCard(
             hardwareSpec = hardwareSpec,
             nodeUsage = nodeUsage
         )
@@ -1534,57 +1469,7 @@ fun NodeAdjustedPowerCard(
     }
 }
 
-/**
- * Blocks Won 카드
- */
-@Composable
-fun NodeBlocksWonCard(
-    hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp)
-        ) {
-            Text(
-                text = "BLOCKS WON",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 1.2.sp,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
-            
-            // Blocks Won 통계
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                NodeMiningStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Blocks Mined", 
-                    value = "4",
-                    subtitle = "Win Count: 4"
-                )
-                NodeMiningStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Rewards (Ratio)",
-                    value = "21.9142 FIL",
-                    subtitle = "(0.03%)"
-                )
-            }
-        }
-    }
-}
+
 
 /**
  * 원형 차트만 표시하는 컴포넌트 (범례 제외) - 차트 라이브러리 사용
