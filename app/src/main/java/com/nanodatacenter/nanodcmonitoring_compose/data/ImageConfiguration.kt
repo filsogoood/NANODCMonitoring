@@ -13,8 +13,8 @@ data class ImageConfiguration(
          * 기본 이미지 순서 (요청사항 기준)
          * 
          * 참고: 다음 이미지들은 ImageScaleUtil에서 90% 스케일이 적용됨:
-         * - DEEPSEEK
-         * - DEEPSEEK_NONE
+         * - SYSTEMTOAI
+         * - SYSTEMTOAI_NONE
          * - AETHIR
          * - AETHIR_NONE
          * - FILECOIN
@@ -24,7 +24,7 @@ data class ImageConfiguration(
         val DEFAULT_ORDER = listOf(
             ImageType.NDP_INFO,
             ImageType.NODE_INFO,
-            ImageType.ONBOARDING,
+            ImageType.NODE_INFO_AETHIR,
             ImageType.SWITCH_100G,
             ImageType.NODE_MINER,
             ImageType.POSTWORKER,
@@ -32,8 +32,8 @@ data class ImageConfiguration(
             ImageType.SUPRA_NONE_1,
             ImageType.SUPRA_NONE_2,
             ImageType.SUPRA_NONE_3,
-            ImageType.DEEPSEEK,
-            ImageType.DEEPSEEK_NONE,
+            ImageType.SYSTEMTOAI,
+            ImageType.SYSTEMTOAI_NONE,
             ImageType.AETHIR,
             ImageType.AETHIR_NONE,
             ImageType.FILECOIN,
