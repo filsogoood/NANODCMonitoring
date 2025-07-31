@@ -40,4 +40,24 @@ interface NanoDcApiService {
     suspend fun getScoreByNanoDcId(
         @Query("nanodc_id") nanodcId: String
     ): Response<Score>
+    
+    /**
+     * 특정 노드의 NDP 트랜잭션 목록 조회 API
+     * @param nodeId 노드 ID
+     * @return NDP 트랜잭션 목록
+     */
+    @GET("/api/ndp/transactions")
+    suspend fun getNdpTransactions(
+        @Query("node_id") nodeId: String
+    ): Response<List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction>>
+    
+    /**
+     * 모든 NDP 트랜잭션 목록 조회 API
+     * @param nanodcId NanoDC ID
+     * @return 모든 NDP 트랜잭션 목록
+     */
+    @GET("/api/ndp/transactions/all")
+    suspend fun getAllNdpTransactions(
+        @Query("nanodc_id") nanodcId: String
+    ): Response<List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction>>
 }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.Node
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.HardwareSpec
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage
+import com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
 import kotlinx.coroutines.launch
@@ -133,18 +135,13 @@ fun ClickableImageItem(
                 exit = shrinkVertically()
             ) {
                 when {
-                    imageIndex == 0 -> {
-                        // 첫 번째 이미지인 경우 스코어 카드 표시
-                        LaunchedEffect(Unit) {
-                            // 스코어 데이터 로드
-                            try {
-                                scoreData = repository.getScoreForFirstImage()
-                            } catch (e: Exception) {
-                                // API 실패 시에도 기본값으로 표시
-                                scoreData = null
-                            }
-                        }
-                        ExpandedScoreCard(score = scoreData)
+                    // 이미지 타입별 처리를 먼저 확인 (우선순위)
+                    imageType == ImageType.NDP_INFO -> {
+                        // NDP 트랜잭션 정보 로드 및 표시
+                        NdpTransactionContainer(
+                            nodeId = null, // 전체 트랜잭션 표시
+                            nanodcId = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
+                        )
                     }
                     // NODE_INFO_AETHIR 이미지의 경우 Aethir 노드 정보 표시
                     imageType == ImageType.NODE_INFO_AETHIR -> {
@@ -226,6 +223,20 @@ fun ClickableImageItem(
                                 }
                             } ?: ExpandedInfoCard(imageType = imageType) // 노드를 찾지 못한 경우 기본 카드 표시
                         } ?: ExpandedInfoCard(imageType = imageType) // API 데이터가 없는 경우 기본 카드 표시
+                    }
+                    // 첫 번째 이미지이면서 위의 특수한 타입이 아닌 경우에만 스코어 카드 표시
+                    imageIndex == 0 -> {
+                        // 첫 번째 이미지인 경우 스코어 카드 표시
+                        LaunchedEffect(Unit) {
+                            // 스코어 데이터 로드
+                            try {
+                                scoreData = repository.getScoreForFirstImage()
+                            } catch (e: Exception) {
+                                // API 실패 시에도 기본값으로 표시
+                                scoreData = null
+                            }
+                        }
+                        ExpandedScoreCard(score = scoreData)
                     }
                     else -> {
                         // 다른 이미지는 기존 확장 정보 표시
@@ -1750,11 +1761,14 @@ fun AethirNodeInfoCard(
         // Aethir 메인 헤더 카드
         AethirMainHeaderCard()
         
-        // 지갑 정보 카드
+        // 지갑 정보 카드 (첫 번째 3개 박스)
         AethirWalletInfoCard()
         
-        // 대시보드 정보 카드
-        AethirDashboardInfoCard()
+        // 지갑 잔액 카드 (도넛 차트 + 중간 3개 박스)
+        AethirWalletBalanceCard()
+        
+        // 스테이킹 정보 카드 (마지막 3개 박스)
+        AethirStakingInfoCard()
     }
 }
 
@@ -1789,7 +1803,7 @@ private fun AethirMainHeaderCard() {
 }
 
 /**
- * Aethir 지갑 정보 카드
+ * Aethir 지갑 정보 카드 (첫 번째 3개 박스)
  */
 @Composable
 private fun AethirWalletInfoCard() {
@@ -1809,11 +1823,11 @@ private fun AethirWalletInfoCard() {
                 text = "WALLET INFORMATION",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFBBF24),
+                color = Color.White,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             
-            // 클레임 가능한 금액들
+            // 클레임 가능한 금액들 (첫 번째 3개 박스)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1837,15 +1851,67 @@ private fun AethirWalletInfoCard() {
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Aethir 지갑 잔액 카드 (도넛 차트만)
+ */
+@Composable
+private fun AethirWalletBalanceCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "WALLET BALANCE",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 진행 막대 (Vesting 정보 표시)
+            // Vesting 정보 도넛 차트만
             AethirVestingProgressBar()
+        }
+    }
+}
+
+/**
+ * Aethir 스테이킹 정보 카드 (총 6개 박스)
+ */
+@Composable
+private fun AethirStakingInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "STAKING INFO",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 중간 정보들 (Vesting Claim, Vesting Withdraw, Cash Out Total)
+            // 첫 번째 행: Vesting 관련 정보들 (WALLET BALANCE에서 이동)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1870,9 +1936,9 @@ private fun AethirWalletInfoCard() {
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
-            // 하단 스테이킹 정보
+            // 두 번째 행: 기존 스테이킹 정보들
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -2084,26 +2150,31 @@ private fun AethirTokenInfoCard(
     isHighlight: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isHighlight) Color(0xFF374151) else Color(0xFF111827)
-    val textColor = if (isHighlight) Color(0xFFFBBF24) else Color.White
+    // 모든 박스를 동일한 회색으로 통일
+    val backgroundColor = Color(0xFF374151)
+    val textColor = Color.White
     
     Card(
-        modifier = modifier,
+        modifier = modifier.height(80.dp), // 고정 높이 설정
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center // 세로 중앙 정렬
         ) {
             Text(
                 text = title,
                 fontSize = 9.sp,
                 color = Color(0xFF9CA3AF),
                 textAlign = TextAlign.Center,
-                maxLines = 2
+                maxLines = 2,
+                lineHeight = 10.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -2111,7 +2182,8 @@ private fun AethirTokenInfoCard(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
         }
     }
@@ -2348,6 +2420,78 @@ private fun AethirProgressLabel(
             fontSize = 8.sp,
             color = Color(0xFF9CA3AF)
         )
+    }
+}
+
+/**
+ * NDP 트랜잭션 컨테이너 컴포넌트
+ * API를 통해 NDP 트랜잭션 데이터를 로드하고 표시상태를 관리합니다.
+ */
+@Composable
+fun NdpTransactionContainer(
+    nodeId: String? = null,
+    nanodcId: String,
+    modifier: Modifier = Modifier
+) {
+    val repository = remember { NanoDcRepository() }
+    var ndpTransactions by remember { mutableStateOf<List<NdpTransaction>?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // NDP 트랜잭션 데이터 로드
+    LaunchedEffect(nodeId, nanodcId) {
+        isLoading = true
+        errorMessage = null
+        
+        try {
+            val transactions = repository.getNdpTransactionsWithFallback(
+                nodeId = nodeId,
+                nanodcId = nanodcId
+            )
+            ndpTransactions = transactions
+            isLoading = false
+        } catch (e: Exception) {
+            errorMessage = "Failed to load NDP transactions: ${e.message}"
+            isLoading = false
+        }
+    }
+    
+    when {
+        isLoading -> {
+            NdpTransactionLoadingCard(modifier = modifier)
+        }
+        errorMessage != null -> {
+            NdpTransactionErrorCard(
+                errorMessage = errorMessage!!,
+                onRetry = {
+                    // 재시도 로직
+                    coroutineScope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        try {
+                            val transactions = repository.getNdpTransactionsWithFallback(
+                                nodeId = nodeId,
+                                nanodcId = nanodcId
+                            )
+                            ndpTransactions = transactions
+                            isLoading = false
+                        } catch (e: Exception) {
+                            errorMessage = "Failed to load NDP transactions: ${e.message}"
+                            isLoading = false
+                        }
+                    }
+                },
+                modifier = modifier
+            )
+        }
+        ndpTransactions != null -> {
+            // 트랜잭션 목록만 표시 (요약 카드 제거)
+            NdpTransactionCard(
+                transactions = ndpTransactions!!,
+                modifier = modifier
+            )
+        }
     }
 }
 

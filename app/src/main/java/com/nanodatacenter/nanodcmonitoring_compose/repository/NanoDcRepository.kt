@@ -198,6 +198,156 @@ class NanoDcRepository {
     }
     
     /**
+     * 특정 노드의 NDP 트랜잭션 목록 조회
+     * @param nodeId 노드 ID
+     * @return NDP 트랜잭션 목록 또는 null (실패 시)
+     */
+    suspend fun getNdpTransactions(nodeId: String): List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Fetching NDP transactions for nodeId: $nodeId")
+                
+                val response = apiService.getNdpTransactions(nodeId)
+                
+                if (response.isSuccessful) {
+                    val transactions = response.body()
+                    Log.d(TAG, "NDP transactions API call successful")
+                    Log.d(TAG, "Transactions count: ${transactions?.size}")
+                    transactions?.forEach { transaction ->
+                        Log.d(TAG, "💰 Transaction ID: ${transaction.id}, Amount: ${transaction.amount} NDP")
+                    }
+                    transactions
+                } else {
+                    Log.e(TAG, "NDP transactions API call failed with code: ${response.code()}")
+                    Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during NDP transactions API call: ${e.message}", e)
+                null
+            }
+        }
+    }
+    
+    /**
+     * 모든 NDP 트랜잭션 목록 조회 (NanoDC 기준)
+     * @param nanodcId NanoDC ID (기본값 사용 가능)
+     * @return 모든 NDP 트랜잭션 목록 또는 null (실패 시)
+     */
+    suspend fun getAllNdpTransactions(nanodcId: String = DEFAULT_NANODC_ID): List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Fetching all NDP transactions for nanodcId: $nanodcId")
+                
+                val response = apiService.getAllNdpTransactions(nanodcId)
+                
+                if (response.isSuccessful) {
+                    val transactions = response.body()
+                    Log.d(TAG, "All NDP transactions API call successful")
+                    Log.d(TAG, "Total transactions count: ${transactions?.size}")
+                    
+                    if (transactions != null) {
+                        val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+                        Log.d(TAG, "Total NDP amount: $totalAmount")
+                    }
+                    
+                    transactions
+                } else {
+                    Log.e(TAG, "All NDP transactions API call failed with code: ${response.code()}")
+                    Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during all NDP transactions API call: ${e.message}", e)
+                null
+            }
+        }
+    }
+    
+    /**
+     * 기존 getUserData API에서 NDP 트랜잭션 추출
+     * 새로운 API가 없을 경우 사용
+     * @param nanodcId NanoDC ID
+     * @return NDP 트랜잭션 목록 또는 빈 목록
+     */
+    suspend fun getNdpTransactionsFromUserData(nanodcId: String = DEFAULT_NANODC_ID): List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction> {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Extracting NDP transactions from getUserData API")
+                
+                val userData = getUserData(nanodcId)
+                val transactions = userData?.ndpListFiltered ?: emptyList()
+                
+                Log.d(TAG, "Extracted ${transactions.size} NDP transactions from user data")
+                if (transactions.isNotEmpty()) {
+                    val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+                    Log.d(TAG, "Total NDP amount from user data: $totalAmount")
+                }
+                
+                transactions
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during NDP extraction from user data: ${e.message}", e)
+                emptyList()
+            }
+        }
+    }
+    
+    /**
+     * NDP 트랜잭션 데이터 조회 (폴백 방식 포함)
+     * 1차: 전용 API 호출
+     * 2차: getUserData에서 추출
+     * 3차: 빈 목록 반환
+     * @param nodeId 노드 ID (선택사항)
+     * @param nanodcId NanoDC ID
+     * @return NDP 트랜잭션 목록
+     */
+    suspend fun getNdpTransactionsWithFallback(
+        nodeId: String? = null,
+        nanodcId: String = DEFAULT_NANODC_ID
+    ): List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction> {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Attempting to get NDP transactions with fallback method")
+                
+                // 1차 시도: 노드별 트랜잭션 API 호출
+                if (!nodeId.isNullOrEmpty()) {
+                    val nodeTransactions = getNdpTransactions(nodeId)
+                    if (!nodeTransactions.isNullOrEmpty()) {
+                        Log.d(TAG, "Successfully retrieved NDP transactions via node API")
+                        return@withContext nodeTransactions
+                    }
+                }
+                
+                // 2차 시도: 전체 트랜잭션 API 호출
+                val allTransactions = getAllNdpTransactions(nanodcId)
+                if (!allTransactions.isNullOrEmpty()) {
+                    Log.d(TAG, "Successfully retrieved NDP transactions via all transactions API")
+                    // 노드 ID가 지정된 경우 필터링
+                    return@withContext if (!nodeId.isNullOrEmpty()) {
+                        allTransactions.filter { it.nodeId == nodeId }
+                    } else {
+                        allTransactions
+                    }
+                }
+                
+                // 3차 시도: getUserData에서 추출
+                Log.d(TAG, "Falling back to getUserData for NDP transactions")
+                val userDataTransactions = getNdpTransactionsFromUserData(nanodcId)
+                
+                // 노드 ID가 지정된 경우 필터링
+                if (!nodeId.isNullOrEmpty()) {
+                    userDataTransactions.filter { it.nodeId == nodeId }
+                } else {
+                    userDataTransactions
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during NDP transactions fallback: ${e.message}", e)
+                emptyList()
+            }
+        }
+    }
+
+    /**
      * API 응답 상세 로그 출력
      */
     private fun logDetailedApiResponse(response: ApiResponse) {
