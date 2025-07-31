@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -53,6 +54,8 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
 import kotlinx.coroutines.launch
+import ir.ehsannarmani.compose_charts.PieChart
+import ir.ehsannarmani.compose_charts.models.Pie
 
 /**
  * 클릭 가능한 이미지 아이템 컴포넌트
@@ -143,8 +146,8 @@ fun ClickableImageItem(
                         }
                         ExpandedScoreCard(score = scoreData)
                     }
-                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER 이미지의 경우 노드 정보 표시
-                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER -> {
+                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO 이미지의 경우 노드 정보 표시
+                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO -> {
                         apiResponse?.let { response ->
                             // 이미지 타입에 따라 해당 노드 찾기
                             val targetNode = when (imageType) {
@@ -152,11 +155,31 @@ fun ClickableImageItem(
                                 ImageType.POSTWORKER -> response.nodes.find { it.nodeName.contains("PostWorker", ignoreCase = true) }
                                 ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
                                 ImageType.NODE_MINER -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
+                                ImageType.NODE_INFO -> response.nodes.firstOrNull() // NODE_INFO는 첫 번째 노드 사용 또는 특정 노드 지정
                                 else -> null
                             }
                             
                             targetNode?.let { node ->
                                 when (imageType) {
+                                    ImageType.NODE_INFO -> {
+                                        // NODE_INFO는 헤더 카드와 마이닝 대시보드를 분리해서 표시
+                                        val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                        val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                        
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            // 첫 번째 카드: 헤더 정보
+                                            NodeInfoHeaderCard()
+                                            
+                                            // 분리된 카드들: Miner Overview, Adjusted Power, Blocks Won
+                                            NodeSeparateCards(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                nodeUsage = nodeUsage
+                                            )
+                                        }
+                                    }
                                     ImageType.FILECOIN -> {
                                         // FILECOIN은 하드디스크 사용량 그래프 표시
                                         val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
@@ -656,6 +679,1050 @@ fun OriginalSizeDataCenterScreen(
                 modifier = Modifier.fillParentMaxWidth(),
                 contentScale = ContentScale.FillWidth,
                 apiResponse = apiResponse
+            )
+        }
+    }
+}
+
+/**
+ * NODE_INFO 마이닝 종합 대시보드 컴포넌트
+ * FileCoin과 유사한 UI로 노드의 상세 마이닝 정보를 표시
+ */
+@Composable
+fun NodeMiningDashboard(
+    node: Node,
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?,
+    modifier: Modifier = Modifier
+) {
+    var selectedTimeRange by remember { mutableStateOf("24 hour") }
+    val timeRanges = listOf("24 hour", "7 day", "30 day", "1 year")
+    
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더 정보 카드 (제목 + Address 통합)
+            NodeInfoHeaderCard()
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // 시간 범위 선택 탭
+            TimeRangeSelector(
+                selectedRange = selectedTimeRange,
+                ranges = timeRanges,
+                onRangeSelected = { selectedTimeRange = it }
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 메인 정보 섹션
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 왼쪽: Address Balance 원형 차트
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Miner Overview",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    NodeBalanceChart(hardwareSpec = hardwareSpec, nodeUsage = nodeUsage)
+                }
+                
+                // 오른쪽: Adjusted Power 정보
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Adjusted Power",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    NodePowerInfo(hardwareSpec = hardwareSpec, nodeUsage = nodeUsage)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // 마이닝 데이터 섹션
+            NodeMiningDataSection(
+                hardwareSpec = hardwareSpec,
+                nodeUsage = nodeUsage,
+                timeRange = selectedTimeRange
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 하드웨어 사용량 섹션
+            if (hardwareSpec != null && nodeUsage != null) {
+                Text(
+                    text = "Hardware Usage",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                
+                NodeHardwareUsageChart(
+                    hardwareSpec = hardwareSpec,
+                    nodeUsage = nodeUsage
+                )
+            }
+        }
+    }
+}
+
+/**
+ * NODE_INFO용 마이닝 대시보드 (헤더 없는 버전)
+ */
+@Composable
+fun NodeMiningDashboardWithoutHeader(
+    node: Node,
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?,
+    modifier: Modifier = Modifier
+) {
+    
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 메인 정보 섹션
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 왼쪽: Address Balance 원형 차트
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Miner Overview",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    NodeBalanceChart(hardwareSpec = hardwareSpec, nodeUsage = nodeUsage)
+                }
+                
+                // 오른쪽: Adjusted Power 정보
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Adjusted Power",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    NodePowerInfo(hardwareSpec = hardwareSpec, nodeUsage = nodeUsage)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // 마이닝 데이터 섹션
+            NodeMiningDataSection(
+                hardwareSpec = hardwareSpec,
+                nodeUsage = nodeUsage,
+                timeRange = "24 hour"
+            )
+        }
+    }
+}
+
+/**
+ * NODE_INFO 전용 헤더 카드 (제목 + Address 통합)
+ */
+@Composable
+fun NodeInfoHeaderCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 제목
+            Text(
+                text = "GY01 FILECOIN NODE INFO",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Address 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Address: ",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+                Text(
+                    text = "f03132919",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 노드 마이너 헤더 (노드 이름과 주소)
+ */
+@Composable
+fun NodeMinerHeader(node: Node) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = node.nodeName,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Text(
+            text = "Address f03132919", // 실제 환경에서는 node에서 가져올 수 있도록 수정
+            fontSize = 14.sp,
+            color = Color(0xFF9CA3AF),
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        
+        // Claim account 링크 스타일
+        Text(
+            text = "Claim account>",
+            fontSize = 12.sp,
+            color = Color(0xFF3B82F6),
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .clickable { /* 클레임 액션 구현 */ }
+        )
+    }
+}
+
+/**
+ * 시간 범위 선택 탭
+ */
+@Composable
+fun TimeRangeSelector(
+    selectedRange: String,
+    ranges: List<String>,
+    onRangeSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ranges.forEach { range ->
+            val isSelected = selectedRange == range
+            Box(
+                modifier = Modifier
+                    .background(
+                        if (isSelected) Color(0xFF3B82F6) else Color(0xFF374151),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .clickable { onRangeSelected(range) }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = range,
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 노드 Balance 도넛형 차트
+ */
+@Composable
+fun NodeBalanceChart(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    // 샘플 데이터 - 실제 환경에서는 API에서 가져와야 함
+    val addressBalance = 18072.2546f
+    val availableBalance = 445.0850f
+    val initialPledge = 16853.3007f
+    val lockedRewards = 773.8689f
+    
+    Box(
+        modifier = Modifier.size(150.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // 도넛형 차트 (Canvas로 구현)
+        Canvas(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val center = Offset(size.width / 2, size.height / 2)
+            val outerRadius = size.minDimension / 2 * 0.8f
+            val innerRadius = outerRadius * 0.5f // 도넛 홀 크기 조절
+            val strokeWidth = outerRadius - innerRadius
+            
+            // 전체 원 (배경) - 도넛형
+            drawCircle(
+                color = androidx.compose.ui.graphics.Color(0xFF374151),
+                radius = outerRadius,
+                center = center,
+                style = Stroke(strokeWidth)
+            )
+            
+            // Available balance 부분 - 도넛형
+            val availableAngle = (availableBalance / addressBalance) * 360f
+            drawArc(
+                color = androidx.compose.ui.graphics.Color(0xFF10B981),
+                startAngle = -90f,
+                sweepAngle = availableAngle,
+                useCenter = false,
+                style = Stroke(strokeWidth, cap = StrokeCap.Round),
+                topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                size = Size(outerRadius * 2, outerRadius * 2)
+            )
+            
+            // Locked rewards 부분 - 도넛형
+            val lockedAngle = (lockedRewards / addressBalance) * 360f
+            drawArc(
+                color = androidx.compose.ui.graphics.Color(0xFFF59E0B),
+                startAngle = -90f + availableAngle,
+                sweepAngle = lockedAngle,
+                useCenter = false,
+                style = Stroke(strokeWidth, cap = StrokeCap.Round),
+                topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                size = Size(outerRadius * 2, outerRadius * 2)
+            )
+        }
+        
+        // 중앙 텍스트 (도넛 홀 안에 표시)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Address Balance",
+                fontSize = 9.sp,
+                color = Color(0xFF9CA3AF)
+            )
+            Text(
+                text = "${String.format("%.1f", addressBalance / 1000)}K FIL",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+    
+    // 범례
+    Spacer(modifier = Modifier.height(12.dp))
+    
+    Column(
+        horizontalAlignment = Alignment.Start
+    ) {
+        NodeBalanceLegendItem(
+            color = Color(0xFF10B981),
+            label = "Available Balance",
+            value = "${String.format("%.4f", availableBalance)} FIL"
+        )
+        NodeBalanceLegendItem(
+            color = Color(0xFFF59E0B),
+            label = "Locked Rewards",
+            value = "${String.format("%.4f", lockedRewards)} FIL"
+        )
+        NodeBalanceLegendItem(
+            color = Color(0xFF6B7280),
+            label = "Initial Pledge",
+            value = "${String.format("%.4f", initialPledge)} FIL"
+        )
+    }
+}
+
+/**
+ * 노드 Balance 범례 아이템
+ */
+@Composable
+fun NodeBalanceLegendItem(
+    color: Color,
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, CircleShape)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Column {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = Color(0xFF9CA3AF)
+            )
+            Text(
+                text = value,
+                fontSize = 14.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+/**
+ * 노드 Power 정보 표시
+ */
+@Composable
+fun NodePowerInfo(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        NodePowerInfoItem(
+            label = "Adjusted Power",
+            value = "3.88 PiB",
+            subInfo = "Rate: 0.02%"
+        )
+        NodePowerInfoItem(
+            label = "Total Reward",
+            value = "3,397.90 FIL",
+            subInfo = "Win Count: 552"
+        )
+    }
+}
+
+/**
+ * 노드 Power 정보 아이템
+ */
+@Composable
+fun NodePowerInfoItem(
+    label: String,
+    value: String,
+    subInfo: String
+) {
+    Column {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color(0xFF9CA3AF)
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Text(
+            text = subInfo,
+            fontSize = 10.sp,
+            color = Color(0xFF9CA3AF)
+        )
+    }
+}
+
+/**
+ * 노드 마이닝 데이터 섹션
+ */
+@Composable
+fun NodeMiningDataSection(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?,
+    timeRange: String
+) {
+    Text(
+        text = "Blocks Won",
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White,
+        modifier = Modifier.padding(bottom = 12.dp)
+    )
+    
+    // Blocks Won 통계
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        NodeMiningStatCard(
+            modifier = Modifier.weight(1f),
+            title = "Blocks Mined", 
+            value = "4",
+            subtitle = "Win Count: 4"
+        )
+        NodeMiningStatCard(
+            modifier = Modifier.weight(1f),
+            title = "Rewards (Ratio)",
+            value = "21.9142 FIL",
+            subtitle = "(0.03%)"
+        )
+    }
+}
+
+/**
+ * 노드 마이닝 통계 카드
+ */
+@Composable
+fun NodeMiningStatCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF374151)
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * 노드 하드웨어 사용량 차트
+ */
+@Composable
+fun NodeHardwareUsageChart(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    if (hardwareSpec == null || nodeUsage == null) {
+        Text(
+            text = "Hardware data not available",
+            color = Color(0xFF9CA3AF),
+            fontSize = 14.sp,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        return
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // CPU 사용량
+        nodeUsage.cpuUsagePercent?.toFloatOrNull()?.let { cpuUsage ->
+            HardwareUsageBar(
+                label = "CPU Usage",
+                percentage = cpuUsage,
+                color = Color(0xFF3B82F6)
+            )
+        }
+        
+        // 메모리 사용량
+        nodeUsage.memUsagePercent?.toFloatOrNull()?.let { memUsage ->
+            HardwareUsageBar(
+                label = "Memory Usage",
+                percentage = memUsage,
+                color = Color(0xFF10B981)
+            )
+        }
+        
+        // GPU 사용량
+        nodeUsage.gpuUsagePercent?.toFloatOrNull()?.let { gpuUsage ->
+            HardwareUsageBar(
+                label = "GPU Usage",
+                percentage = gpuUsage,
+                color = Color(0xFFF59E0B)
+            )
+        }
+        
+        // SSD 상태
+        nodeUsage.ssdHealthPercent?.toFloatOrNull()?.let { ssdHealth ->
+            HardwareUsageBar(
+                label = "SSD Health",
+                percentage = ssdHealth,
+                color = Color(0xFF8B5CF6)
+            )
+        }
+    }
+}
+
+/**
+ * 하드웨어 사용량 바
+ */
+@Composable
+fun HardwareUsageBar(
+    label: String,
+    percentage: Float,
+    color: Color
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "${String.format("%.1f", percentage)}%",
+                fontSize = 12.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(
+                    Color(0xFF374151),
+                    RoundedCornerShape(4.dp)
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth((percentage / 100f).coerceIn(0f, 1f))
+                    .background(
+                        color,
+                        RoundedCornerShape(4.dp)
+                    )
+            )
+        }
+    }
+}
+
+/**
+ * NODE_INFO용 분리된 카드들 (Miner Overview, Adjusted Power, Blocks Won)
+ */
+@Composable
+fun NodeSeparateCards(
+    node: Node,
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Miner Overview 카드
+        NodeMinerOverviewCard(
+            hardwareSpec = hardwareSpec,
+            nodeUsage = nodeUsage
+        )
+        
+        // Adjusted Power 카드
+        NodeAdjustedPowerCard(
+            hardwareSpec = hardwareSpec,
+            nodeUsage = nodeUsage
+        )
+        
+        // Blocks Won 카드
+        NodeBlocksWonCard(
+            hardwareSpec = hardwareSpec,
+            nodeUsage = nodeUsage
+        )
+    }
+}
+
+/**
+ * Miner Overview 카드 (크기 확대 및 레이아웃 개선)
+ */
+@Composable
+fun NodeMinerOverviewCard(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+            // 제목을 더 크고 눈에 띄게
+            Text(
+                text = "MINER OVERVIEW",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+            
+            // 차트와 범례를 가로로 배치
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 왼쪽: 원형 차트
+                NodeBalanceChartOnly(
+                    hardwareSpec = hardwareSpec,
+                    nodeUsage = nodeUsage,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // 오른쪽: 범례
+                NodeBalanceLegendOnly(
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Adjusted Power 카드 (가로 배치)
+ */
+@Composable
+fun NodeAdjustedPowerCard(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Text(
+                text = "ADJUSTED POWER",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+            
+            // 가로 배치로 변경 (회색 박스로 감싸기)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 왼쪽: Adjusted Power (회색 박스)
+                PowerStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Adjusted Power",
+                    value = "3.88 PiB",
+                    subtitle = "Rate: 0.02%"
+                )
+                
+                // 오른쪽: Total Reward (회색 박스)
+                PowerStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Total Reward",
+                    value = "3,397.90 FIL",
+                    subtitle = "Win Count: 552"
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Blocks Won 카드
+ */
+@Composable
+fun NodeBlocksWonCard(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Text(
+                text = "BLOCKS WON",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+            
+            // Blocks Won 통계
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                NodeMiningStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Blocks Mined", 
+                    value = "4",
+                    subtitle = "Win Count: 4"
+                )
+                NodeMiningStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Rewards (Ratio)",
+                    value = "21.9142 FIL",
+                    subtitle = "(0.03%)"
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 원형 차트만 표시하는 컴포넌트 (범례 제외) - 차트 라이브러리 사용
+ */
+@Composable
+fun NodeBalanceChartOnly(
+    hardwareSpec: HardwareSpec?,
+    nodeUsage: NodeUsage?,
+    modifier: Modifier = Modifier
+) {
+    // 샘플 데이터 - 실제 환경에서는 API에서 가져와야 함
+    val addressBalance = 18072.2546f
+    val availableBalance = 445.0850f
+    val lockedRewards = 773.8689f
+    val initialPledge = addressBalance - availableBalance - lockedRewards
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier.size(180.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // 차트 라이브러리를 사용한 도넛형 차트
+            PieChart(
+                modifier = Modifier.size(180.dp),
+                data = listOf(
+                    Pie(
+                        label = "Available Balance",
+                        data = availableBalance.toDouble(),
+                        color = Color(0xFF22C55E),
+                        selectedColor = Color(0xFF22C55E)
+                    ),
+                    Pie(
+                        label = "Locked Rewards", 
+                        data = lockedRewards.toDouble(),
+                        color = Color(0xFFEA580C),
+                        selectedColor = Color(0xFFEA580C)
+                    ),
+                    Pie(
+                        label = "Initial Pledge",
+                        data = initialPledge.toDouble(),
+                        color = Color(0xFF3B82F6),
+                        selectedColor = Color(0xFF3B82F6)
+                    )
+                ),
+                onPieClick = { /* 클릭 이벤트 처리 */ },
+                selectedScale = 1.0f,
+                style = Pie.Style.Stroke(width = 40.dp)
+            )
+        }
+        
+        // 차트 아래에 Address Balance 정보 표시
+        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Address Balance", 
+                fontSize = 16.sp,
+                color = Color(0xFF9CA3AF),
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "${String.format("%.4f", addressBalance)} FIL",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+/**
+ * 범례만 표시하는 컴포넌트 (차트 제외)
+ */
+@Composable
+fun NodeBalanceLegendOnly(
+    modifier: Modifier = Modifier
+) {
+    // 샘플 데이터 - 실제 환경에서는 API에서 가져와야 함
+    val availableBalance = 445.0850f
+    val initialPledge = 16853.3007f
+    val lockedRewards = 773.8689f
+    
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        NodeBalanceLegendItem(
+            color = Color(0xFF22C55E),
+            label = "Available Balance",
+            value = "${String.format("%.4f", availableBalance)} FIL"
+        )
+        NodeBalanceLegendItem(
+            color = Color(0xFFEA580C),
+            label = "Locked Rewards",
+            value = "${String.format("%.4f", lockedRewards)} FIL"
+        )
+        NodeBalanceLegendItem(
+            color = Color(0xFF3B82F6),
+            label = "Initial Pledge",
+            value = "${String.format("%.4f", initialPledge)} FIL"
+        )
+    }
+}
+
+/**
+ * Power 통계 카드 (회색 박스, 중앙 정렬)
+ */
+@Composable
+fun PowerStatCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .height(120.dp), // 고정 높이 설정
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF374151)
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center // 세로 중앙 정렬
+        ) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center
             )
         }
     }

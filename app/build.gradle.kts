@@ -65,6 +65,9 @@ dependencies {
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
+    // Chart library - Compose Charts for Pie Chart
+    implementation("io.github.ehsannarmani:compose-charts:0.0.13")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
