@@ -77,7 +77,7 @@ fun NodeImageWithInfo(
 
 /**
  * 노드 정보를 표시하는 카드 컴포넌트
- * 스코어, 하드웨어 스펙, 사용률 정보를 포함합니다.
+ * 각 정보를 개별 카드로 분리하여 표시합니다.
  */
 @Composable
 fun NodeInfoCard(
@@ -87,62 +87,166 @@ fun NodeInfoCard(
     nodeUsage: NodeUsage?,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937) // 어두운 배경
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        shape = RoundedCornerShape(12.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            // 노드 이름 헤더
-            Text(
-                text = node.nodeName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // 스코어 섹션
-            if (score != null) {
-                ScoreSection(score = score)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            // 하드웨어 스펙 섹션
-            if (hardwareSpec != null) {
-                HardwareSpecSection(hardwareSpec = hardwareSpec)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            // 사용률 섹션
-            if (nodeUsage != null) {
-                UsageSection(nodeUsage = nodeUsage)
-            }
+        // 노드 이름 카드
+        NodeNameCard(node = node)
+        
+        // 스코어 카드
+        if (score != null) {
+            NodeScoreCard(score = score)
+        }
+        
+        // 하드웨어 스펙 카드
+        if (hardwareSpec != null) {
+            NodeHardwareSpecCard(hardwareSpec = hardwareSpec)
+        }
+        
+        // 사용률 카드
+        if (nodeUsage != null) {
+            NodeUsageCard(nodeUsage = nodeUsage)
         }
     }
 }
 
 /**
- * 스코어 섹션 - 기존 최상단 레이아웃 재활용
+ * 노드 이름을 표시하는 개별 카드
+ */
+@Composable
+private fun NodeNameCard(
+    node: Node,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = node.nodeName,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+/**
+ * 스코어를 표시하는 개별 카드
+ */
+@Composable
+private fun NodeScoreCard(
+    score: Score,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Performance Score",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF60A5FA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            ScoreSection(score = score)
+        }
+    }
+}
+
+/**
+ * 하드웨어 스펙을 표시하는 개별 카드
+ */
+@Composable
+private fun NodeHardwareSpecCard(
+    hardwareSpec: HardwareSpec,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Hardware Specifications",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF60A5FA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            HardwareSpecSection(hardwareSpec = hardwareSpec)
+        }
+    }
+}
+
+/**
+ * 사용률을 표시하는 개별 카드
+ */
+@Composable
+private fun NodeUsageCard(
+    nodeUsage: NodeUsage,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Current Usage",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF60A5FA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            UsageSection(nodeUsage = nodeUsage)
+        }
+    }
+}
+
+/**
+ * 스코어 섹션 - 평균 스코어와 개별 스코어 표시
  */
 @Composable
 private fun ScoreSection(score: Score) {
     Column {
-        Text(
-            text = "Score",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF60A5FA),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
         // 평균 스코어 표시
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -214,53 +318,69 @@ private fun ScoreItem(
 }
 
 /**
- * 하드웨어 스펙 섹션
+ * 하드웨어 스펙 섹션 - 하드웨어 정보 표시
  */
 @Composable
 private fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
     Column {
-        Text(
-            text = "Hardware Specifications",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF60A5FA),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        InfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
-        InfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
-        InfoRow("RAM", "${hardwareSpec.totalRamGb}GB")
-        InfoRow("Storage", "${hardwareSpec.storageType} ${hardwareSpec.storageTotalGb}GB")
-        InfoRow("NVMe Count", hardwareSpec.nvmeCount)
+        NodeInfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
+        NodeInfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
+        NodeInfoRow("RAM", "${hardwareSpec.totalRamGb}GB")
+        NodeInfoRow("Storage", "${hardwareSpec.storageType} ${hardwareSpec.storageTotalGb}GB")
+        NodeInfoRow("NVMe Count", hardwareSpec.nvmeCount)
     }
 }
 
 /**
- * 사용률 섹션
+ * 사용률 섹션 - 현재 사용률 정보 표시
  */
 @Composable
 private fun UsageSection(nodeUsage: NodeUsage) {
     Column {
-        Text(
-            text = "Current Usage",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF60A5FA),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        InfoRow("CPU Usage", "${nodeUsage.cpuUsagePercent}%")
-        InfoRow("Memory Usage", "${nodeUsage.memUsagePercent}%")
+        NodeInfoRow("CPU Usage", "${nodeUsage.cpuUsagePercent}%")
+        NodeInfoRow("Memory Usage", "${nodeUsage.memUsagePercent}%")
         
         if (!nodeUsage.gpuUsagePercent.isNullOrEmpty()) {
-            InfoRow("GPU Usage", "${nodeUsage.gpuUsagePercent}%")
-            InfoRow("GPU Temperature", "${nodeUsage.gpuTemp}°C")
-            InfoRow("GPU VRAM", "${nodeUsage.gpuVramPercent}%")
+            NodeInfoRow("GPU Usage", "${nodeUsage.gpuUsagePercent}%")
+            NodeInfoRow("GPU Temperature", "${nodeUsage.gpuTemp}°C")
+            NodeInfoRow("GPU VRAM", "${nodeUsage.gpuVramPercent}%")
         }
         
-        InfoRow("Storage Used", "${nodeUsage.usedStorageGb}GB")
-        InfoRow("SSD Health", "${nodeUsage.ssdHealthPercent}%")
-        InfoRow("Last Update", nodeUsage.timestamp)
+        NodeInfoRow("Storage Used", "${nodeUsage.usedStorageGb}GB")
+        NodeInfoRow("SSD Health", "${nodeUsage.ssdHealthPercent}%")
+        NodeInfoRow("Last Update", nodeUsage.timestamp)
+    }
+}
+
+/**
+ * 노드 정보 행을 표시하는 재사용 가능한 컴포넌트
+ */
+@Composable
+private fun NodeInfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = Color(0xFF9CA3AF),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
