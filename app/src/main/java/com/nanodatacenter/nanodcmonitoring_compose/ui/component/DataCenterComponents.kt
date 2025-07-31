@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +42,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
 import com.nanodatacenter.nanodcmonitoring_compose.manager.AdminAccessManager
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
+import com.nanodatacenter.nanodcmonitoring_compose.network.model.ApiResponse
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.Score
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
@@ -50,13 +53,15 @@ import kotlinx.coroutines.launch
  * 첫 번째 이미지(index 0) 클릭 시 스코어 카드를 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
+ * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
  */
 @Composable
 fun ClickableImageItem(
     imageType: ImageType,
     imageIndex: Int = -1,
     modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.FillWidth
+    contentScale: ContentScale = ContentScale.FillWidth,
+    apiResponse: ApiResponse? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var scoreData by remember { mutableStateOf<Score?>(null) }
@@ -118,21 +123,49 @@ fun ClickableImageItem(
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
-                if (imageIndex == 0) {
-                    // 첫 번째 이미지인 경우 스코어 카드 표시
-                    LaunchedEffect(Unit) {
-                        // 스코어 데이터 로드
-                        try {
-                            scoreData = repository.getScoreForFirstImage()
-                        } catch (e: Exception) {
-                            // API 실패 시에도 기본값으로 표시
-                            scoreData = null
+                when {
+                    imageIndex == 0 -> {
+                        // 첫 번째 이미지인 경우 스코어 카드 표시
+                        LaunchedEffect(Unit) {
+                            // 스코어 데이터 로드
+                            try {
+                                scoreData = repository.getScoreForFirstImage()
+                            } catch (e: Exception) {
+                                // API 실패 시에도 기본값으로 표시
+                                scoreData = null
+                            }
                         }
+                        ExpandedScoreCard(score = scoreData)
                     }
-                    ExpandedScoreCard(score = scoreData)
-                } else {
-                    // 다른 이미지는 기존 확장 정보 표시
-                    ExpandedInfoCard(imageType = imageType)
+                    // SUPRA, POSTWORKER, FILECOIN 이미지의 경우 노드 정보 표시
+                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN -> {
+                        apiResponse?.let { response ->
+                            // 이미지 타입에 따라 해당 노드 찾기
+                            val targetNode = when (imageType) {
+                                ImageType.SUPRA -> response.nodes.find { it.nodeName.contains("Supra", ignoreCase = true) }
+                                ImageType.POSTWORKER -> response.nodes.find { it.nodeName.contains("PostWorker", ignoreCase = true) }
+                                ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
+                                else -> null
+                            }
+                            
+                            targetNode?.let { node ->
+                                val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                val score = response.scores.find { it.nodeId == node.nodeId }
+                                val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                
+                                NodeInfoCard(
+                                    node = node,
+                                    hardwareSpec = hardwareSpec,
+                                    score = score,
+                                    nodeUsage = nodeUsage
+                                )
+                            } ?: ExpandedInfoCard(imageType = imageType) // 노드를 찾지 못한 경우 기본 카드 표시
+                        } ?: ExpandedInfoCard(imageType = imageType) // API 데이터가 없는 경우 기본 카드 표시
+                    }
+                    else -> {
+                        // 다른 이미지는 기존 확장 정보 표시
+                        ExpandedInfoCard(imageType = imageType)
+                    }
                 }
             }
         }
@@ -268,13 +301,15 @@ fun SeamlessImageItem(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
+ * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
  */
 @Composable
 fun PureImageItem(
     imageType: ImageType,
     imageIndex: Int = -1,
     modifier: Modifier = Modifier,
-    scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH
+    scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH,
+    apiResponse: ApiResponse? = null
 ) {
     val contentScale = ImageScaleUtil.getContentScale(scaleMode)
 
@@ -282,13 +317,15 @@ fun PureImageItem(
         imageType = imageType,
         imageIndex = imageIndex,
         modifier = modifier,
-        contentScale = contentScale
+        contentScale = contentScale,
+        apiResponse = apiResponse
     )
 }
 
 /**
  * 스크롤 없이 모든 이미지가 한 화면에 보이도록 하는 컴포넌트
  * 이미지들이 간격 없이 연속적으로 표시됨
+ * API 데이터를 로드하여 SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 노드 정보 표시
  */
 @Composable
 fun DataCenterMonitoringScreen(
@@ -299,19 +336,34 @@ fun DataCenterMonitoringScreen(
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
+    
+    // API 데이터 로드
+    val repository = remember { NanoDcRepository() }
+    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            apiResponse = repository.getUserData("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
+        } catch (e: Exception) {
+            // 에러 처리 - 로그만 남기고 계속 진행
+            android.util.Log.e("DataCenterMonitoringScreen", "Failed to load API data", e)
+        }
+    }
 
     if (useOriginalSize) {
         // 원본 크기 모드: 각 이미지를 원본 크기로 표시하고 스크롤 가능
         SeamlessOriginalSizeContent(
             imageOrder = imageOrder,
-            modifier = modifier
+            modifier = modifier,
+            apiResponse = apiResponse
         )
     } else {
         // 기존 방식: 화면에 맞춰 이미지 크기 조정
         SeamlessFitScreenContent(
             imageOrder = imageOrder,
             scaleMode = scaleMode,
-            modifier = modifier
+            modifier = modifier,
+            apiResponse = apiResponse
         )
     }
 }
@@ -323,11 +375,13 @@ fun DataCenterMonitoringScreen(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
+ * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
  */
 @Composable
 private fun SeamlessOriginalSizeContent(
     imageOrder: List<ImageType>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    apiResponse: ApiResponse? = null
 ) {
     Column(
         modifier = modifier
@@ -339,7 +393,8 @@ private fun SeamlessOriginalSizeContent(
             ClickableImageItem(
                 imageType = imageType,
                 imageIndex = index,
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
+                apiResponse = apiResponse
             )
         }
     }
@@ -354,7 +409,8 @@ private fun SeamlessOriginalSizeContent(
 private fun SeamlessFitScreenContent(
     imageOrder: List<ImageType>,
     scaleMode: ImageScaleUtil.ScaleMode,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    apiResponse: ApiResponse? = null
 ) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp
@@ -378,7 +434,8 @@ private fun SeamlessFitScreenContent(
                 imageType = imageType,
                 imageIndex = index,
                 modifier = Modifier.height(adjustedHeight.dp),
-                scaleMode = scaleMode
+                scaleMode = scaleMode,
+                apiResponse = apiResponse
             )
         }
     }
@@ -391,6 +448,7 @@ private fun SeamlessFitScreenContent(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
+ * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(
@@ -399,6 +457,19 @@ fun OriginalSizeDataCenterScreen(
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
+    
+    // API 데이터 로드
+    val repository = remember { NanoDcRepository() }
+    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            apiResponse = repository.getUserData("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
+        } catch (e: Exception) {
+            // 에러 처리 - 로그만 남기고 계속 진행
+            android.util.Log.e("OriginalSizeDataCenterScreen", "Failed to load API data", e)
+        }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -413,7 +484,8 @@ fun OriginalSizeDataCenterScreen(
                 imageType = imageType,
                 imageIndex = index,
                 modifier = Modifier.fillParentMaxWidth(),  // LazyColumn 내에서 전체 너비 사용
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
+                apiResponse = apiResponse
             )
         }
     }
