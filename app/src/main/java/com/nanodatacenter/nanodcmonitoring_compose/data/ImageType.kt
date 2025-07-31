@@ -10,7 +10,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.R
 enum class ImageType(@DrawableRes val drawableRes: Int, val description: String) {
     NDP_INFO(R.drawable.ndp_info, "NDP Information"),
     NODE_INFO(R.drawable.node_info, "Node Information"),
-    ONBOARDING(R.drawable.onboarding, "Onboarding"),
+    ONBOARDING(R.drawable.node_info_aethir, "Onboarding"),
     SWITCH_100G(R.drawable.switch_100g, "100G Switch"),
     NODE_MINER(R.drawable.node_miner, "Node Miner"),
     POSTWORKER(R.drawable.postworker, "Post Worker"),
