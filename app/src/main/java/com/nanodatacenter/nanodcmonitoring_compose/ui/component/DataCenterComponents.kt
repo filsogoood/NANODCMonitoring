@@ -1856,7 +1856,7 @@ private fun AethirWalletInfoCard() {
 }
 
 /**
- * Aethir 지갑 잔액 카드 (도넛 차트만)
+ * Aethir 지갑 잔액 카드 (도넛 차트 + 3개 박스)
  */
 @Composable
 private fun AethirWalletBalanceCard() {
@@ -1880,38 +1880,12 @@ private fun AethirWalletBalanceCard() {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             
-            // Vesting 정보 도넛 차트만
+            // Vesting 정보 도넛 차트 (범례가 오른쪽으로 이동됨)
             AethirVestingProgressBar()
-        }
-    }
-}
-
-/**
- * Aethir 스테이킹 정보 카드 (총 6개 박스)
- */
-@Composable
-private fun AethirStakingInfoCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            // 헤더
-            Text(
-                text = "STAKING INFO",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
             
-            // 첫 번째 행: Vesting 관련 정보들 (WALLET BALANCE에서 이동)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Vesting 관련 정보들 (STAKING INFO에서 다시 이동)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1935,10 +1909,36 @@ private fun AethirStakingInfoCard() {
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Aethir 스테이킹 정보 카드 (3개 박스만)
+ */
+@Composable
+private fun AethirStakingInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "STAKING INFO",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
             
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // 두 번째 행: 기존 스테이킹 정보들
+            // 스테이킹 정보들만 (3개 박스)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -2271,18 +2271,19 @@ private fun AethirIncomeItemInfoCard(
 }
 
 /**
- * Aethir Vesting 정보 도넛형 차트
+ * Aethir Vesting 정보 도넛형 차트 (범례가 오른쪽에 위치)
  * 이미지에서 확인한 색상 구분을 도넛형 그래프로 구현
  */
 @Composable
 private fun AethirVestingProgressBar(
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // 도넛형 차트
+        // 왼쪽: 도넛형 차트
         Box(
             modifier = Modifier.size(200.dp),
             contentAlignment = Alignment.Center
@@ -2372,26 +2373,13 @@ private fun AethirVestingProgressBar(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // 범례
+        // 오른쪽: 범례 (Other 제거됨)
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                AethirDonutLegendItem("Vesting Claim", "88173.20 ATH", Color(0xFF10B981))
-                AethirDonutLegendItem("Claimable", "15869.76 ATH", Color(0xFFFBBF24))
-            }
-            
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                AethirDonutLegendItem("Cash Out", "149372.40 ATH", Color(0xFFEF4444))
-                AethirDonutLegendItem("Other", "0.00 ATH", Color(0xFF9CA3AF))
-            }
+            AethirDonutLegendItem("Vesting Claim", "88173.20 ATH", Color(0xFF10B981))
+            AethirDonutLegendItem("Claimable", "15869.76 ATH", Color(0xFFFBBF24))
+            AethirDonutLegendItem("Cash Out", "149372.40 ATH", Color(0xFFEF4444))
         }
     }
 }
