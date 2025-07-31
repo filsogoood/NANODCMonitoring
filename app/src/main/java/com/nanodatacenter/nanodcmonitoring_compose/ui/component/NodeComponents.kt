@@ -100,6 +100,7 @@ fun NodeInfoCard(
     hardwareSpec: HardwareSpec?,
     score: Score?,
     nodeUsage: NodeUsage?,
+    displayName: String? = null, // 커스텀 표시 이름
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -109,7 +110,7 @@ fun NodeInfoCard(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 노드 이름 카드
-        NodeNameCard(node = node)
+        NodeNameCard(node = node, displayName = displayName)
         
         // 스코어 카드
         if (score != null) {
@@ -134,6 +135,7 @@ fun NodeInfoCard(
 @Composable
 private fun NodeNameCard(
     node: Node,
+    displayName: String? = null, // 커스텀 표시 이름
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -151,7 +153,7 @@ private fun NodeNameCard(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = node.nodeName,
+                text = displayName ?: node.nodeName, // displayName이 있으면 사용, 없으면 기본 이름
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White

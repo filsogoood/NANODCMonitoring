@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
  * 첫 번째 이미지(index 0) 클릭 시 스코어 카드를 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
- * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
+ * SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN은 이름만, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
  */
 @Composable
 fun ClickableImageItem(
@@ -137,28 +137,52 @@ fun ClickableImageItem(
                         }
                         ExpandedScoreCard(score = scoreData)
                     }
-                    // SUPRA, POSTWORKER, FILECOIN 이미지의 경우 노드 정보 표시
-                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN -> {
+                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER 이미지의 경우 노드 정보 표시
+                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER -> {
                         apiResponse?.let { response ->
                             // 이미지 타입에 따라 해당 노드 찾기
                             val targetNode = when (imageType) {
                                 ImageType.SUPRA -> response.nodes.find { it.nodeName.contains("Supra", ignoreCase = true) }
                                 ImageType.POSTWORKER -> response.nodes.find { it.nodeName.contains("PostWorker", ignoreCase = true) }
                                 ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
+                                ImageType.NODE_MINER -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
                                 else -> null
                             }
                             
                             targetNode?.let { node ->
-                                val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
-                                val score = response.scores.find { it.nodeId == node.nodeId }
-                                val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
-                                
-                                NodeInfoCard(
-                                    node = node,
-                                    hardwareSpec = hardwareSpec,
-                                    score = score,
-                                    nodeUsage = nodeUsage
-                                )
+                                when (imageType) {
+                                    ImageType.FILECOIN -> {
+                                        // FILECOIN은 이름만 표시
+                                        SimpleNodeNameCard(nodeName = node.nodeName)
+                                    }
+                                    ImageType.NODE_MINER -> {
+                                        // NODE_MINER는 전체 정보 표시 (CY01-Node Miner로 표기)
+                                        val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                        val score = response.scores.find { it.nodeId == node.nodeId }
+                                        val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                        
+                                        NodeInfoCard(
+                                            node = node,
+                                            hardwareSpec = hardwareSpec,
+                                            score = score,
+                                            nodeUsage = nodeUsage,
+                                            displayName = "CY01-Node Miner"
+                                        )
+                                    }
+                                    else -> {
+                                        // SUPRA, POSTWORKER는 전체 정보 표시
+                                        val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                        val score = response.scores.find { it.nodeId == node.nodeId }
+                                        val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                        
+                                        NodeInfoCard(
+                                            node = node,
+                                            hardwareSpec = hardwareSpec,
+                                            score = score,
+                                            nodeUsage = nodeUsage
+                                        )
+                                    }
+                                }
                             } ?: ExpandedInfoCard(imageType = imageType) // 노드를 찾지 못한 경우 기본 카드 표시
                         } ?: ExpandedInfoCard(imageType = imageType) // API 데이터가 없는 경우 기본 카드 표시
                     }
@@ -181,6 +205,41 @@ fun ClickableImageItem(
                 Toast.makeText(context, "관리자 메뉴 접근", Toast.LENGTH_SHORT).show()
             }
         )
+    }
+}
+
+/**
+ * 간단한 노드 이름만 표시하는 카드 컴포넌트
+ * FILECOIN 전용으로 사용
+ */
+@Composable
+fun SimpleNodeNameCard(
+    nodeName: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = nodeName,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
     }
 }
 
@@ -301,7 +360,7 @@ fun SeamlessImageItem(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
- * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
+ * SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN은 이름만, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
  */
 @Composable
 fun PureImageItem(
@@ -325,7 +384,7 @@ fun PureImageItem(
 /**
  * 스크롤 없이 모든 이미지가 한 화면에 보이도록 하는 컴포넌트
  * 이미지들이 간격 없이 연속적으로 표시됨
- * API 데이터를 로드하여 SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 노드 정보 표시
+ * API 데이터를 로드하여 SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN은 이름만, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
  */
 @Composable
 fun DataCenterMonitoringScreen(
@@ -375,7 +434,7 @@ fun DataCenterMonitoringScreen(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
- * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
+ * SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN은 이름만, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
  */
 @Composable
 private fun SeamlessOriginalSizeContent(
@@ -448,7 +507,7 @@ private fun SeamlessFitScreenContent(
  * 클릭 가능한 이미지의 경우 첫 번째 이미지 클릭 시 스코어 모달을 표시합니다.
  * LOGO_ZETACUBE 클릭 시 관리자 접근 기능을 제공합니다.
  * None이 붙은 이미지들, 100G Switch, UPS Controller는 클릭해도 카드가 나오지 않습니다.
- * SUPRA, POSTWORKER, FILECOIN 이미지 클릭 시 해당 노드 정보를 표시합니다.
+ * SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN은 이름만, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(
