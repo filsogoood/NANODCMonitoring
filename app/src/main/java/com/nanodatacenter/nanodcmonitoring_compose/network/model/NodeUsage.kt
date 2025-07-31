@@ -37,5 +37,8 @@ data class NodeUsage(
     val gpuVramPercent: String,
     
     @SerializedName("harddisk_used_percent")
-    val harddiskUsedPercent: String?
+    val harddiskUsedPercent: String?,
+    
+    @SerializedName("stage_used")
+    val stageUsed: String?
 )
