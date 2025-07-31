@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.provider.Settings
 import android.util.Log
 import java.util.Locale
+import com.nanodatacenter.nanodcmonitoring_compose.data.DataCenterType
 
 /**
  * 기기별 설정 관리 클래스
@@ -34,6 +35,9 @@ class DeviceConfigurationManager private constructor(context: Context) {
         private const val KEY_LAST_SYNC_TIME = "last_sync_time"
         private const val KEY_API_TIMEOUT = "api_timeout"
         private const val KEY_ENABLE_DETAILED_LOGS = "enable_detailed_logs"
+        
+        // DataCenter Selection Keys
+        private const val KEY_SELECTED_DATACENTER = "selected_datacenter"
         
         // Default Values
         private const val DEFAULT_REFRESH_INTERVAL = 30000L // 30 seconds
@@ -180,6 +184,33 @@ class DeviceConfigurationManager private constructor(context: Context) {
     }
     
     /**
+     * 데이터센터 선택 관리
+     */
+    fun setSelectedDataCenter(dataCenter: DataCenterType) {
+        sharedPreferences.edit().putString(KEY_SELECTED_DATACENTER, dataCenter.name).apply()
+        // 선택된 데이터센터의 nanoDcId도 함께 업데이트
+        setNanoDcId(dataCenter.nanoDcId)
+        Log.d(TAG, "Selected data center set to: ${dataCenter.name} (${dataCenter.nanoDcId})")
+    }
+
+    fun getSelectedDataCenter(): DataCenterType {
+        val dataCenterString = sharedPreferences.getString(KEY_SELECTED_DATACENTER, DataCenterType.GY01.name)
+        return try {
+            DataCenterType.valueOf(dataCenterString ?: DataCenterType.GY01.name)
+        } catch (e: IllegalArgumentException) {
+            DataCenterType.GY01
+        }
+    }
+    
+    /**
+     * 현재 설정된 nanoDcId로부터 데이터센터 타입 추론
+     */
+    fun getCurrentDataCenterFromNanoDcId(): DataCenterType {
+        val currentNanoDcId = getNanoDcId()
+        return DataCenterType.fromNanoDcId(currentNanoDcId) ?: DataCenterType.GY01
+    }
+    
+    /**
      * 기기 정보 로그 출력
      * 디버깅 및 지원을 위한 기기 정보 확인
      */
@@ -194,6 +225,7 @@ class DeviceConfigurationManager private constructor(context: Context) {
         Log.d(TAG, "Theme Mode: ${getThemeMode()}")
         Log.d(TAG, "API Timeout: ${getApiTimeout()}s")
         Log.d(TAG, "Detailed Logs: ${isDetailedLogsEnabled()}")
+        Log.d(TAG, "Selected Data Center: ${getSelectedDataCenter()}")
         Log.d(TAG, "System Language: ${Locale.getDefault().language}")
         Log.d(TAG, "System Country: ${Locale.getDefault().country}")
         Log.d(TAG, "Last Sync: ${if (getLastSyncTime() > 0) java.util.Date(getLastSyncTime()) else "Never"}")

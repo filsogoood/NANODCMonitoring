@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
+import com.nanodatacenter.nanodcmonitoring_compose.data.DataCenterType
+import com.nanodatacenter.nanodcmonitoring_compose.config.DeviceConfigurationManager
 import com.nanodatacenter.nanodcmonitoring_compose.manager.AdminAccessManager
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.ApiResponse
@@ -73,7 +75,8 @@ fun ClickableImageItem(
     imageIndex: Int = -1,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
-    apiResponse: ApiResponse? = null
+    apiResponse: ApiResponse? = null,
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var scoreData by remember { mutableStateOf<Score?>(null) }
@@ -272,12 +275,20 @@ fun ClickableImageItem(
     
     // 관리자 다이얼로그 표시
     if (imageType.isAdminAccess) {
+        // 현재 선택된 데이터센터 가져오기
+        val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+        
         AdminAccessDialog(
             isVisible = adminManager.showAdminDialog,
             onDismiss = { adminManager.dismissAdminDialog() },
+            onDataCenterChanged = { dataCenter ->
+                // MainActivity의 콜백 호출
+                onDataCenterChanged?.invoke(dataCenter)
+                Toast.makeText(context, "Data center changed to: ${dataCenter.displayName}", Toast.LENGTH_SHORT).show()
+            },
             onAdminAccess = {
                 // 추후 관리자 메뉴 확장 시 사용
-                Toast.makeText(context, "관리자 메뉴 접근", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Admin menu access", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -556,7 +567,8 @@ fun PureImageItem(
     imageIndex: Int = -1,
     modifier: Modifier = Modifier,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH,
-    apiResponse: ApiResponse? = null
+    apiResponse: ApiResponse? = null,
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     val contentScale = ImageScaleUtil.getContentScale(scaleMode)
 
@@ -565,7 +577,8 @@ fun PureImageItem(
         imageIndex = imageIndex,
         modifier = modifier,
         contentScale = contentScale,
-        apiResponse = apiResponse
+        apiResponse = apiResponse,
+        onDataCenterChanged = onDataCenterChanged
     )
 }
 
@@ -579,7 +592,8 @@ fun DataCenterMonitoringScreen(
     modifier: Modifier = Modifier,
     deviceType: DeviceType = DeviceType.DEFAULT,
     scaleMode: ImageScaleUtil.ScaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH,
-    useOriginalSize: Boolean = false
+    useOriginalSize: Boolean = false,
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
     val imageOrder = imageOrderManager.getImageOrder(deviceType)
@@ -589,12 +603,17 @@ fun DataCenterMonitoringScreen(
     val apiResponse by repository.apiResponseState.collectAsState()
     val isLoading by repository.isLoading.collectAsState()
     
+    // 현재 선택된 데이터센터 가져오기
+    val context = LocalContext.current
+    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    
     // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
     LaunchedEffect(Unit) {
         // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
         if (repository.apiResponseState.value == null) {
-            android.util.Log.d("DataCenterMonitoringScreen", "🔄 Ensuring auto refresh is active...")
-            repository.startAutoRefresh("c236ea9c-3d7e-430b-98b8-1e22d0d6cf01")
+            val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
+            android.util.Log.d("DataCenterMonitoringScreen", "🔄 Ensuring auto refresh is active with: $currentNanoDcId")
+            repository.startAutoRefresh(currentNanoDcId)
         }
     }
 
@@ -603,7 +622,8 @@ fun DataCenterMonitoringScreen(
         SeamlessOriginalSizeContent(
             imageOrder = imageOrder,
             modifier = modifier,
-            apiResponse = apiResponse
+            apiResponse = apiResponse,
+            onDataCenterChanged = onDataCenterChanged
         )
     } else {
         // 기존 방식: 화면에 맞춰 이미지 크기 조정
@@ -611,7 +631,8 @@ fun DataCenterMonitoringScreen(
             imageOrder = imageOrder,
             scaleMode = scaleMode,
             modifier = modifier,
-            apiResponse = apiResponse
+            apiResponse = apiResponse,
+            onDataCenterChanged = onDataCenterChanged
         )
     }
 }
@@ -623,7 +644,8 @@ fun DataCenterMonitoringScreen(
 private fun SeamlessOriginalSizeContent(
     imageOrder: List<ImageType>,
     modifier: Modifier = Modifier,
-    apiResponse: ApiResponse? = null
+    apiResponse: ApiResponse? = null,
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -636,7 +658,8 @@ private fun SeamlessOriginalSizeContent(
                 imageType = imageType,
                 imageIndex = index,
                 contentScale = ContentScale.FillWidth,
-                apiResponse = apiResponse
+                apiResponse = apiResponse,
+                onDataCenterChanged = onDataCenterChanged
             )
         }
     }
@@ -650,7 +673,8 @@ private fun SeamlessFitScreenContent(
     imageOrder: List<ImageType>,
     scaleMode: ImageScaleUtil.ScaleMode,
     modifier: Modifier = Modifier,
-    apiResponse: ApiResponse? = null
+    apiResponse: ApiResponse? = null,
+    onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp
@@ -675,7 +699,8 @@ private fun SeamlessFitScreenContent(
                 imageIndex = index,
                 modifier = Modifier.height(adjustedHeight.dp),
                 scaleMode = scaleMode,
-                apiResponse = apiResponse
+                apiResponse = apiResponse,
+                onDataCenterChanged = onDataCenterChanged
             )
         }
     }

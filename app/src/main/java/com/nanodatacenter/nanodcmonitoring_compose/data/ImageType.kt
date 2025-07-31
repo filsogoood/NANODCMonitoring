@@ -86,3 +86,40 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     val showsInfoCard: Boolean
         get() = isClickable && !isAdminAccess
 }
+
+/**
+ * 데이터센터 종류 enum
+ */
+enum class DataCenterType(
+    val displayName: String,
+    val nanoDcId: String
+) {
+    BC01("BC01", "dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20"),
+    BC02("BC02", "5e807a27-7c3a-4a22-8df2-20c392186ed3"),
+    GY01("GY01", "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01");
+    
+    companion object {
+        /**
+         * nanoDcId로 DataCenterType 찾기
+         */
+        fun fromNanoDcId(nanoDcId: String): DataCenterType? {
+            return entries.find { it.nanoDcId == nanoDcId }
+        }
+        
+        /**
+         * displayName으로 DataCenterType 찾기
+         */
+        fun fromDisplayName(displayName: String): DataCenterType? {
+            return entries.find { it.displayName == displayName }
+        }
+    }
+}
+
+/**
+ * 데이터센터 상태 정보
+ */
+data class DataCenterState(
+    val selectedCenter: DataCenterType = DataCenterType.GY01,
+    val isLoading: Boolean = false,
+    val loadingCenter: DataCenterType? = null
+)

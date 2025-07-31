@@ -19,6 +19,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
+import com.nanodatacenter.nanodcmonitoring_compose.data.DataCenterType
+import com.nanodatacenter.nanodcmonitoring_compose.config.DeviceConfigurationManager
 import com.nanodatacenter.nanodcmonitoring_compose.manager.ImageOrderManager
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.ui.component.DataCenterMonitoringScreen
@@ -30,39 +32,93 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     
     private val repository = NanoDcRepository.getInstance()
+    private lateinit var deviceConfigManager: DeviceConfigurationManager
     
     companion object {
         private const val TAG = "MainActivity"
-        private const val TEST_NANODC_ID = "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // 기기 설정 매니저 초기화
+        deviceConfigManager = DeviceConfigurationManager.getInstance(this)
+        
         // 전체화면 모드 설정
         setupFullScreenMode()
         
-        // API 연결 테스트 및 자동 갱신 시작
-        testApiConnection()
-        startAutoDataRefresh()
+        // 저장된 데이터센터 설정 로드 및 API 시작
+        initializeDataCenter()
         
         enableEdgeToEdge()
         
         setContent {
             DataCenterTheme {
-                MonitoringApp()
+                MonitoringApp(
+                    onDataCenterChanged = { dataCenter ->
+                        handleDataCenterChange(dataCenter)
+                    }
+                )
             }
         }
     }
     
     /**
-     * API 연결 테스트 실행
+     * 저장된 데이터센터 설정을 로드하고 API 연결을 시작합니다
      */
-    private fun testApiConnection() {
+    private fun initializeDataCenter() {
+        val selectedDataCenter = deviceConfigManager.getSelectedDataCenter()
+        Log.d(TAG, "🏢 Initializing with data center: ${selectedDataCenter.displayName} (${selectedDataCenter.nanoDcId})")
+        
+        // API 연결 테스트 및 자동 갱신 시작
+        testApiConnection(selectedDataCenter.nanoDcId)
+        startAutoDataRefresh(selectedDataCenter.nanoDcId)
+    }
+    
+    /**
+     * 데이터센터 변경 처리
+     */
+    private fun handleDataCenterChange(dataCenter: DataCenterType) {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "🚀 Starting API connection test...")
-                repository.testApiConnection(TEST_NANODC_ID)
+                Log.d(TAG, "🔄 Changing data center to: ${dataCenter.displayName}")
+                
+                // 기존 자동 갱신 중지
+                repository.stopAutoRefresh()
+                
+                // 코루틴이 완전히 정리될 시간을 줌 (취소 처리 완료 대기)
+                kotlinx.coroutines.delay(100)
+                
+                // 새 데이터센터 설정 저장
+                deviceConfigManager.setSelectedDataCenter(dataCenter)
+                
+                // 새 데이터센터로 API 연결 테스트 및 자동 갱신 시작
+                testApiConnection(dataCenter.nanoDcId)
+                startAutoDataRefresh(dataCenter.nanoDcId)
+                
+                Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName}")
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to change data center: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * 현재 선택된 데이터센터 반환
+     */
+    fun getCurrentDataCenter(): DataCenterType {
+        return deviceConfigManager.getSelectedDataCenter()
+    }
+    
+    /**
+     * API 연결 테스트 실행
+     */
+    private fun testApiConnection(nanoDcId: String = getCurrentDataCenter().nanoDcId) {
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "🚀 Starting API connection test for: $nanoDcId")
+                repository.testApiConnection(nanoDcId)
             } catch (e: Exception) {
                 Log.e(TAG, "❌ API connection test failed with exception: ${e.message}", e)
             }
@@ -73,9 +129,9 @@ class MainActivity : ComponentActivity() {
      * 자동 데이터 갱신 시작
      * 20초마다 백그라운드에서 데이터를 갱신합니다
      */
-    private fun startAutoDataRefresh() {
-        Log.d(TAG, "🔄 Starting automatic data refresh...")
-        repository.startAutoRefresh(TEST_NANODC_ID)
+    private fun startAutoDataRefresh(nanoDcId: String = getCurrentDataCenter().nanoDcId) {
+        Log.d(TAG, "🔄 Starting automatic data refresh for: $nanoDcId")
+        repository.startAutoRefresh(nanoDcId)
     }
     
     /**
@@ -130,7 +186,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MonitoringApp() {
+fun MonitoringApp(onDataCenterChanged: (DataCenterType) -> Unit) {
     // 앱 시작 시 설정 초기화
     LaunchedEffect(Unit) {
         ImageConfigurationHelper.applyAllConfigurations()
@@ -144,7 +200,8 @@ fun MonitoringApp() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         scaleMode = ImageScaleUtil.ScaleMode.FIT_WIDTH,
-        useOriginalSize = true // 원본 크기로 표시하며 margin 적용
+        useOriginalSize = true, // 원본 크기로 표시하며 margin 적용
+        onDataCenterChanged = onDataCenterChanged
     )
 }
 
@@ -152,6 +209,6 @@ fun MonitoringApp() {
 @Composable
 fun MonitoringAppPreview() {
     DataCenterTheme {
-        MonitoringApp()
+        MonitoringApp(onDataCenterChanged = { /* No-op for preview */ })
     }
 }

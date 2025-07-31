@@ -15,6 +15,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.isActive
 
 /**
  * NanoDC 데이터 레포지토리
@@ -90,6 +92,9 @@ class NanoDcRepository private constructor() {
                     Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
                     null
                 }
+            } catch (e: CancellationException) {
+                Log.d(TAG, "🛑 Score API call cancelled")
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Exception during score API call: ${e.message}", e)
                 null
@@ -125,6 +130,9 @@ class NanoDcRepository private constructor() {
                     Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
                     null
                 }
+            } catch (e: CancellationException) {
+                Log.d(TAG, "🛑 Score by NanoDC API call cancelled")
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Exception during score by NanoDC API call: ${e.message}", e)
                 null
@@ -163,6 +171,9 @@ class NanoDcRepository private constructor() {
                 }
                 
                 score
+            } catch (e: CancellationException) {
+                Log.d(TAG, "🛑 First image score retrieval cancelled")
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Exception during first image score retrieval: ${e.message}", e)
                 // 예외 발생 시에도 기본값 반환
@@ -211,6 +222,9 @@ class NanoDcRepository private constructor() {
                     Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
                     null
                 }
+            } catch (e: CancellationException) {
+                Log.d(TAG, "🛑 API call cancelled")
+                throw e // CancellationException은 다시 throw
             } catch (e: Exception) {
                 Log.e(TAG, "Exception during API call: ${e.message}", e)
                 null
@@ -259,8 +273,13 @@ class NanoDcRepository private constructor() {
                     }
                     transactions
                 } else {
-                    Log.e(TAG, "NDP transactions API call failed with code: ${response.code()}")
-                    Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    // 404는 예상된 상황 (엔드포인트가 아직 구현되지 않음)
+                    if (response.code() == 404) {
+                        Log.d(TAG, "Node NDP transactions API endpoint not available (404) - will use fallback method")
+                    } else {
+                        Log.e(TAG, "NDP transactions API call failed with code: ${response.code()}")
+                        Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    }
                     null
                 }
             } catch (e: Exception) {
@@ -294,8 +313,13 @@ class NanoDcRepository private constructor() {
                     
                     transactions
                 } else {
-                    Log.e(TAG, "All NDP transactions API call failed with code: ${response.code()}")
-                    Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    // 404는 예상된 상황 (엔드포인트가 아직 구현되지 않음)
+                    if (response.code() == 404) {
+                        Log.d(TAG, "NDP transactions API endpoint not available (404) - will use fallback method")
+                    } else {
+                        Log.e(TAG, "All NDP transactions API call failed with code: ${response.code()}")
+                        Log.e(TAG, "Error body: ${response.errorBody()?.string()}")
+                    }
                     null
                 }
             } catch (e: Exception) {
@@ -314,15 +338,15 @@ class NanoDcRepository private constructor() {
     suspend fun getNdpTransactionsFromUserData(nanodcId: String = DEFAULT_NANODC_ID): List<com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction> {
         return withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "Extracting NDP transactions from getUserData API")
+                Log.d(TAG, "📊 Using standard getUserData API to retrieve NDP transaction data")
                 
                 val userData = getUserData(nanodcId)
                 val transactions = userData?.ndpListFiltered ?: emptyList()
                 
-                Log.d(TAG, "Extracted ${transactions.size} NDP transactions from user data")
+                Log.d(TAG, "✅ Successfully extracted ${transactions.size} NDP transactions from user data")
                 if (transactions.isNotEmpty()) {
                     val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
-                    Log.d(TAG, "Total NDP amount from user data: $totalAmount")
+                    Log.d(TAG, "💰 Total NDP amount from user data: $totalAmount")
                 }
                 
                 transactions
@@ -371,8 +395,8 @@ class NanoDcRepository private constructor() {
                     }
                 }
                 
-                // 3차 시도: getUserData에서 추출
-                Log.d(TAG, "Falling back to getUserData for NDP transactions")
+                // 3차 시도: getUserData에서 추출 (정상적인 fallback 동작)
+                Log.d(TAG, "✅ Using fallback method: extracting NDP transactions from getUserData API")
                 val userDataTransactions = getNdpTransactionsFromUserData(nanodcId)
                 
                 // 노드 ID가 지정된 경우 필터링
@@ -461,17 +485,28 @@ class NanoDcRepository private constructor() {
         Log.d(TAG, "🔄 Starting auto refresh every ${AUTO_REFRESH_INTERVAL / 1000} seconds")
         
         autoRefreshJob = repositoryScope.launch {
-            // 즉시 첫 번째 데이터 로드
-            refreshData(nanodcId)
-            
-            while (true) {
-                try {
-                    delay(AUTO_REFRESH_INTERVAL)
-                    refreshData(nanodcId)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Auto refresh error: ${e.message}", e)
-                    // 에러가 발생해도 계속 시도 (백그라운드에서 조용히 처리)
+            try {
+                // 즉시 첫 번째 데이터 로드
+                refreshData(nanodcId)
+                
+                while (isActive) {
+                    try {
+                        delay(AUTO_REFRESH_INTERVAL)
+                        if (isActive) {
+                            refreshData(nanodcId)
+                        }
+                    } catch (e: CancellationException) {
+                        // 코루틴이 정상적으로 취소됨 - 에러 로그 출력하지 않음
+                        Log.d(TAG, "🛑 Auto refresh cancelled")
+                        throw e // CancellationException은 다시 throw해야 함
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Auto refresh error: ${e.message}", e)
+                        // 일반 에러는 계속 시도 (백그라운드에서 조용히 처리)
+                    }
                 }
+            } catch (e: CancellationException) {
+                // 전체 코루틴이 취소됨
+                Log.d(TAG, "🛑 Auto refresh job cancelled")
             }
         }
     }
@@ -509,6 +544,10 @@ class NanoDcRepository private constructor() {
                 Log.w(TAG, "⚠️ Failed to refresh data, keeping existing data")
             }
             
+        } catch (e: CancellationException) {
+            // 코루틴이 취소됨 - 정상적인 상황이므로 에러 로그 출력하지 않음
+            Log.d(TAG, "🛑 Data refresh cancelled")
+            throw e // CancellationException은 다시 throw해야 함
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error during data refresh: ${e.message}", e)
             // 에러가 발생해도 기존 데이터는 유지
