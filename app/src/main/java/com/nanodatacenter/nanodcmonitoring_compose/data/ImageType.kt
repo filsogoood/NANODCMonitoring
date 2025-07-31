@@ -18,14 +18,14 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     SUPRA_NONE_1(R.drawable.supra_none, "Supra Inactive 1"),
     SUPRA_NONE_2(R.drawable.supra_none, "Supra Inactive 2"),
     SUPRA_NONE_3(R.drawable.supra_none, "Supra Inactive 3"),
-    SYSTEMTOAI(R.drawable.systemtoai, "SystemToAI"),
+    SYSTEMTOAI(R.drawable.systemtoai_none, "SystemToAI"),
     SYSTEMTOAI_NONE(R.drawable.systemtoai_none, "SystemToAI Inactive"),
-    AETHIR(R.drawable.aethir, "Aethir"),
+    AETHIR(R.drawable.aethir_none, "Aethir"),
     AETHIR_NONE(R.drawable.aethir_none, "Aethir Inactive"),
-    FILECOIN(R.drawable.filecoin, "Filecoin"),
+    FILECOIN(R.drawable.filecoin_none, "Filecoin"),
     FILECOIN_NONE_1(R.drawable.filecoin_none, "Filecoin Inactive 1"),
     FILECOIN_NONE_2(R.drawable.filecoin_none, "Filecoin Inactive 2"),
-    NOT_STORAGE(R.drawable.not_storage, "No Storage"),
+    NOT_STORAGE(R.drawable.storage, "Storage"),
     UPS_CONTROLLER(R.drawable.upscontroller, "UPS Controller"),
     LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo");
 
