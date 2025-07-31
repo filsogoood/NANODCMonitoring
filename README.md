@@ -12,20 +12,62 @@ NANO DC Monitoring Compose는 안드로이드 Jetpack Compose를 사용하여 �
 - 🔄 **재사용 가능한 컴포넌트**: 클린코드 원칙에 따른 모듈화된 설계
 - ⚡ **런타임 변경**: 앱 실행 중에도 설정 변경 가능
 - 🔐 **관리자 접근**: LOGO_ZETACUBE 8번 클릭으로 관리자 기능 접근
+- 🌐 **Aethir 노드 모니터링**: 전용 Aethir 노드 정보 표시 및 관리
+
+## 🚀 새로운 기능: Aethir 노드 정보
+
+### 3번째 위치 - NODE_INFO_AETHIR
+3번째 위치에 배치된 `node_info_aethir` 이미지를 클릭하면 Aethir 네트워크 노드의 상세 정보를 확인할 수 있습니다.
+
+#### 📊 표시되는 정보
+**1. 지갑 정보 (Wallet Information)**
+- CLAIMABLE - SERVICE FEE: 클레임 가능한 서비스 수수료
+- CLAIMABLE - POC & POD REWARDS: POC 및 POD 리워드
+- WITHDRAWABLE: 출금 가능한 금액
+- VESTING CLAIM: 베스팅 클레임 정보
+- VESTING WITHDRAW: 베스팅 출금 정보
+- CASH OUT TOTAL: 총 현금화 금액
+- STAKED: 스테이킹된 ATH 토큰
+- UNSTAKING: 언스테이킹 중인 ATH 토큰
+- UNSTAKED: 언스테이킹 완료된 ATH 토큰
+
+**2. 리소스 개요 (Resource Overview)**
+- TOTAL LOCATIONS: 총 위치 수
+- TOTAL SERVERS: 총 서버 수
+- MY AETHIR EARTH: 내 Aethir Earth 자원
+- MY AETHIR ATMOSPHERE: 내 Aethir Atmosphere 자원
+
+**3. 일일 수입 정보 (Daily Income)**
+- SERVICE FEE: 서비스 수수료 수입
+- POC REWARD: POC 리워드 수입
+- POD REWARD: POD 리워드 수입
+- Total Daily Earnings: 일일 총 수익
+
+#### 🎨 UI 특징
+- **색상 구분**: 각 정보 카테고리별로 다른 색상 테마 적용
+- **진행 막대**: 베스팅 정보를 시각적으로 표시
+- **하이라이트**: 중요한 수치들을 강조 표시
+- **카드 레이아웃**: 정보별로 구분된 카드 형태의 깔끔한 UI
+
+#### 💻 구현 특징
+- **확장 가능한 구조**: 새로운 Aethir 정보 추가 용이
+- **재사용 가능한 컴포넌트**: 다른 노드 타입에도 적용 가능
+- **실시간 데이터 지원**: API 연동을 통한 실시간 정보 업데이트 준비
+- **글로벌 대응**: 영어 기반 UI로 글로벌 환경 지원
 
 ## 🎯 이미지 순서 (기본 설정)
 현재 설정된 기본 이미지 순서는 다음과 같습니다:
 
 1. **ndp_info** - NDP 정보
 2. **node_info** - 노드 정보  
-3. **onboarding** - 온보딩
+3. **node_info_aethir** - Aethir 노드 정보 (NEW!)
 4. **switch_100g** - 100G 스위치
 5. **node_miner** - 노드 마이너
 6. **postworker** - 포스트워커
 7. **supra** - 수프라
 8. **supra_none** (3개) - 수프라 없음
-9. **deepseek** - 딥시크
-10. **deepseek_none** - 딥시크 없음
+9. **systemtoai** - 시스템투AI
+10. **systemtoai_none** - 시스템투AI 없음
 11. **aethir** - 에테르
 12. **aethir_none** - 에테르 없음
 13. **filecoin** - 파일코인
@@ -45,8 +87,11 @@ app/src/main/java/com/nanodatacenter/nanodcmonitoring_compose/
 │   ├── ImageOrderManager.kt      # 이미지 순서 관리 (Singleton)
 │   └── AdminAccessManager.kt     # 관리자 접근 기능 관리 (Singleton)
 ├── ui/component/
-│   ├── DataCenterComponents.kt   # 데이터센터 모니터링 UI 컴포넌트
-│   └── AdminComponents.kt        # 관리자 접근 UI 컴포넌트
+│   ├── DataCenterComponents.kt      # 데이터센터 모니터링 UI 컴포넌트
+│   ├── AethirNodeComponents.kt      # Aethir 노드 전용 UI 컴포넌트 (NEW!)
+│   ├── NodeComponents.kt            # 일반 노드 정보 UI 컴포넌트
+│   ├── ScoreComponents.kt           # 스코어 표시 UI 컴포넌트
+│   └── AdminComponents.kt           # 관리자 접근 UI 컴포넌트
 ├── util/
 │   └── ImageConfigurationHelper.kt   # 설정 생성 헬퍼
 ├── sample/

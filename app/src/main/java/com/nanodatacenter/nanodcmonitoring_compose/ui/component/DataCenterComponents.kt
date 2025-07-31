@@ -146,6 +146,11 @@ fun ClickableImageItem(
                         }
                         ExpandedScoreCard(score = scoreData)
                     }
+                    // NODE_INFO_AETHIR 이미지의 경우 Aethir 노드 정보 표시
+                    imageType == ImageType.NODE_INFO_AETHIR -> {
+                        // Aethir 노드 정보를 간단하게 표시
+                        AethirNodeInfoCard()
+                    }
                     // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO 이미지의 경우 노드 정보 표시
                     imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO -> {
                         apiResponse?.let { response ->
@@ -1725,5 +1730,663 @@ fun PowerStatCard(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+/**
+ * Aethir 노드 정보를 표시하는 카드 컴포넌트
+ * 이미지에서 확인한 Aethir 정보들을 표시합니다.
+ */
+@Composable
+fun AethirNodeInfoCard(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Aethir 메인 헤더 카드
+        AethirMainHeaderCard()
+        
+        // 지갑 정보 카드
+        AethirWalletInfoCard()
+        
+        // 대시보드 정보 카드
+        AethirDashboardInfoCard()
+    }
+}
+
+/**
+ * Aethir 메인 헤더 카드
+ */
+@Composable
+private fun AethirMainHeaderCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "AETHIR NODE INFORMATION",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.2.sp
+            )
+        }
+    }
+}
+
+/**
+ * Aethir 지갑 정보 카드
+ */
+@Composable
+private fun AethirWalletInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "WALLET INFORMATION",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFBBF24),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            // 클레임 가능한 금액들
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirTokenInfoCard(
+                    title = "CLAIMABLE - SERVICE FEE",
+                    amount = "0.00",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "CLAIMABLE - POC & POD REWARDS",
+                    amount = "158.75",
+                    isHighlight = true,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "WITHDRAWABLE",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 진행 막대 (Vesting 정보 표시)
+            AethirVestingProgressBar()
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 중간 정보들 (Vesting Claim, Vesting Withdraw, Cash Out Total)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirTokenInfoCard(
+                    title = "VESTING CLAIM",
+                    amount = "88173.1976",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "VESTING WITHDRAW",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "CASH OUT TOTAL",
+                    amount = "149372.4039",
+                    isHighlight = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 하단 스테이킹 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirTokenInfoCard(
+                    title = "STAKED",
+                    amount = "209542.8",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "UNSTAKING",
+                    amount = "224115.8",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "UNSTAKED",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Aethir 대시보드 정보 카드
+ */
+@Composable
+private fun AethirDashboardInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "RESOURCE OVERVIEW",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF10B981),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            // 리소스 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirResourceInfoCard(
+                    title = "TOTAL LOCATIONS",
+                    value = "1.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirResourceInfoCard(
+                    title = "TOTAL SERVERS",
+                    value = "205296.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirResourceInfoCard(
+                    title = "MY AETHIR EARTH",
+                    value = "5.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirResourceInfoCard(
+                    title = "MY AETHIR ATMOSPHERE",
+                    value = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Aethir 수입 정보 카드
+ */
+@Composable
+private fun AethirIncomeInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Text(
+                text = "DAILY INCOME (2025-07-30)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF8B5CF6),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            // 수입 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirIncomeItemInfoCard(
+                    title = "SERVICE FEE",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirIncomeItemInfoCard(
+                    title = "POC REWARD",
+                    amount = "645.3498",
+                    isHighlight = true,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirIncomeItemInfoCard(
+                    title = "POD REWARD",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 진행 막대 (Vesting 정보 표시)
+            AethirVestingProgressBar()
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 중간 정보들 (Vesting Claim, Vesting Withdraw, Cash Out Total)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirTokenInfoCard(
+                    title = "VESTING CLAIM",
+                    amount = "88173.1976",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "VESTING WITHDRAW",
+                    amount = "0.0000",
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenInfoCard(
+                    title = "CASH OUT TOTAL",
+                    amount = "149372.4039",
+                    isHighlight = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 총합 표시
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF111827)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Total Daily Earnings",
+                        fontSize = 14.sp,
+                        color = Color(0xFF9CA3AF),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "645.3498 ATH",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFBBF24),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Aethir 토큰 정보 카드
+ */
+@Composable
+private fun AethirTokenInfoCard(
+    title: String,
+    amount: String,
+    isHighlight: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (isHighlight) Color(0xFF374151) else Color(0xFF111827)
+    val textColor = if (isHighlight) Color(0xFFFBBF24) else Color.White
+    
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                fontSize = 9.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "$amount ATH",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Aethir 리소스 정보 카드
+ */
+@Composable
+private fun AethirResourceInfoCard(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF111827)
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                fontSize = 9.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF10B981),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Aethir 수입 항목 정보 카드
+ */
+@Composable
+private fun AethirIncomeItemInfoCard(
+    title: String,
+    amount: String,
+    isHighlight: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (isHighlight) Color(0xFF374151) else Color(0xFF111827)
+    val textColor = if (isHighlight) Color(0xFF8B5CF6) else Color.White
+    
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                fontSize = 9.sp,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "$amount ATH",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Aethir Vesting 정보 도넛형 차트
+ * 이미지에서 확인한 색상 구분을 도넛형 그래프로 구현
+ */
+@Composable
+private fun AethirVestingProgressBar(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 도넛형 차트
+        Box(
+            modifier = Modifier.size(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val center = Offset(size.width / 2, size.height / 2)
+                val outerRadius = size.minDimension / 2 * 0.8f
+                val innerRadius = outerRadius * 0.6f // 도넛 홀 크기
+                val strokeWidth = outerRadius - innerRadius
+                
+                // 전체 원 (배경) - 도넛형
+                drawCircle(
+                    color = androidx.compose.ui.graphics.Color(0xFF374151),
+                    radius = outerRadius,
+                    center = center,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth)
+                )
+                
+                // 각 섹션의 각도 계산 (전체 360도를 비율로 분배)
+                val vestingClaimAngle = 35f * 3.6f  // 35% -> 126도
+                val claimableAngle = 18f * 3.6f     // 18% -> 64.8도  
+                val cashOutAngle = 47f * 3.6f       // 47% -> 169.2도
+                
+                var currentAngle = -90f // 12시 방향부터 시작
+                
+                // Vesting Claim 섹션 (초록색)
+                drawArc(
+                    color = androidx.compose.ui.graphics.Color(0xFF10B981),
+                    startAngle = currentAngle,
+                    sweepAngle = vestingClaimAngle,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = strokeWidth,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    ),
+                    topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                    size = androidx.compose.ui.geometry.Size(outerRadius * 2, outerRadius * 2)
+                )
+                currentAngle += vestingClaimAngle
+                
+                // Claimable 섹션 (황색)
+                drawArc(
+                    color = androidx.compose.ui.graphics.Color(0xFFFBBF24),
+                    startAngle = currentAngle,
+                    sweepAngle = claimableAngle,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = strokeWidth,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    ),
+                    topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                    size = androidx.compose.ui.geometry.Size(outerRadius * 2, outerRadius * 2)
+                )
+                currentAngle += claimableAngle
+                
+                // Cash Out 섹션 (빨간색)
+                drawArc(
+                    color = androidx.compose.ui.graphics.Color(0xFFEF4444),
+                    startAngle = currentAngle,
+                    sweepAngle = cashOutAngle,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = strokeWidth,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    ),
+                    topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                    size = androidx.compose.ui.geometry.Size(outerRadius * 2, outerRadius * 2)
+                )
+            }
+            
+            // 중앙 텍스트
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Wallet",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+                Text(
+                    text = "Balance",
+                    fontSize = 12.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 범례
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                AethirDonutLegendItem("Vesting Claim", "88173.20 ATH", Color(0xFF10B981))
+                AethirDonutLegendItem("Claimable", "15869.76 ATH", Color(0xFFFBBF24))
+            }
+            
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                AethirDonutLegendItem("Cash Out", "149372.40 ATH", Color(0xFFEF4444))
+                AethirDonutLegendItem("Other", "0.00 ATH", Color(0xFF9CA3AF))
+            }
+        }
+    }
+}
+
+/**
+ * Aethir 진행 막대 라벨
+ */
+@Composable
+private fun AethirProgressLabel(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, RoundedCornerShape(4.dp))
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            fontSize = 8.sp,
+            color = Color(0xFF9CA3AF)
+        )
+    }
+}
+
+/**
+ * 도넛 차트 범례 아이템
+ */
+@Composable
+private fun AethirDonutLegendItem(
+    label: String,
+    value: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(color, CircleShape)
+            )
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = Color(0xFF9CA3AF),
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            fontSize = 11.sp,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
