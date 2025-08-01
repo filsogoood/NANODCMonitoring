@@ -165,19 +165,78 @@ fun ClickableImageItem(
                     // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO, NOT_STORAGE, STORAGE 이미지의 경우 노드 정보 표시
                     imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO || imageType == ImageType.NOT_STORAGE || imageType == ImageType.STORAGE_1 || imageType == ImageType.STORAGE_2 || imageType == ImageType.STORAGE_3 || imageType == ImageType.STORAGE_4 || imageType == ImageType.STORAGE_5 || imageType == ImageType.STORAGE_6 -> {
                         apiResponse?.let { response ->
+                            // 디버그 로그 추가
+                            android.util.Log.d("DataCenterComponents", "🔍 Debug Info:")
+                            android.util.Log.d("DataCenterComponents", "   Image Type: $imageType")
+                            android.util.Log.d("DataCenterComponents", "   Current NanoDC ID: $currentNanoDcId")
+                            android.util.Log.d("DataCenterComponents", "   Available Nodes: ${response.nodes.map { it.nodeName }}")
+                            
                             // 이미지 타입에 따라 해당 노드 찾기
                             val targetNode = when (imageType) {
                                 ImageType.SUPRA -> response.nodes.find { it.nodeName.contains("Supra", ignoreCase = true) }
                                 ImageType.POSTWORKER -> response.nodes.find { it.nodeName.contains("PostWorker", ignoreCase = true) }
                                 ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
-                                ImageType.NODE_MINER -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
+                                ImageType.NODE_MINER -> {
+                                    // BC01의 경우 Filecoin-Miner 노드를 찾음
+                                    val isBC01 = currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)
+                                    if (isBC01) {
+                                        android.util.Log.d("DataCenterComponents", "🎯 BC01 NODE_MINER: Looking for Filecoin-Miner")
+                                        response.nodes.find { it.nodeName.contains("Filecoin-Miner", ignoreCase = true) }
+                                    } else {
+                                        response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
+                                    }
+                                }
                                 ImageType.NOT_STORAGE -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
-                                ImageType.STORAGE_1, ImageType.STORAGE_2, ImageType.STORAGE_3, ImageType.STORAGE_4, ImageType.STORAGE_5, ImageType.STORAGE_6 -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
+                                ImageType.STORAGE_1, ImageType.STORAGE_2, ImageType.STORAGE_3, ImageType.STORAGE_4, ImageType.STORAGE_5, ImageType.STORAGE_6 -> {
+                                    // BC01의 경우 각 스토리지 이미지를 특정 NAS 노드에 매핑
+                                    val isBC01 = currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)
+                                    if (isBC01) {
+                                        android.util.Log.d("DataCenterComponents", "🎯 BC01 STORAGE: Processing $imageType")
+                                        android.util.Log.d("DataCenterComponents", "   BC01 Check: currentNanoDcId='$currentNanoDcId', isBC01=$isBC01")
+                                        when (imageType) {
+                                            ImageType.STORAGE_1 -> {
+                                                android.util.Log.d("DataCenterComponents", "   Looking for NAS5")
+                                                response.nodes.find { it.nodeName.contains("NAS5", ignoreCase = true) }
+                                            }
+                                            ImageType.STORAGE_2 -> {
+                                                android.util.Log.d("DataCenterComponents", "   Looking for NAS3 or NAS4")
+                                                response.nodes.find { it.nodeName.contains("NAS3", ignoreCase = true) || it.nodeName.contains("NAS4", ignoreCase = true) }
+                                            }
+                                            ImageType.STORAGE_3 -> {
+                                                android.util.Log.d("DataCenterComponents", "   Looking for NAS2")
+                                                response.nodes.find { it.nodeName.contains("NAS2", ignoreCase = true) }
+                                            }
+                                            ImageType.STORAGE_4 -> {
+                                                android.util.Log.d("DataCenterComponents", "   Looking for NAS1")
+                                                response.nodes.find { it.nodeName.contains("NAS1", ignoreCase = true) }
+                                            }
+                                            ImageType.STORAGE_5 -> {
+                                                android.util.Log.d("DataCenterComponents", "   Looking for SAI Server")
+                                                response.nodes.find { it.nodeName.contains("SAI Server", ignoreCase = true) }
+                                            }
+                                            else -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
+                                        }
+                                    } else {
+                                        response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // 기존 로직 유지
+                                    }
+                                }
                                 ImageType.NODE_INFO -> response.nodes.firstOrNull() // NODE_INFO는 첫 번째 노드 사용 또는 특정 노드 지정
                                 else -> null
                             }
                             
+                            android.util.Log.d("DataCenterComponents", "   Found Node: ${targetNode?.nodeName ?: "NULL"}")
+                            
                             targetNode?.let { node ->
+                                android.util.Log.d("DataCenterComponents", "✅ Processing node: ${node.nodeName}")
+                                val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                val score = response.scores.find { it.nodeId == node.nodeId }
+                                
+                                android.util.Log.d("DataCenterComponents", "📊 Data availability:")
+                                android.util.Log.d("DataCenterComponents", "   HardwareSpec: ${if (hardwareSpec != null) "✅" else "❌"}")
+                                android.util.Log.d("DataCenterComponents", "   NodeUsage: ${if (nodeUsage != null) "✅" else "❌"}")  
+                                android.util.Log.d("DataCenterComponents", "   Score: ${if (score != null) "✅" else "❌"}")
+                                
                                 when (imageType) {
                                     ImageType.NODE_INFO -> {
                                         // NODE_INFO는 헤더 카드와 마이닝 대시보드를 분리해서 표시
@@ -223,24 +282,55 @@ fun ClickableImageItem(
                                         )
                                     }
                                     ImageType.STORAGE_1, ImageType.STORAGE_2, ImageType.STORAGE_3, ImageType.STORAGE_4, ImageType.STORAGE_5, ImageType.STORAGE_6 -> {
-                                        // STORAGE 이미지들도 하드디스크 사용량 그래프 표시 (FILECOIN과 동일)
-                                        val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
-                                        val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
-                                        
-                                        FilecoinDiskUsageCard(
-                                            node = node,
-                                            hardwareSpec = hardwareSpec,
-                                            nodeUsage = nodeUsage,
-                                            displayName = when (imageType) {
-                                                ImageType.STORAGE_1 -> "BC01 STORAGE 1"
-                                                ImageType.STORAGE_2 -> "BC01 STORAGE 2"
-                                                ImageType.STORAGE_3 -> "BC01 STORAGE 3"
-                                                ImageType.STORAGE_4 -> "BC01 STORAGE 4"
-                                                ImageType.STORAGE_5 -> "BC01 STORAGE 5"
-                                                ImageType.STORAGE_6 -> "BC01 STORAGE 6"
-                                                else -> "BC01 STORAGE"
+                                        val displayName = when {
+                                            // BC01 데이터센터의 경우 실제 노드 이름 반영
+                                            currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true) -> when (imageType) {
+                                                ImageType.STORAGE_1 -> "BC01 Storage 1 (NAS5)"
+                                                ImageType.STORAGE_2 -> "BC01 Storage 2 (NAS3+NAS4)"
+                                                ImageType.STORAGE_3 -> "BC01 Storage 3 (NAS2)"
+                                                ImageType.STORAGE_4 -> "BC01 Storage 4 (NAS1)"
+                                                ImageType.STORAGE_5 -> "BC01 Storage 5 (SAI Server)"
+                                                ImageType.STORAGE_6 -> "BC01 Storage 6"
+                                                else -> "BC01 Storage"
                                             }
-                                        )
+                                            // 다른 데이터센터는 기존 방식
+                                            else -> when (imageType) {
+                                                ImageType.STORAGE_1 -> "GY01 STORAGE 1"
+                                                ImageType.STORAGE_2 -> "GY01 STORAGE 2"
+                                                ImageType.STORAGE_3 -> "GY01 STORAGE 3"
+                                                ImageType.STORAGE_4 -> "GY01 STORAGE 4"
+                                                ImageType.STORAGE_5 -> "GY01 STORAGE 5"
+                                                ImageType.STORAGE_6 -> "GY01 STORAGE 6"
+                                                else -> "GY01 STORAGE"
+                                            }
+                                        }
+                                        
+                                        android.util.Log.d("DataCenterComponents", "🎨 Creating Storage Card:")
+                                        android.util.Log.d("DataCenterComponents", "   DisplayName: $displayName")
+                                        android.util.Log.d("DataCenterComponents", "   Node: ${node.nodeName}")
+                                        android.util.Log.d("DataCenterComponents", "   HardwareSpec: ${hardwareSpec?.cpuModel ?: "N/A"}")
+                                        android.util.Log.d("DataCenterComponents", "   NodeUsage: CPU=${nodeUsage?.cpuUsagePercent ?: "N/A"}%")
+                                        android.util.Log.d("DataCenterComponents", "   Score: ${score?.averageScore ?: "N/A"}")
+                                        
+                                        // BC01의 경우 전체 정보 카드 표시, 다른 데이터센터는 디스크 사용량 카드 표시
+                                        if (currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)) {
+                                            android.util.Log.d("DataCenterComponents", "   Using NodeInfoCard for BC01")
+                                            NodeInfoCard(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                score = score,
+                                                nodeUsage = nodeUsage,
+                                                displayName = displayName
+                                            )
+                                        } else {
+                                            android.util.Log.d("DataCenterComponents", "   Using FilecoinDiskUsageCard for other centers")
+                                            FilecoinDiskUsageCard(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                nodeUsage = nodeUsage,
+                                                displayName = displayName
+                                            )
+                                        }
                                     }
                                     ImageType.NODE_MINER -> {
                                         // NODE_MINER는 전체 정보 표시 (GY01 NODE MINER로 표기)
@@ -253,7 +343,11 @@ fun ClickableImageItem(
                                             hardwareSpec = hardwareSpec,
                                             score = score,
                                             nodeUsage = nodeUsage,
-                                            displayName = "GY01 NODE MINER"
+                                            displayName = if (currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)) {
+                                                "BC01 Filecoin Miner"
+                                            } else {
+                                                "GY01 NODE MINER"
+                                            }
                                         )
                                     }
                                     else -> {
@@ -278,8 +372,14 @@ fun ClickableImageItem(
                                         )
                                     }
                                 }
-                            } ?: ExpandedInfoCard(imageType = imageType) // 노드를 찾지 못한 경우 기본 카드 표시
-                        } ?: ExpandedInfoCard(imageType = imageType) // API 데이터가 없는 경우 기본 카드 표시
+                            } ?: run {
+                                android.util.Log.w("DataCenterComponents", "❌ No matching node found for $imageType")
+                                ExpandedInfoCard(imageType = imageType) // 노드를 찾지 못한 경우 기본 카드 표시
+                            }
+                        } ?: run {
+                            android.util.Log.w("DataCenterComponents", "❌ No API response available")
+                            ExpandedInfoCard(imageType = imageType) // API 데이터가 없는 경우 기본 카드 표시
+                        }
                     }
                     // 첫 번째 이미지이면서 위의 특수한 타입이 아닌 경우에만 스코어 카드 표시
                     imageIndex == 0 -> {
@@ -336,6 +436,15 @@ fun FilecoinDiskUsageCard(
     displayName: String? = null, // 커스텀 표시 이름
     modifier: Modifier = Modifier
 ) {
+    android.util.Log.d("FilecoinDiskUsageCard", "🎨 Rendering card for: ${displayName ?: node.nodeName}")
+    android.util.Log.d("FilecoinDiskUsageCard", "   HardwareSpec exists: ${hardwareSpec != null}")
+    android.util.Log.d("FilecoinDiskUsageCard", "   NodeUsage exists: ${nodeUsage != null}")
+    if (hardwareSpec != null) {
+        android.util.Log.d("FilecoinDiskUsageCard", "   TotalHDD: ${hardwareSpec.totalHarddiskGb}")
+    }
+    if (nodeUsage != null) {
+        android.util.Log.d("FilecoinDiskUsageCard", "   HDDUsage: ${nodeUsage.harddiskUsedPercent}%")
+    }
     Card(
         modifier = modifier
             .fillMaxWidth()
