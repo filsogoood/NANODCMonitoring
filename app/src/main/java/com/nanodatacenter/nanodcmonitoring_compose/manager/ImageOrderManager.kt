@@ -39,7 +39,7 @@ class ImageOrderManager private constructor() {
         
         // 데이터센터별 설정
         configurations[DeviceType.BC01] = ImageConfiguration.createBC01()
-        configurations[DeviceType.BC02] = ImageConfiguration.createDefault(DeviceType.BC02)
+        configurations[DeviceType.BC02] = ImageConfiguration.createBC02()
         configurations[DeviceType.GY01] = ImageConfiguration.createDefault(DeviceType.GY01)
         
         // 추후 다른 기기별 설정 예시 (필요시 수정)

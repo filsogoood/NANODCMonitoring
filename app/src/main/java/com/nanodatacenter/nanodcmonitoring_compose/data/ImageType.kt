@@ -14,6 +14,7 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     SWITCH_100G(R.drawable.switch_100g, "100G Switch"),
     NODE_MINER(R.drawable.node_miner, "Node Miner"),
     POSTWORKER(R.drawable.postworker, "Post Worker"),
+    LONOVO_POST(R.drawable.lonovo_post, "Lonovo Post Worker"),
     SUPRA(R.drawable.supra, "Supra"),
     SUPRA_NONE_1(R.drawable.supra_none, "Supra Inactive 1"),
     SUPRA_NONE_2(R.drawable.supra_none, "Supra Inactive 2"),

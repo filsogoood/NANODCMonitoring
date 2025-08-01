@@ -81,6 +81,38 @@ data class ImageConfiguration(
         )
 
         /**
+         * BC02 데이터센터 전용 이미지 순서
+         * 
+         * 요구사항:
+         * - NDP_INFO: NDP 정보 (ndp_info.png)
+         * - NODE_INFO: 노드 정보 (node_info.jpg)
+         * - NODE_INFO_AETHIR: 노드 정보 에테르 (node_info_aethir.png)
+         * - SWITCH_100G: 100G 스위치 (switch_100g.png) [클릭 불가]
+         * - LONOVO_POST: 포스트워커 (lonovo_post.png) - 3개
+         * - NODE_MINER: 노드 마이너 (node_miner.jpg)
+         * - UPS_CONTROLLER: UPS 컨트롤러 (upscontroller.jpg) [클릭 불가]
+         * - STORAGE 1~5: storage2.png (5개)
+         * - LOGO_ZETACUBE: 제타큐브 로고 (logo_zetacube.jpg) [관리자 접근]
+         */
+        val BC02_ORDER = listOf(
+            ImageType.NDP_INFO,           // 1. NDP 정보
+            ImageType.NODE_INFO,          // 2. 노드 정보
+            ImageType.NODE_INFO_AETHIR,   // 3. 노드 정보 에테르
+            ImageType.SWITCH_100G,        // 4. 100G 스위치 [클릭 불가]
+            ImageType.LONOVO_POST,        // 5. 포스트워커 1
+            ImageType.LONOVO_POST,        // 6. 포스트워커 2
+            ImageType.LONOVO_POST,        // 7. 포스트워커 3
+            ImageType.NODE_MINER,         // 8. 노드 마이너
+            ImageType.UPS_CONTROLLER,     // 9. UPS 컨트롤러 [클릭 불가]
+            ImageType.STORAGE_1,          // 10. 스토리지 1
+            ImageType.STORAGE_1,          // 11. 스토리지 2
+            ImageType.STORAGE_1,          // 12. 스토리지 3
+            ImageType.STORAGE_1,          // 13. 스토리지 4
+            ImageType.STORAGE_1,          // 14. 스토리지 5
+            ImageType.LOGO_ZETACUBE       // 15. 제타큐브 로고 [관리자 접근]
+        )
+
+        /**
          * 기본 설정을 생성합니다.
          */
         fun createDefault(deviceType: DeviceType = DeviceType.DEFAULT): ImageConfiguration {
@@ -95,13 +127,20 @@ data class ImageConfiguration(
         }
 
         /**
+         * BC02 데이터센터 전용 설정을 생성합니다.
+         */
+        fun createBC02(): ImageConfiguration {
+            return ImageConfiguration(DeviceType.BC02, BC02_ORDER)
+        }
+
+        /**
          * 데이터센터 타입에 따라 적절한 이미지 순서를 반환합니다.
          */
         fun getOrderForDataCenter(dataCenterName: String): List<ImageType> {
             return when (dataCenterName.uppercase()) {
                 "BC01" -> BC01_ORDER
-                "BC02" -> DEFAULT_ORDER // BC02는 기본 순서 사용
-                "GY01" -> DEFAULT_ORDER // GY01은 기본 순서 사용
+                "BC02" -> BC02_ORDER
+                "GY01" -> DEFAULT_ORDER
                 else -> DEFAULT_ORDER
             }
         }
