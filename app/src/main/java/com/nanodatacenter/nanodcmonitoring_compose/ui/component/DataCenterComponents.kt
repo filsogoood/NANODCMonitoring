@@ -162,8 +162,8 @@ fun ClickableImageItem(
                         // Aethir 노드 정보를 간단하게 표시
                         AethirNodeInfoCard()
                     }
-                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO, NOT_STORAGE 이미지의 경우 노드 정보 표시
-                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO || imageType == ImageType.NOT_STORAGE -> {
+                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO, NOT_STORAGE, STORAGE 이미지의 경우 노드 정보 표시
+                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO || imageType == ImageType.NOT_STORAGE || imageType == ImageType.STORAGE_1 || imageType == ImageType.STORAGE_2 || imageType == ImageType.STORAGE_3 || imageType == ImageType.STORAGE_4 || imageType == ImageType.STORAGE_5 || imageType == ImageType.STORAGE_6 -> {
                         apiResponse?.let { response ->
                             // 이미지 타입에 따라 해당 노드 찾기
                             val targetNode = when (imageType) {
@@ -172,6 +172,7 @@ fun ClickableImageItem(
                                 ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
                                 ImageType.NODE_MINER -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
                                 ImageType.NOT_STORAGE -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
+                                ImageType.STORAGE_1, ImageType.STORAGE_2, ImageType.STORAGE_3, ImageType.STORAGE_4, ImageType.STORAGE_5, ImageType.STORAGE_6 -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) } // FILECOIN과 동일한 데이터 사용
                                 ImageType.NODE_INFO -> response.nodes.firstOrNull() // NODE_INFO는 첫 번째 노드 사용 또는 특정 노드 지정
                                 else -> null
                             }
@@ -219,6 +220,26 @@ fun ClickableImageItem(
                                             hardwareSpec = hardwareSpec,
                                             nodeUsage = nodeUsage,
                                             displayName = "GY01 STORAGE"
+                                        )
+                                    }
+                                    ImageType.STORAGE_1, ImageType.STORAGE_2, ImageType.STORAGE_3, ImageType.STORAGE_4, ImageType.STORAGE_5, ImageType.STORAGE_6 -> {
+                                        // STORAGE 이미지들도 하드디스크 사용량 그래프 표시 (FILECOIN과 동일)
+                                        val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
+                                        val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
+                                        
+                                        FilecoinDiskUsageCard(
+                                            node = node,
+                                            hardwareSpec = hardwareSpec,
+                                            nodeUsage = nodeUsage,
+                                            displayName = when (imageType) {
+                                                ImageType.STORAGE_1 -> "BC01 STORAGE 1"
+                                                ImageType.STORAGE_2 -> "BC01 STORAGE 2"
+                                                ImageType.STORAGE_3 -> "BC01 STORAGE 3"
+                                                ImageType.STORAGE_4 -> "BC01 STORAGE 4"
+                                                ImageType.STORAGE_5 -> "BC01 STORAGE 5"
+                                                ImageType.STORAGE_6 -> "BC01 STORAGE 6"
+                                                else -> "BC01 STORAGE"
+                                            }
                                         )
                                     }
                                     ImageType.NODE_MINER -> {
@@ -598,6 +619,7 @@ fun PureImageItem(
  * 스크롤 없이 모든 이미지가 한 화면에 보이도록 하는 컴포넌트
  * 이미지들이 간격 없이 연속적으로 표시됨
  * API 데이터를 로드하여 SUPRA, POSTWORKER는 전체 노드 정보를 표시하고, FILECOIN과 NOT_STORAGE는 하드디스크 사용량 그래프, NODE_MINER는 FILECOIN 데이터로 전체 정보를 표시합니다.
+ * 데이터센터별로 다른 이미지 순서를 지원합니다.
  */
 @Composable
 fun DataCenterMonitoringScreen(
@@ -608,17 +630,21 @@ fun DataCenterMonitoringScreen(
     onDataCenterChanged: ((DataCenterType) -> Unit)? = null
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
-    val imageOrder = imageOrderManager.getImageOrder(deviceType)
+    
+    // 현재 선택된 데이터센터 가져오기
+    val context = LocalContext.current
+    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
+    val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
+    
+    // 데이터센터별 이미지 순서 가져오기
+    val imageOrder = imageOrderManager.getImageOrderForDataCenter(currentDataCenter)
     
     // API 데이터 로드 - StateFlow를 통한 자동 갱신 데이터 구독
     val repository = remember { NanoDcRepository.getInstance() }
     val apiResponse by repository.apiResponseState.collectAsState()
     val isLoading by repository.isLoading.collectAsState()
     
-    // 현재 선택된 데이터센터 가져오기
-    val context = LocalContext.current
-    val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
-    val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
+    val currentNanoDcId = currentDataCenter.nanoDcId
     
     // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
     LaunchedEffect(Unit) {
@@ -726,6 +752,7 @@ private fun SeamlessFitScreenContent(
 
 /**
  * 원본 크기 이미지들을 연속으로 표시하는 전체 화면 모니터링 컴포넌트
+ * 데이터센터별로 다른 이미지 순서를 지원합니다.
  */
 @Composable
 fun OriginalSizeDataCenterScreen(
@@ -733,12 +760,15 @@ fun OriginalSizeDataCenterScreen(
     deviceType: DeviceType = DeviceType.DEFAULT
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
-    val imageOrder = imageOrderManager.getImageOrder(deviceType)
     
     // 현재 선택된 데이터센터 가져오기
     val context = LocalContext.current
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
-    val currentNanoDcId = deviceConfigManager.getSelectedDataCenter().nanoDcId
+    val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
+    
+    // 데이터센터별 이미지 순서 가져오기
+    val imageOrder = imageOrderManager.getImageOrderForDataCenter(currentDataCenter)
+    val currentNanoDcId = currentDataCenter.nanoDcId
     
     // API 데이터 로드
     val repository = remember { NanoDcRepository.getInstance() }

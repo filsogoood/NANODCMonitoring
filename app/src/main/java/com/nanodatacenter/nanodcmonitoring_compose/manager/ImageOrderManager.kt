@@ -3,6 +3,7 @@ package com.nanodatacenter.nanodcmonitoring_compose.manager
 import com.nanodatacenter.nanodcmonitoring_compose.data.DeviceType
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageConfiguration
 import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
+import com.nanodatacenter.nanodcmonitoring_compose.data.DataCenterType
 
 /**
  * 이미지 순서와 설정을 관리하는 싱글톤 클래스
@@ -35,6 +36,11 @@ class ImageOrderManager private constructor() {
     private fun initializeDefaultConfigurations() {
         // 기본 설정
         configurations[DeviceType.DEFAULT] = ImageConfiguration.createDefault(DeviceType.DEFAULT)
+        
+        // 데이터센터별 설정
+        configurations[DeviceType.BC01] = ImageConfiguration.createBC01()
+        configurations[DeviceType.BC02] = ImageConfiguration.createDefault(DeviceType.BC02)
+        configurations[DeviceType.GY01] = ImageConfiguration.createDefault(DeviceType.GY01)
         
         // 추후 다른 기기별 설정 예시 (필요시 수정)
         // configurations[DeviceType.DEVICE_A] = createDeviceAConfiguration()
@@ -117,6 +123,27 @@ class ImageOrderManager private constructor() {
         return getImageOrder(deviceType).size
     }
     
+    /**
+     * 데이터센터별 이미지 순서를 반환합니다.
+     * DataCenterType에 따라 적절한 DeviceType을 매핑하여 사용합니다.
+     */
+    fun getImageOrderForDataCenter(dataCenterType: DataCenterType): List<ImageType> {
+        val deviceType = when (dataCenterType) {
+            DataCenterType.BC01 -> DeviceType.BC01
+            DataCenterType.BC02 -> DeviceType.BC02
+            DataCenterType.GY01 -> DeviceType.GY01
+        }
+        return getImageOrder(deviceType)
+    }
+
+    /**
+     * 데이터센터 이름으로 이미지 순서를 반환합니다.
+     */
+    fun getImageOrderForDataCenterName(dataCenterName: String): List<ImageType> {
+        val deviceType = DeviceType.fromDataCenterName(dataCenterName)
+        return getImageOrder(deviceType)
+    }
+
     /**
      * 설정을 초기화합니다. (테스트 또는 리셋 용도)
      */
