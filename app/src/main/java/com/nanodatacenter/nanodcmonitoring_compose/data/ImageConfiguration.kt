@@ -53,9 +53,10 @@ data class ImageConfiguration(
          * - NODE_INFO_AETHIR: node_info_aethir.png
          * - SWITCH_100G: switch_100g.png [클릭 불가]
          * - SYSTEMTOAI: systemtoai_none.png [90% 스케일]
-         * - AETHIR: aethir.jpg [90% 스케일]
+         * - AETHIR: aethir_none.png [90% 스케일]
          * - FILECOIN: filecoin_none.png [90% 스케일]
-         * - STORAGE 1~6: storage2.png (6개)
+         * - STORAGE 1~5: storage2.png (5개)
+         * - STORAGE2_NONE: storage2_none.png [클릭 불가]
          * - NODE_MINER: node_miner.jpg
          * - UPS_CONTROLLER: upscontroller.jpg [클릭 불가]
          * - LOGO_ZETACUBE: logo_zetacube.jpg [관리자 접근]
@@ -66,7 +67,7 @@ data class ImageConfiguration(
             ImageType.NODE_INFO_AETHIR,   // 3. 노드 정보 에테르
             ImageType.SWITCH_100G,        // 4. 100G 스위치 [클릭 불가]
             ImageType.SYSTEMTOAI,         // 5. 시스템투AI [90% 스케일]
-            ImageType.AETHIR,             // 6. 에테르 [90% 스케일]
+            ImageType.AETHIR,             // 6. 에테르 [90% 스케일] - aethir_none.png
             ImageType.FILECOIN,           // 7. 파일코인 [90% 스케일]
             ImageType.STORAGE_1,          // 8. 스토리지 1
             ImageType.STORAGE_2,          // 9. 스토리지 2
@@ -74,7 +75,7 @@ data class ImageConfiguration(
             ImageType.STORAGE_3,          // 11. 스토리지 3
             ImageType.STORAGE_4,          // 12. 스토리지 4
             ImageType.STORAGE_5,          // 13. 스토리지 5
-            ImageType.STORAGE_6,          // 14. 스토리지 6
+            ImageType.STORAGE2_NONE,      // 14. 스토리지 2 없음 - storage2_none.png
             ImageType.UPS_CONTROLLER,     // 15. UPS 컨트롤러 [클릭 불가]
             ImageType.LOGO_ZETACUBE       // 16. 제타큐브 로고 [관리자 접근]
         )

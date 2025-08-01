@@ -20,7 +20,7 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     SUPRA_NONE_3(R.drawable.supra_none, "Supra Inactive 3"),
     SYSTEMTOAI(R.drawable.systemtoai_none, "SystemToAI"),
     SYSTEMTOAI_NONE(R.drawable.systemtoai_none, "SystemToAI Inactive"),
-    AETHIR(R.drawable.aethir, "Aethir"),
+    AETHIR(R.drawable.aethir_none, "Aethir"),
     AETHIR_NONE(R.drawable.aethir_none, "Aethir Inactive"),
     FILECOIN(R.drawable.filecoin_none, "Filecoin"),
     FILECOIN_NONE_1(R.drawable.filecoin_none, "Filecoin Inactive 1"),
@@ -32,6 +32,7 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     STORAGE_4(R.drawable.storage2, "Storage 4"),
     STORAGE_5(R.drawable.storage2, "Storage 5"),
     STORAGE_6(R.drawable.storage2, "Storage 6"),
+    STORAGE2_NONE(R.drawable.storage2_none, "Storage 2 None"),
     UPS_CONTROLLER(R.drawable.upscontroller, "UPS Controller"),
     LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo");
 
@@ -56,6 +57,7 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
             AETHIR_NONE,
             FILECOIN_NONE_1,
             FILECOIN_NONE_2,
+            STORAGE2_NONE,
             SWITCH_100G,
             UPS_CONTROLLER
         )
