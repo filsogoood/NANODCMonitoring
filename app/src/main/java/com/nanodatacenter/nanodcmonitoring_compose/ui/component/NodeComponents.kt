@@ -59,6 +59,7 @@ fun NodeImageWithInfo(
     hardwareSpec: HardwareSpec?,
     score: Score?,
     nodeUsage: NodeUsage?,
+    nodeIndex: Int = 0, // 노드 인덱스 추가
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -92,7 +93,8 @@ fun NodeImageWithInfo(
                 node = node,
                 hardwareSpec = hardwareSpec,
                 score = score,
-                nodeUsage = nodeUsage
+                nodeUsage = nodeUsage,
+                nodeIndex = nodeIndex // 노드 인덱스 전달
             )
         }
     }
@@ -109,6 +111,7 @@ fun NodeInfoCard(
     score: Score?,
     nodeUsage: NodeUsage?,
     displayName: String? = null, // 커스텀 표시 이름
+    nodeIndex: Int = 0, // 노드 인덱스 (레이아웃 패턴 결정용)
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -130,9 +133,13 @@ fun NodeInfoCard(
             NodeHardwareSpecCard(hardwareSpec = hardwareSpec)
         }
         
-        // 사용률 카드
+        // 사용률 카드 (노드 인덱스와 이름 전달)
         if (nodeUsage != null) {
-            NodeUsageCard(nodeUsage = nodeUsage)
+            NodeUsageCard(
+                nodeUsage = nodeUsage,
+                nodeIndex = nodeIndex,
+                nodeName = node.nodeName
+            )
         }
     }
 }
@@ -251,6 +258,13 @@ private fun NodeHardwareSpecCard(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
+            // Text(
+            //     text = "Storage Information",
+            //     fontSize = 16.sp,
+            //     fontWeight = FontWeight.SemiBold,
+            //     color = Color(0xFF60A5FA),
+            //     modifier = Modifier.padding(bottom = 16.dp)
+            // )
             Text(
                 text = "Hardware Specifications",
                 fontSize = 16.sp,
@@ -270,6 +284,8 @@ private fun NodeHardwareSpecCard(
 @Composable
 private fun NodeUsageCard(
     nodeUsage: NodeUsage,
+    nodeIndex: Int = 0,
+    nodeName: String = "",
     modifier: Modifier = Modifier
 ) {
     // Repository에서 실제 데이터 갱신 시간 가져오기
@@ -281,6 +297,7 @@ private fun NodeUsageCard(
         "00:00:00"
     }
     
+    // Current Usage와 System Metrics를 하나의 카드로 통합
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -289,52 +306,54 @@ private fun NodeUsageCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(20.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
+            // 헤더 - Current Usage 제목과 시간 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 헤더와 시간 정보
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                Text(
+                    text = "Current Usage",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF60A5FA)
+                )
+                
+                Column(
+                    horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "Current Usage",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF60A5FA),
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        text = "Last Update: ${nodeUsage.timestamp}",
+                        fontSize = 10.sp,
+                        color = Color(0xFF9CA3AF)
                     )
-                    
-                    Column(
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Text(
-                            text = "Last Update: ${nodeUsage.timestamp}",
-                            fontSize = 10.sp,
-                            color = Color(0xFF9CA3AF)
-                        )
-                        Text(
-                            text = "Refreshed: $refreshTime",
-                            fontSize = 10.sp,
-                            color = Color(0xFF60A5FA)
-                        )
-                    }
+                    Text(
+                        text = "Refreshed: $refreshTime",
+                        fontSize = 10.sp,
+                        color = Color(0xFF60A5FA)
+                    )
                 }
-                
-                // 그래프 섹션
-                UsageGraphSection(nodeUsage = nodeUsage)
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 상세 정보 섹션
-                UsageSection(nodeUsage = nodeUsage)
             }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 확장된 그래프 섹션 (통합된 형태로 표시)
+            EnhancedUsageGraphSection(
+                nodeUsage = nodeUsage,
+                nodeIndex = nodeIndex,
+                nodeName = nodeName,
+                showTitle = false // 제목을 표시하지 않음 (이미 위에서 표시함)
+            )
         }
     }
+    
+    Spacer(modifier = Modifier.height(8.dp))
+    
+    // 추가 상세 정보 카드 (별도 카드로 유지) - Detail Information 주석처리
+    // AdditionalUsageInfoCard(nodeUsage = nodeUsage)
 }
 
 /**
@@ -733,148 +752,67 @@ private fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
         NodeInfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
         NodeInfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
         NodeInfoRow("RAM", "${hardwareSpec.totalRamGb}GB")
-        NodeInfoRow("Storage", "${hardwareSpec.storageType} ${hardwareSpec.storageTotalGb}GB")
+        // NodeInfoRow("Storage", "${hardwareSpec.storageType} ${hardwareSpec.storageTotalGb}GB") // Storage Information 제거
         NodeInfoRow("NVMe Count", hardwareSpec.nvmeCount)
     }
 }
 
 /**
- * 사용률 그래프 섹션 - CPU, Memory, GPU 사용률을 그래프로 표시
+ * 추가 사용률 정보 카드
+ * 텍스트 형태로 상세 정보 표시
  */
 @Composable
-private fun UsageGraphSection(nodeUsage: NodeUsage) {
-    val usageData = listOf(
-        UsageGraphData(
-            name = "CPU",
-            percentage = nodeUsage.cpuUsagePercent.toFloatOrNull() ?: 0f,
-            color = UsageMetrics.CPU_COLOR
-        ),
-        UsageGraphData(
-            name = "Memory",
-            percentage = nodeUsage.memUsagePercent.toFloatOrNull() ?: 0f,
-            color = UsageMetrics.MEMORY_COLOR
-        ),
-        UsageGraphData(
-            name = "GPU",
-            percentage = nodeUsage.gpuUsagePercent?.toFloatOrNull() ?: 0f,
-            color = UsageMetrics.GPU_COLOR
-        ),
-        UsageGraphData(
-            name = "Storage",
-            percentage = nodeUsage.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
-            color = UsageMetrics.STORAGE_COLOR
-        )
-    )
-    
-    Column {
-        // 그래프 그리드
-        usageData.chunked(2).forEach { rowData ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowData.forEach { data ->
-                    UsageGraph(
-                        data = data,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // 홀수 개일 경우 빈 공간 채우기
-                if (rowData.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-    }
-}
-
-/**
- * 개별 사용률 그래프 컴포넌트
- */
-@Composable
-private fun UsageGraph(
-    data: UsageGraphData,
+private fun AdditionalUsageInfoCard(
+    nodeUsage: NodeUsage,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        // 그래프 제목
-        Text(
-            text = data.name,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF9CA3AF),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        // 원형 진행률 그래프
-        Box(
-            modifier = Modifier.size(80.dp),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.padding(20.dp)
         ) {
-            Canvas(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                val strokeWidth = 8.dp.toPx()
-                val radius = (size.minDimension - strokeWidth) / 2
-                val center = Offset(size.width / 2, size.height / 2)
-                
-                // 배경 원
-                drawCircle(
-                    color = Color(0xFF374151),
-                    radius = radius,
-                    center = center,
-                    style = Stroke(width = strokeWidth)
-                )
-                
-                // 진행률 호
-                val sweepAngle = (data.percentage / 100f) * 360f
-                drawArc(
-                    color = data.color,
-                    startAngle = -90f,
-                    sweepAngle = sweepAngle,
-                    useCenter = false,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                    topLeft = Offset(
-                        center.x - radius,
-                        center.y - radius
-                    ),
-                    size = androidx.compose.ui.geometry.Size(
-                        radius * 2,
-                        radius * 2
-                    )
-                )
-            }
-            
-            // 퍼센트 텍스트
             Text(
-                text = "${data.percentage.toInt()}%",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                text = "Detailed Information",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF60A5FA),
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+            
+            // 상세 정보 섹션
+            Column {
+                NodeInfoRow("CPU Usage", "${nodeUsage.cpuUsagePercent}%")
+                NodeInfoRow("Memory Usage", "${nodeUsage.memUsagePercent}%")
+                
+                if (!nodeUsage.gpuUsagePercent.isNullOrEmpty()) {
+                    NodeInfoRow("GPU Usage", "${nodeUsage.gpuUsagePercent}%")
+                    NodeInfoRow("GPU Temperature", "${nodeUsage.gpuTemp}°C")
+                    NodeInfoRow("GPU VRAM", "${nodeUsage.gpuVramPercent}%")
+                }
+                
+                nodeUsage.cpuTemp?.let { temp ->
+                    NodeInfoRow("CPU Temperature", "${temp}°C")
+                }
+                
+                NodeInfoRow("Storage Used", "${nodeUsage.usedStorageGb}GB")
+                nodeUsage.harddiskUsedPercent?.let { percent ->
+                    NodeInfoRow("Storage Usage", "${percent}%")
+                }
+                nodeUsage.ssdHealthPercent?.let { health ->
+                    NodeInfoRow("SSD Health", "${health}%")
+                }
+            }
         }
     }
 }
 
-/**
- * 사용률 섹션 - 현재 사용률 정보 표시 (Last Update 제거)
- */
-@Composable
-private fun UsageSection(nodeUsage: NodeUsage) {
-    Column {
-        if (!nodeUsage.gpuUsagePercent.isNullOrEmpty()) {
-            NodeInfoRow("GPU Temperature", "${nodeUsage.gpuTemp}°C")
-            NodeInfoRow("GPU VRAM", "${nodeUsage.gpuVramPercent}%")
-        }
-        
-        NodeInfoRow("Storage Used", "${nodeUsage.usedStorageGb}GB")
-        NodeInfoRow("SSD Health", "${nodeUsage.ssdHealthPercent}%")
-    }
-}
+
 
 /**
  * 노드 정보 행을 표시하는 재사용 가능한 컴포넌트
@@ -951,7 +889,8 @@ fun NodeBasedMonitoringScreen(
                 contentPadding = PaddingValues(0.dp)
             ) {
                 // 노드별로 이미지와 정보 표시
-                items(response.nodes) { node ->
+                items(response.nodes.size) { index ->
+                    val node = response.nodes[index]
                     val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
                     val score = response.scores.find { it.nodeId == node.nodeId }
                     val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
@@ -961,6 +900,7 @@ fun NodeBasedMonitoringScreen(
                         hardwareSpec = hardwareSpec,
                         score = score,
                         nodeUsage = nodeUsage,
+                        nodeIndex = index, // 노드 인덱스 전달
                         modifier = Modifier.fillParentMaxWidth()
                     )
                 }

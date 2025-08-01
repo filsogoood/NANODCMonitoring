@@ -1,0 +1,824 @@
+package com.nanodatacenter.nanodcmonitoring_compose.ui.component
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage
+
+/**
+ * 확장된 사용률 그래프 섹션
+ * 다양한 레이아웃 패턴으로 그래프를 표시합니다.
+ */
+@Composable
+fun EnhancedUsageGraphSection(
+    nodeUsage: NodeUsage,
+    nodeIndex: Int,
+    nodeName: String,
+    showTitle: Boolean = true, // 제목 표시 여부
+    modifier: Modifier = Modifier
+) {
+    val extendedData = nodeUsage.toExtendedUsageData()
+    val layoutPattern = getLayoutPatternForNode(nodeIndex, nodeName)
+    
+    // Card 제거하여 중첩 방지 (상위에서 이미 Card 사용)
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        // 헤더 (조건부 표시)
+        if (showTitle) {
+            Text(
+                text = "System Metrics",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = UsageMetrics.TEXT_ACCENT,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+        
+        // 레이아웃 패턴에 따른 그래프 렌더링
+        when (layoutPattern) {
+            GraphLayoutPattern.GRID_2X2 -> Grid2x2Layout(extendedData)
+            GraphLayoutPattern.VERTICAL_BARS -> VerticalBarsLayout(extendedData)
+            GraphLayoutPattern.HORIZONTAL_BARS -> HorizontalBarsLayout(extendedData)
+            GraphLayoutPattern.MIXED_LAYOUT -> MixedLayout(extendedData)
+            GraphLayoutPattern.DASHBOARD -> DashboardLayout(extendedData)
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+/**
+ * 2x2 그리드 레이아웃
+ */
+@Composable
+private fun Grid2x2Layout(data: ExtendedUsageData) {
+    // NULL 값만 필터링 (0%는 표시, Storage 제외)
+    val mainMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
+        if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage else null
+    )
+    
+    // Storage 메트릭 분리
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // 메인 메트릭 그리드 (2개씩 배치)
+        if (mainMetrics.isNotEmpty()) {
+            mainMetrics.chunked(2).forEach { rowData ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    rowData.forEach { metricData ->
+                        when (metricData.type) {
+                            GraphType.CIRCULAR -> CircularProgressGraph(
+                                data = metricData,
+                                modifier = Modifier.weight(1f)
+                            )
+                            GraphType.BAR -> VerticalBarGraph(
+                                data = metricData,
+                                modifier = Modifier.weight(1f)
+                            )
+                            else -> CircularProgressGraph(
+                                data = metricData,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    // 홀수 개일 경우 빈 공간 채우기
+                    if (rowData.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        
+        // 추가 메트릭 (온도, SSD Health) - NULL 값 필터링 적용
+        AdditionalMetricsRow(data)
+        
+        // Storage 항목을 하단에 가로 바 그래프로 표시
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Storage Information",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            storageMetrics.forEach { storageMetric ->
+                HorizontalBarGraph(
+                    data = storageMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 세로 바 그래프 레이아웃
+ */
+@Composable
+private fun VerticalBarsLayout(data: ExtendedUsageData) {
+    // NULL 값만 필터링하여 제외 (0%는 표시)
+    val validVerticalMetrics = listOfNotNull(
+        // CPU Usage는 항상 표시 (기본 메트릭)
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage.copy(type = GraphType.BAR) else null,
+        // Memory Usage는 항상 표시 (기본 메트릭)  
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage.copy(type = GraphType.BAR) else null,
+        // GPU Usage는 값이 유효할 때만 표시
+        if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage.copy(type = GraphType.BAR) else null,
+        // CPU 온도는 값이 유효할 때만 표시
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // GPU 온도는 값이 유효할 때만 표시
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
+        // SSD Health는 값이 유효할 때만 표시
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
+        // GPU VRAM은 값이 유효할 때만 표시
+        if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram.copy(type = GraphType.BAR) else null
+    ).filter { it != null } // null이 아닌 값만 필터링
+    
+    // Storage 메트릭은 별도로 분리 (가로 바 그래프용)
+    val storageMetrics = listOfNotNull(
+        // Storage Usage는 값이 유효할 때만 표시
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 세로 바 그래프들 (Storage 제외)
+        if (validVerticalMetrics.isNotEmpty()) {
+            validVerticalMetrics.chunked(4).forEach { rowMetrics ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    rowMetrics.forEach { metricData ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            VerticalBarGraph(
+                                data = metricData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                    // 4개보다 적은 경우 남은 공간 채우기
+                    repeat(4 - rowMetrics.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        
+        // Storage 항목을 하단에 가로 바 그래프로 표시
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+//            Text(
+//                text = "Storage Information2",
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium,
+//                color = UsageMetrics.TEXT_SECONDARY,
+//                modifier = Modifier.padding(vertical = 8.dp)
+//            )
+            
+            storageMetrics.forEach { storageMetric ->
+                HorizontalBarGraph(
+                    data = storageMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 가로 바 그래프 레이아웃
+ */
+@Composable
+private fun HorizontalBarsLayout(data: ExtendedUsageData) {
+    // NULL 값만 필터링 (0%는 표시, Storage 제외)
+    val validMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
+        if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage else null,
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
+        if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
+    )
+    
+    // Storage 메트릭 분리
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // 일반 메트릭들
+        validMetrics.forEach { metricData ->
+            HorizontalBarGraph(
+                data = metricData,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        
+        // Storage 항목을 하단에 분리 표시
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            storageMetrics.forEach { storageMetric ->
+                HorizontalBarGraph(
+                    data = storageMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 혼합 레이아웃 (원형 + 바)
+ */
+@Composable
+private fun MixedLayout(data: ExtendedUsageData) {
+    // 상단 원형 그래프용 메트릭 필터링 (NULL만 제외)
+    val circularMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
+        if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
+    )
+    
+    // 중단 바 그래프용 메트릭 필터링 (NULL만 제외, Storage 제외)
+    val barMetrics = listOfNotNull(
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null
+    )
+    
+    // Storage 메트릭 분리
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // 상단: 원형 그래프들
+        if (circularMetrics.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                circularMetrics.forEach { metricData ->
+                    CircularProgressGraph(
+                        data = metricData,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // 빈 공간 채우기
+                repeat(3 - circularMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // 중단: 바 그래프들 (온도, SSD Health)
+        barMetrics.forEach { metricData ->
+            HorizontalBarGraph(
+                data = metricData,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        
+        // Storage 항목을 하단에 분리 표시
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+//            Text(
+//                text = "Storage Information",
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium,
+//                color = UsageMetrics.TEXT_SECONDARY,
+//                modifier = Modifier.padding(vertical = 8.dp)
+//            )
+//
+            storageMetrics.forEach { storageMetric ->
+                HorizontalBarGraph(
+                    data = storageMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 대시보드 레이아웃
+ */
+@Composable
+private fun DashboardLayout(data: ExtendedUsageData) {
+    // 상단 주요 메트릭 필터링 (NULL만 제외)
+    val mainMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null
+    )
+    
+    // 온도 게이지 메트릭 필터링 (NULL만 제외)
+    val tempMetrics = listOfNotNull(
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
+    )
+    
+    // Health 메트릭 필터링 (NULL만 제외)
+    val healthMetrics = listOfNotNull(
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null
+    )
+    
+    // Storage 메트릭 분리
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // 상단: 주요 메트릭을 큰 원형 그래프로
+        if (mainMetrics.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                mainMetrics.forEach { metricData ->
+                    LargeCircularProgressGraph(
+                        data = metricData,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // 빈 공간 채우기
+                repeat(2 - mainMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // 중단: 온도 게이지들
+        if (tempMetrics.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                tempMetrics.forEach { tempData ->
+                    GaugeGraph(
+                        data = tempData,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // 빈 공간 채우기
+                repeat(2 - tempMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // Health 메트릭 표시
+        healthMetrics.forEach { healthMetric ->
+            HorizontalBarGraph(
+                data = healthMetric,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        
+        // Storage 항목을 하단에 분리 표시
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Storage Information",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            storageMetrics.forEach { storageMetric ->
+                HorizontalBarGraph(
+                    data = storageMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 추가 메트릭 행 (온도, SSD Health 등)
+ */
+@Composable
+private fun AdditionalMetricsRow(data: ExtendedUsageData) {
+    // NULL 값만 필터링 (0%는 표시)
+    val additionalMetrics = listOfNotNull(
+        // CPU 온도는 값이 유효할 때만 표시
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // GPU 온도는 값이 유효할 때만 표시
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
+        // SSD Health는 값이 유효할 때만 표시
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
+        // GPU VRAM은 값이 유효할 때만 표시
+        if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
+    )
+    
+    if (additionalMetrics.isNotEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "Additional Metrics",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            additionalMetrics.chunked(2).forEach { rowData ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    rowData.forEach { metricData ->
+                        when (metricData.type) {
+                            GraphType.BAR -> HorizontalBarGraph(
+                                data = metricData,
+                                modifier = Modifier.weight(1f),
+                                compact = true
+                            )
+                            else -> CircularProgressGraph(
+                                data = metricData,
+                                modifier = Modifier.weight(1f),
+                                size = 60.dp
+                            )
+                        }
+                    }
+                    // 홀수 개일 경우 빈 공간 채우기
+                    if (rowData.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 원형 진행률 그래프 컴포넌트
+ */
+@Composable
+fun CircularProgressGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 80.dp
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = data.percentage / 100f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "progress"
+    )
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 그래프 제목
+        Text(
+            text = data.name,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = UsageMetrics.TEXT_SECONDARY,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // 원형 진행률 그래프
+        Box(
+            modifier = Modifier.size(size),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val strokeWidth = 6.dp.toPx()
+                val radius = (this.size.minDimension - strokeWidth) / 2
+                val center = Offset(this.size.width / 2, this.size.height / 2)
+                
+                // 배경 원
+                drawCircle(
+                    color = UsageMetrics.BACKGROUND_DARK,
+                    radius = radius,
+                    center = center,
+                    style = Stroke(width = strokeWidth)
+                )
+                
+                // 진행률 호
+                val sweepAngle = animatedProgress * 360f
+                drawArc(
+                    color = data.color,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    topLeft = Offset(
+                        center.x - radius,
+                        center.y - radius
+                    ),
+                    size = Size(radius * 2, radius * 2)
+                )
+            }
+            
+            // 퍼센트 텍스트
+            Text(
+                text = if (data.value.isNotEmpty()) data.value else "${data.percentage.toInt()}%",
+                fontSize = if (size > 70.dp) 12.sp else 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = UsageMetrics.TEXT_PRIMARY,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * 큰 원형 진행률 그래프 (대시보드용)
+ */
+@Composable
+fun LargeCircularProgressGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier
+) {
+    CircularProgressGraph(
+        data = data,
+        modifier = modifier,
+        size = 120.dp
+    )
+}
+
+/**
+ * 세로 바 그래프 컴포넌트
+ */
+@Composable
+fun VerticalBarGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier,
+    height: androidx.compose.ui.unit.Dp = 80.dp
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = data.percentage / 100f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "progress"
+    )
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 그래프 제목 - 높이 고정으로 일관성 유지
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(28.dp), // 고정 높이로 일관성 유지
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = data.name,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
+        }
+        
+        // 값 표시 - 높이 고정으로 일관성 유지
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp), // 고정 높이로 일관성 유지
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (data.value.isNotEmpty()) data.value else "${data.percentage.toInt()}%",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = UsageMetrics.TEXT_PRIMARY,
+                textAlign = TextAlign.Center
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // 바 그래프 - 중앙에 정확히 위치
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(28.dp) // 약간 더 넓게 하여 시각적 안정성 증대
+                    .height(height)
+                    .clip(RoundedCornerShape(6.dp)) // 더 둥근 모서리
+                    .background(UsageMetrics.BACKGROUND_DARK),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(animatedProgress)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(data.color)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 가로 바 그래프 컴포넌트
+ */
+@Composable
+fun HorizontalBarGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = data.percentage / 100f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "progress"
+    )
+    
+    val barHeight = if (compact) 16.dp else 20.dp
+    val fontSize = if (compact) 10.sp else 12.sp
+    
+    Column(
+        modifier = modifier
+    ) {
+        // 헤더 (이름과 값)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = data.name,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY
+            )
+            Text(
+                text = if (data.value.isNotEmpty()) data.value else "${data.percentage.toInt()}%",
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold,
+                color = data.color
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        // 바 그래프
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(barHeight)
+                .clip(RoundedCornerShape(barHeight / 2))
+                .background(UsageMetrics.BACKGROUND_DARK)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedProgress)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(barHeight / 2))
+                    .background(data.color)
+            )
+        }
+    }
+}
+
+/**
+ * 게이지 그래프 컴포넌트 (온도용)
+ */
+@Composable
+fun GaugeGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = data.percentage / 100f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "progress"
+    )
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 그래프 제목
+        Text(
+            text = data.name,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = UsageMetrics.TEXT_SECONDARY,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // 게이지 그래프
+        Box(
+            modifier = Modifier.size(80.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                drawGauge(this, animatedProgress, data.color)
+            }
+            
+            // 중앙 값 표시
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = data.value,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UsageMetrics.TEXT_PRIMARY,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 게이지 그리기 함수
+ */
+private fun drawGauge(
+    drawScope: DrawScope,
+    progress: Float,
+    color: Color
+) {
+    with(drawScope) {
+        val strokeWidth = 8.dp.toPx()
+        val radius = (size.minDimension - strokeWidth) / 2f
+        val center = Offset(size.width / 2f, size.height / 2f)
+        
+        // 배경 호 (반원)
+        drawArc(
+            color = UsageMetrics.BACKGROUND_DARK,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2f, radius * 2f)
+        )
+        
+        // 진행률 호 (반원)
+        val sweepAngle = progress * 180f
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2f, radius * 2f)
+        )
+    }
+}
+
+

@@ -21,6 +21,9 @@ data class NodeUsage(
     @SerializedName("mem_usage_percent")
     val memUsagePercent: String,
     
+    @SerializedName("cpu_temp")
+    val cpuTemp: String?,
+    
     @SerializedName("gpu_usage_percent")
     val gpuUsagePercent: String,
     
