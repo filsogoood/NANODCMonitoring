@@ -2231,18 +2231,16 @@ private fun AethirIncomeItemInfoCard(
 private fun AethirVestingProgressBar(
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // 왼쪽: 도넛형 차트
+    Column(modifier = modifier.fillMaxWidth()) {
+        // 도넛형 차트를 중앙에 배치
         Box(
-            modifier = Modifier.size(200.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
             contentAlignment = Alignment.Center
         ) {
             Canvas(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.size(200.dp)
             ) {
                 val center = Offset(size.width / 2, size.height / 2)
                 val outerRadius = size.minDimension / 2 * 0.8f
@@ -2308,27 +2306,15 @@ private fun AethirVestingProgressBar(
                     size = androidx.compose.ui.geometry.Size(outerRadius * 2, outerRadius * 2)
                 )
             }
-            
-            // 중앙 텍스트
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Wallet",
-                    fontSize = 14.sp,
-                    color = Color(0xFF9CA3AF)
-                )
-                Text(
-                    text = "Balance",
-                    fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF)
-                )
-            }
         }
         
-        // 오른쪽: 범례 (Other 제거됨)
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 그래프 아래: 범례 텍스트들 (한 줄로 배치)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AethirDonutLegendItem("Vesting Claim", "88173.20 ATH", Color(0xFF10B981))
             AethirDonutLegendItem("Claimable", "15869.76 ATH", Color(0xFFFBBF24))
