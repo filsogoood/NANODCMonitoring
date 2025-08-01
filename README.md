@@ -68,8 +68,8 @@ NANO DC Monitoring Compose는 안드로이드 Jetpack Compose를 사용하여 �
 8. **supra_none** (3개) - 수프라 없음
 9. **systemtoai** - 시스템투AI
 10. **systemtoai_none** - 시스템투AI 없음
-11. **aethir** - 에테르
-12. **aethir_none** - 에테르 없음
+11. **aethir** - 에이서
+12. **aethir_none**  에이서 없음
 13. **filecoin** - 파일코인
 14. **filecoin_none** (2개) - 파일코인 없음
 15. **not_storage** - 스토리지 없음

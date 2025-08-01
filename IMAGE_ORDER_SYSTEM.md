@@ -41,8 +41,8 @@ app/src/main/java/com/nanodatacenter/nanodcmonitoring_compose/
 8. `supra_none` - 수프라 없음 (3개)
 9. `deepseek` - 딥시크
 10. `deepseek_none` - 딥시크 없음
-11. `aethir` - 에테르
-12. `aethir_none` - 에테르 없음
+11. `aethir` - 에이서
+12. `aethir_none` - 에이서 없음
 13. `filecoin` - 파일코인
 14. `filecoin_none` - 파일코인 없음 (2개)
 15. `not_storage` - 스토리지 없음
