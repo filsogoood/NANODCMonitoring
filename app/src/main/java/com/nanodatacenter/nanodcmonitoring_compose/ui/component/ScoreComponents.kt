@@ -286,9 +286,9 @@ private fun extractMetrics(score: Score?): List<MetricData> {
 }
 
 /**
- * 메트릭 데이터 클래스 (내부 모듈에서 공유 가능)
+ * 메트릭 데이터 클래스 (모듈 간 공유 가능)
  */
-internal data class MetricData(
+data class MetricData(
     val name: String,
     val value: Float,
     val color: Color

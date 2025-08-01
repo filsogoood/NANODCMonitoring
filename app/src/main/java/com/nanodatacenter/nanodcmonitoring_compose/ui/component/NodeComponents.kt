@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -38,7 +39,12 @@ import com.nanodatacenter.nanodcmonitoring_compose.data.ImageType
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.*
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.ui.component.MetricData
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.UsageGraphData
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.UsageMetrics
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -266,6 +272,15 @@ private fun NodeUsageCard(
     nodeUsage: NodeUsage,
     modifier: Modifier = Modifier
 ) {
+    // Repository에서 실제 데이터 갱신 시간 가져오기
+    val repository = remember { NanoDcRepository.getInstance() }
+    val lastRefreshTime by repository.lastRefreshTime.collectAsState()
+    val refreshTime = if (lastRefreshTime > 0) {
+        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(lastRefreshTime))
+    } else {
+        "00:00:00"
+    }
+    
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -274,18 +289,50 @@ private fun NodeUsageCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Current Usage",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF60A5FA),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            UsageSection(nodeUsage = nodeUsage)
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                // 헤더와 시간 정보
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "Current Usage",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF60A5FA),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = "Last Update: ${nodeUsage.timestamp}",
+                            fontSize = 10.sp,
+                            color = Color(0xFF9CA3AF)
+                        )
+                        Text(
+                            text = "Refreshed: $refreshTime",
+                            fontSize = 10.sp,
+                            color = Color(0xFF60A5FA)
+                        )
+                    }
+                }
+                
+                // 그래프 섹션
+                UsageGraphSection(nodeUsage = nodeUsage)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 상세 정보 섹션
+                UsageSection(nodeUsage = nodeUsage)
+            }
         }
     }
 }
@@ -692,23 +739,140 @@ private fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
 }
 
 /**
- * 사용률 섹션 - 현재 사용률 정보 표시
+ * 사용률 그래프 섹션 - CPU, Memory, GPU 사용률을 그래프로 표시
+ */
+@Composable
+private fun UsageGraphSection(nodeUsage: NodeUsage) {
+    val usageData = listOf(
+        UsageGraphData(
+            name = "CPU",
+            percentage = nodeUsage.cpuUsagePercent.toFloatOrNull() ?: 0f,
+            color = UsageMetrics.CPU_COLOR
+        ),
+        UsageGraphData(
+            name = "Memory",
+            percentage = nodeUsage.memUsagePercent.toFloatOrNull() ?: 0f,
+            color = UsageMetrics.MEMORY_COLOR
+        ),
+        UsageGraphData(
+            name = "GPU",
+            percentage = nodeUsage.gpuUsagePercent?.toFloatOrNull() ?: 0f,
+            color = UsageMetrics.GPU_COLOR
+        ),
+        UsageGraphData(
+            name = "Storage",
+            percentage = nodeUsage.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
+            color = UsageMetrics.STORAGE_COLOR
+        )
+    )
+    
+    Column {
+        // 그래프 그리드
+        usageData.chunked(2).forEach { rowData ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                rowData.forEach { data ->
+                    UsageGraph(
+                        data = data,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // 홀수 개일 경우 빈 공간 채우기
+                if (rowData.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
+
+/**
+ * 개별 사용률 그래프 컴포넌트
+ */
+@Composable
+private fun UsageGraph(
+    data: UsageGraphData,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 그래프 제목
+        Text(
+            text = data.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF9CA3AF),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // 원형 진행률 그래프
+        Box(
+            modifier = Modifier.size(80.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val strokeWidth = 8.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2
+                val center = Offset(size.width / 2, size.height / 2)
+                
+                // 배경 원
+                drawCircle(
+                    color = Color(0xFF374151),
+                    radius = radius,
+                    center = center,
+                    style = Stroke(width = strokeWidth)
+                )
+                
+                // 진행률 호
+                val sweepAngle = (data.percentage / 100f) * 360f
+                drawArc(
+                    color = data.color,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    topLeft = Offset(
+                        center.x - radius,
+                        center.y - radius
+                    ),
+                    size = androidx.compose.ui.geometry.Size(
+                        radius * 2,
+                        radius * 2
+                    )
+                )
+            }
+            
+            // 퍼센트 텍스트
+            Text(
+                text = "${data.percentage.toInt()}%",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+/**
+ * 사용률 섹션 - 현재 사용률 정보 표시 (Last Update 제거)
  */
 @Composable
 private fun UsageSection(nodeUsage: NodeUsage) {
     Column {
-        NodeInfoRow("CPU Usage", "${nodeUsage.cpuUsagePercent}%")
-        NodeInfoRow("Memory Usage", "${nodeUsage.memUsagePercent}%")
-        
         if (!nodeUsage.gpuUsagePercent.isNullOrEmpty()) {
-            NodeInfoRow("GPU Usage", "${nodeUsage.gpuUsagePercent}%")
             NodeInfoRow("GPU Temperature", "${nodeUsage.gpuTemp}°C")
             NodeInfoRow("GPU VRAM", "${nodeUsage.gpuVramPercent}%")
         }
         
         NodeInfoRow("Storage Used", "${nodeUsage.usedStorageGb}GB")
         NodeInfoRow("SSD Health", "${nodeUsage.ssdHealthPercent}%")
-        NodeInfoRow("Last Update", nodeUsage.timestamp)
     }
 }
 
