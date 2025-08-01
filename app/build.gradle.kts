@@ -6,16 +6,21 @@ plugins {
 
 android {
     namespace = "com.nanodatacenter.nanodcmonitoring_compose"
-    compileSdk = 36
+    compileSdk = 34  // Android 7.1.1 호환성을 위해 안정적인 버전 사용
 
     defaultConfig {
         applicationId = "com.nanodatacenter.nanodcmonitoring_compose"
-        minSdk = 27
-        targetSdk = 36
+        minSdk = 25  // Android 7.1.1 호환성 지원
+        targetSdk = 34  // 안정성을 위해 34로 설정
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // 벡터 드로어블 호환성 설정
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -36,6 +41,9 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"  // Kotlin 2.0.21 호환 버전
     }
 }
 
