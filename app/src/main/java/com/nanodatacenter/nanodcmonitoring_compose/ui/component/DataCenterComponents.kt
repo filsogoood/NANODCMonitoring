@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,9 +16,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -1871,47 +1876,70 @@ private fun AethirWalletBalanceCard() {
  */
 @Composable
 private fun AethirStakingInfoCard() {
-    Card(
+    // 스테이킹 정보 - 가로 배치 및 강조 표시
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF0F172A),
+        border = BorderStroke(1.dp, Color(0xFFFBBF24).copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            // 헤더
-            Text(
-                text = "STAKING INFO",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // 스테이킹 정보들만 (3개 박스)
+            // 스테이킹 정보 헤더 - 개선된 디자인
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                AethirTokenInfoCard(
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(24.dp)
+                        .background(
+                            Color(0xFFFBBF24),
+                            RoundedCornerShape(2.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "STAKING INFO",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFBBF24)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Icon(
+                    Icons.Default.Savings,
+                    contentDescription = "Staking",
+                    tint = Color(0xFFFBBF24),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 스테이킹 데이터 세로 배치 - 개선된 레이아웃
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AethirStakingTokenCard(
                     title = "STAKED",
                     amount = "209542.8",
-                    modifier = Modifier.weight(1f)
+                    color = Color(0xFF10B981),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                AethirTokenInfoCard(
+                AethirStakingTokenCard(
                     title = "UNSTAKING",
                     amount = "224115.8",
-                    modifier = Modifier.weight(1f)
+                    color = Color(0xFFF59E0B),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                AethirTokenInfoCard(
+                AethirStakingTokenCard(
                     title = "UNSTAKED",
                     amount = "0.0000",
-                    modifier = Modifier.weight(1f)
+                    color = Color(0xFF6B7280),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -2459,5 +2487,65 @@ private fun AethirDonutLegendItem(
             color = Color.White,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+/**
+ * Aethir 스테이킹 정보를 표시하는 개별 카드 (확장된 버전)
+ */
+@Composable
+private fun AethirStakingTokenCard(
+    title: String,
+    amount: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF111827),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 스테이킹 상태 아이콘
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(color, RoundedCornerShape(5.dp))
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 제목
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            // 금액
+            Text(
+                text = amount,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            
+            // ATH 단위
+            Text(
+                text = "ATH",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = color,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }

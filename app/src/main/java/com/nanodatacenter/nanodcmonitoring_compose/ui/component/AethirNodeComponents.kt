@@ -317,28 +317,75 @@ private fun AethirWalletCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 스테이킹 정보
-            Row(
+            // 스테이킹 정보 - 가로 배치 및 강조 표시
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF0F172A),
+                border = BorderStroke(1.dp, Color(0xFFFBBF24).copy(alpha = 0.3f))
             ) {
-                AethirTokenCard(
-                    title = "STAKED",
-                    amount = walletInfo.staked,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AethirTokenCard(
-                    title = "UNSTAKING",
-                    amount = walletInfo.unstaking,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AethirTokenCard(
-                    title = "UNSTAKED",
-                    amount = walletInfo.unstaked,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    // 스테이킹 정보 헤더
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(20.dp)
+                                .background(
+                                    Color(0xFFFBBF24),
+                                    RoundedCornerShape(2.dp)
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "STAKING INFO",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFBBF24)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.Savings,
+                            contentDescription = "Staking",
+                            tint = Color(0xFFFBBF24),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // 스테이킹 데이터 가로 배치
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        AethirStakingCard(
+                            title = "STAKED",
+                            amount = walletInfo.staked,
+                            color = Color(0xFF10B981),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        AethirStakingCard(
+                            title = "UNSTAKING",
+                            amount = walletInfo.unstaking,
+                            color = Color(0xFFF59E0B),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        AethirStakingCard(
+                            title = "UNSTAKED",
+                            amount = walletInfo.unstaked,
+                            color = Color(0xFF6B7280),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -570,6 +617,66 @@ private fun AethirIncomeCard(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Aethir 스테이킹 정보를 표시하는 개별 카드 (확장된 버전)
+ */
+@Composable
+private fun AethirStakingCard(
+    title: String,
+    amount: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF111827),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 스테이킹 상태 아이콘
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(color, RoundedCornerShape(4.dp))
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // 제목
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // 금액
+            Text(
+                text = "$amount",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // ATH 단위
+            Text(
+                text = "ATH",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = color,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
