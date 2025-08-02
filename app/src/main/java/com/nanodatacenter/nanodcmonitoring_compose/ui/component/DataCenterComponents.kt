@@ -354,21 +354,21 @@ fun ClickableImageItem(
                                         val displayName = when {
                                             // BC01 데이터센터의 경우 실제 노드 이름 반영
                                             isBC01 -> when (imageType) {
-                                                ImageType.STORAGE_1 -> "BC01 Storage 1 (NAS5)"
-                                                ImageType.STORAGE_2 -> "BC01 Storage 2 (NAS3+NAS4)"
-                                                ImageType.STORAGE_3 -> "BC01 Storage 3 (NAS2)"
-                                                ImageType.STORAGE_4 -> "BC01 Storage 4 (NAS1)"
-                                                ImageType.STORAGE_5 -> "BC01 Storage 5 (SAI Server)"
+                                                ImageType.STORAGE_1 -> "BC01 Storage 1"
+                                                ImageType.STORAGE_2 -> "BC01 Storage 2"
+                                                ImageType.STORAGE_3 -> "BC01 Storage 3"
+                                                ImageType.STORAGE_4 -> "BC01 Storage 4"
+                                                ImageType.STORAGE_5 -> "BC01 Storage 5"
                                                 ImageType.STORAGE_6 -> "BC01 Storage 6"
                                                 else -> "BC01 Storage"
                                             }
                                             // BC02 데이터센터의 경우 각 STORAGE_1을 다른 NAS로 표시
                                             isBC02 -> when (imageIndex) {
-                                                9 -> "BC02 NAS1 (STORAGE_1)"
-                                                10 -> "BC02 NAS2 (STORAGE_1)"
-                                                11 -> "BC02 NAS3 (STORAGE_1)"
-                                                12 -> "BC02 NAS4 (STORAGE_1)"
-                                                13 -> "BC02 NAS5 (STORAGE_1)"
+                                                9 -> "BC02 NAS1"
+                                                10 -> "BC02 NAS2"
+                                                11 -> "BC02 NAS3"
+                                                12 -> "BC02 NAS4"
+                                                13 -> "BC02 NAS5"
                                                 else -> "BC02 Storage"
                                             }
                                             // 다른 데이터센터는 기존 방식
@@ -399,7 +399,7 @@ fun ClickableImageItem(
                                                 score = score,
                                                 nodeUsage = nodeUsage,
                                                 displayName = displayName,
-                                                showNameCard = !isBC02 // BC02의 경우 이름 카드 숨김
+                                                showNameCard = true // 이름 카드 표시
                                             )
                                         } else {
                                             android.util.Log.d("DataCenterComponents", "   Using FilecoinDiskUsageCard for other centers")
@@ -420,9 +420,9 @@ fun ClickableImageItem(
                                         // BC02의 경우 LONOVO_POST 이미지별로 다른 표시 이름 사용
                                         val displayName = if (isBC02) {
                                             when (imageIndex) {
-                                                4 -> "BC02 Filecoin Miner (1번 lonovopost)"
-                                                5 -> "BC02 3080Ti GPU Worker (2번 lonovopost)"
-                                                6 -> "BC02 Post Worker (3번 lonovopost)"
+                                                4 -> "BC02 Filecoin Miner"
+                                                5 -> "BC02 3080Ti GPU Worker"
+                                                6 -> "BC02 Post Worker"
                                                 else -> "BC02 Post Worker"
                                             }
                                         } else {
@@ -435,7 +435,7 @@ fun ClickableImageItem(
                                             score = score,
                                             nodeUsage = nodeUsage,
                                             displayName = displayName,
-                                            showNameCard = !isBC02 // BC02의 경우 이름 카드 숨김
+                                            showNameCard = true // 이름 카드 표시
                                         )
                                     }
                                     ImageType.NODE_MINER -> {
@@ -454,7 +454,7 @@ fun ClickableImageItem(
                                                 isBC02 -> "BC02 Filecoin Miner"
                                                 else -> "GY01 NODE MINER"
                                             },
-                                            showNameCard = !isBC02 // BC02의 경우 이름 카드 숨김
+                                            showNameCard = true // 이름 카드 표시
                                         )
                                     }
                                     else -> {
@@ -475,7 +475,7 @@ fun ClickableImageItem(
                                             score = score,
                                             nodeUsage = nodeUsage,
                                             displayName = displayName,
-                                            showNameCard = !isBC02 // BC02의 경우 이름 카드 숨김
+                                            showNameCard = true // 이름 카드 표시
                                         )
                                     }
                                 }

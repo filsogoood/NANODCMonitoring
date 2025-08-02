@@ -7,14 +7,14 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.Node
  * BC02 데이터센터 전용 데이터 매핑 유틸리티
  * 
  * BC02 매핑 규칙:
- * - LONOVO_POST (imageIndex 4) → BC02 Filecoin Miner (1번 lonovopost)
- * - LONOVO_POST (imageIndex 5) → BC02 3080Ti GPU Worker (2번 lonovopost)
- * - LONOVO_POST (imageIndex 6) → BC02 Post Worker (3번 lonovopost)
- * - STORAGE_1 (imageIndex 9) → BC02 NAS1 (STORAGE_1)
- * - STORAGE_1 (imageIndex 10) → BC02 NAS2 (STORAGE_1)
- * - STORAGE_1 (imageIndex 11) → BC02 NAS3 (STORAGE_1)
- * - STORAGE_1 (imageIndex 12) → BC02 NAS4 (STORAGE_1)
- * - STORAGE_1 (imageIndex 13) → BC02 NAS5 (STORAGE_1)
+ * - LONOVO_POST (imageIndex 4) → BC02 Filecoin Miner
+ * - LONOVO_POST (imageIndex 5) → BC02 3080Ti GPU Worker
+ * - LONOVO_POST (imageIndex 6) → BC02 Post Worker
+ * - STORAGE_1 (imageIndex 9) → BC02 NAS1
+ * - STORAGE_1 (imageIndex 10) → BC02 NAS2
+ * - STORAGE_1 (imageIndex 11) → BC02 NAS3
+ * - STORAGE_1 (imageIndex 12) → BC02 NAS4
+ * - STORAGE_1 (imageIndex 13) → BC02 NAS5
  */
 object BC02DataMapper {
     
@@ -39,14 +39,14 @@ object BC02DataMapper {
      * BC02 이미지별 표시 이름 매핑
      */
     private val BC02_DISPLAY_NAMES = mapOf(
-        4 to "BC02 Filecoin Miner (1번 lonovopost)",
-        5 to "BC02 3080Ti GPU Worker (2번 lonovopost)",
-        6 to "BC02 Post Worker (3번 lonovopost)",
-        9 to "BC02 NAS1 (STORAGE_1)",
-        10 to "BC02 NAS2 (STORAGE_1)",
-        11 to "BC02 NAS3 (STORAGE_1)",
-        12 to "BC02 NAS4 (STORAGE_1)",
-        13 to "BC02 NAS5 (STORAGE_1)"
+        4 to "BC02 Filecoin Miner",
+        5 to "BC02 3080Ti GPU Worker",
+        6 to "BC02 Post Worker",
+        9 to "BC02 NAS1",
+        10 to "BC02 NAS2",
+        11 to "BC02 NAS3",
+        12 to "BC02 NAS4",
+        13 to "BC02 NAS5"
     )
     
     /**
