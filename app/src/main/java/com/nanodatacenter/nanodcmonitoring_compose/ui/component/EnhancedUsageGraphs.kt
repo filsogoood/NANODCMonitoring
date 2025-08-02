@@ -157,8 +157,8 @@ private fun VerticalBarsLayout(data: ExtendedUsageData) {
         if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage.copy(type = GraphType.BAR) else null,
         // GPU Usage는 값이 유효할 때만 표시
         if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage.copy(type = GraphType.BAR) else null,
-        // CPU 온도는 값이 유효할 때만 표시
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 값이 유효할 때만 표시 (BC02에서 사용하지 않음)
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         // GPU 온도는 값이 유효할 때만 표시
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         // SSD Health는 값이 유효할 때만 표시
@@ -238,7 +238,8 @@ private fun HorizontalBarsLayout(data: ExtendedUsageData) {
         if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
         if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
         if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage else null,
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
         if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
@@ -286,7 +287,8 @@ private fun MixedLayout(data: ExtendedUsageData) {
     
     // 중단 바 그래프용 메트릭 필터링 (NULL만 제외, Storage 제외)
     val barMetrics = listOfNotNull(
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null
     )
@@ -359,7 +361,8 @@ private fun DashboardLayout(data: ExtendedUsageData) {
     
     // 온도 게이지 메트릭 필터링 (NULL만 제외)
     val tempMetrics = listOfNotNull(
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
     )
     
@@ -465,9 +468,9 @@ private fun StorageFocusedLayout(data: ExtendedUsageData) {
     )
     
     // 온도 메트릭
-    val tempMetrics = listOfNotNull(
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
-    )
+    val tempMetrics = emptyList<UsageGraphData>()
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // 상단: Storage 메트릭을 크게 강조
@@ -596,7 +599,8 @@ private fun PostWorkerFocusedLayout(data: ExtendedUsageData) {
     
     // 온도 모니터링
     val thermalMetrics = listOfNotNull(
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
     )
     
@@ -716,7 +720,8 @@ private fun NasFocusedLayout(data: ExtendedUsageData) {
     // Health & 온도 메트릭 (장기간 안정적인 운영을 위한 모니터링)
     val healthMetrics = listOfNotNull(
         if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
+        // CPU 온도는 BC02에서 사용하지 않음
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
     )
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -877,8 +882,8 @@ private fun NasFocusedLayout(data: ExtendedUsageData) {
 private fun AdditionalMetricsRow(data: ExtendedUsageData) {
     // NULL 값만 필터링 (0%는 표시)
     val additionalMetrics = listOfNotNull(
-        // CPU 온도는 값이 유효할 때만 표시
-        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // CPU 온도는 값이 유효할 때만 표시 (BC02에서 사용하지 않음)
+        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         // GPU 온도는 값이 유효할 때만 표시
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         // SSD Health는 값이 유효할 때만 표시
