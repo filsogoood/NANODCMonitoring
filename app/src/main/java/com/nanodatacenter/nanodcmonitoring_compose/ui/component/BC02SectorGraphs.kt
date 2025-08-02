@@ -814,70 +814,66 @@ private fun NASStorageChart(
     hardwareSpec: HardwareSpec?,
     nodeUsage: NodeUsage?
 ) {
+    // 스토리지 및 시스템 사용량을 각각 별개의 가로형 막대 차트로 표시
+    val ssdHealth = nodeUsage?.ssdHealthPercent?.toFloatOrNull() ?: 100f
+    val hddUsage = nodeUsage?.harddiskUsedPercent?.toFloatOrNull() ?: 0f
+    val memUsage = nodeUsage?.memUsagePercent?.toFloatOrNull() ?: 0f
+    val cpuUsage = nodeUsage?.cpuUsagePercent?.toFloatOrNull() ?: 0f
+    
     Column {
         Text(
             text = "Storage Usage Overview",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF9CA3AF),
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        // 세로 막대 차트를 위한 데이터
-        val storageData = listOf(
-            "SSD" to (nodeUsage?.ssdHealthPercent?.toFloatOrNull() ?: 100f),
-            "HDD" to (nodeUsage?.harddiskUsedPercent?.toFloatOrNull() ?: 0f),
-            "Memory" to (nodeUsage?.memUsagePercent?.toFloatOrNull() ?: 0f),
-            "CPU" to (nodeUsage?.cpuUsagePercent?.toFloatOrNull() ?: 0f)
+        // SSD Health - 별개의 가로형 막대 차트
+        HorizontalMetricBar(
+            label = "SSD Health",
+            value = ssdHealth,
+            maxValue = 100f,
+            color = Color(0xFF3B82F6),
+            backgroundColor = Color(0xFF374151),
+            modifier = Modifier.fillMaxWidth()
         )
         
-        val chartData = storageData.map { (label, value) ->
-            Bars(
-                label = label,
-                values = listOf(
-                    Bars.Data(
-                        value = value.toDouble(),
-                        color = SolidColor(
-                            when (label) {
-                                "SSD" -> Color(0xFF3B82F6)
-                                "HDD" -> Color(0xFF10B981)
-                                "Memory" -> Color(0xFFF59E0B)
-                                "CPU" -> Color(0xFF8B5CF6)
-                                else -> Color(0xFF6B7280)
-                            }
-                        )
-                    )
-                )
-            )
-        }
+        Spacer(modifier = Modifier.height(12.dp))
         
-        ColumnChart(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            data = chartData,
-            barProperties = BarProperties(
-                spacing = 8.dp,
-                thickness = 20.dp
-            )
+        // HDD Usage - 별개의 가로형 막대 차트
+        HorizontalMetricBar(
+            label = "HDD Usage",
+            value = hddUsage,
+            maxValue = 100f,
+            color = Color(0xFF10B981),
+            backgroundColor = Color(0xFF374151),
+            modifier = Modifier.fillMaxWidth()
         )
         
-        // 범례
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            storageData.forEach { (label, _) ->
-                Text(
-                    text = label,
-                    fontSize = 10.sp,
-                    color = Color(0xFF9CA3AF),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Memory Usage - 별개의 가로형 막대 차트
+        HorizontalMetricBar(
+            label = "Memory Usage",
+            value = memUsage,
+            maxValue = 100f,
+            color = Color(0xFFF59E0B),
+            backgroundColor = Color(0xFF374151),
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // CPU Usage - 별개의 가로형 막대 차트
+        HorizontalMetricBar(
+            label = "CPU Usage",
+            value = cpuUsage,
+            maxValue = 100f,
+            color = Color(0xFF8B5CF6),
+            backgroundColor = Color(0xFF374151),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -899,7 +895,9 @@ private fun NASStorageDetails(
         )
         
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp), // 수치가 잘리지 않도록 높이를 증가
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 총 용량
@@ -907,7 +905,9 @@ private fun NASStorageDetails(
                 title = "Total Capacity",
                 value = "${hardwareSpec?.totalHarddiskGb ?: "N/A"} GB",
                 color = Color(0xFF3B82F6),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight() // Row의 전체 높이를 채우도록 설정
             )
             
             // 사용량
@@ -915,7 +915,9 @@ private fun NASStorageDetails(
                 title = "Used Space",
                 value = "${nodeUsage?.harddiskUsedPercent ?: "0"}%",
                 color = Color(0xFF10B981),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight() // Row의 전체 높이를 채우도록 설정
             )
             
             // SSD 상태
@@ -923,7 +925,9 @@ private fun NASStorageDetails(
                 title = "SSD Health",
                 value = "${nodeUsage?.ssdHealthPercent ?: "N/A"}%",
                 color = Color(0xFFF59E0B),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight() // Row의 전체 높이를 채우도록 설정
             )
         }
     }
@@ -1049,9 +1053,11 @@ private fun StorageDetailCard(
     ) {
         Column(
             modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(8.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
@@ -1063,14 +1069,17 @@ private fun StorageDetailCard(
                 text = title,
                 fontSize = 10.sp,
                 color = Color(0xFF9CA3AF),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2 // 제목이 2줄까지 표시되도록 설정
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = value,
-                fontSize = 12.sp,
+                fontSize = 11.sp, // 폰트 크기를 약간 줄여서 공간 확보
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2 // 값이 2줄까지 표시되도록 설정
             )
         }
     }
