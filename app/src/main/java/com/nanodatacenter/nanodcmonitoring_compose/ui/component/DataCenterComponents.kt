@@ -64,6 +64,9 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.NdpTransaction
 import com.nanodatacenter.nanodcmonitoring_compose.repository.NanoDcRepository
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
 import com.nanodatacenter.nanodcmonitoring_compose.util.BC02DataMapper
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.BC02PostWorkerSectorGraph
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.BC02NodeMinerSectorGraph
+import com.nanodatacenter.nanodcmonitoring_compose.ui.component.BC02NASSectorGraph
 import kotlinx.coroutines.launch
 import ir.ehsannarmani.compose_charts.PieChart
 import ir.ehsannarmani.compose_charts.models.Pie
@@ -181,33 +184,33 @@ fun ClickableImageItem(
                                 ImageType.SUPRA -> response.nodes.find { it.nodeName.contains("Supra", ignoreCase = true) }
                                 ImageType.POSTWORKER -> response.nodes.find { it.nodeName.contains("PostWorker", ignoreCase = true) }
                                 ImageType.FILECOIN -> response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) }
-                                ImageType.LONOVO_POST -> {
-                                    // BC02의 경우 LONOVO_POST 이미지를 특정 노드에 매핑
-                                    if (isBC02) {
-                                        android.util.Log.d("DataCenterComponents", "🎯 BC02 LONOVO_POST: Processing imageIndex=$imageIndex")
-                                        when (imageIndex) {
-                                            4 -> { // 첫 번째 LONOVO_POST - BC02 Filecoin Miner (1번 lonovopost)
-                                                android.util.Log.d("DataCenterComponents", "   Looking for Filecoin Miner")
-                                                response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) && it.nodeName.contains("Miner", ignoreCase = true) }
+                                    ImageType.LONOVO_POST -> {
+                                        // BC02의 경우 LONOVO_POST 이미지를 특정 노드에 매핑하고 섹터별 그래프 적용
+                                        if (isBC02) {
+                                            android.util.Log.d("DataCenterComponents", "🎯 BC02 LONOVO_POST: Processing imageIndex=$imageIndex")
+                                            when (imageIndex) {
+                                                4 -> { // 첫 번째 LONOVO_POST - BC02 Filecoin Miner (1번 lonovopost)
+                                                    android.util.Log.d("DataCenterComponents", "   Looking for Filecoin Miner")
+                                                    response.nodes.find { it.nodeName.contains("Filecoin", ignoreCase = true) && it.nodeName.contains("Miner", ignoreCase = true) }
+                                                }
+                                                5 -> { // 두 번째 LONOVO_POST - BC02 3080Ti GPU Worker (2번 lonovopost)
+                                                    android.util.Log.d("DataCenterComponents", "   Looking for 3080Ti GPU Worker")
+                                                    response.nodes.find { it.nodeName.contains("3080Ti", ignoreCase = true) || it.nodeName.contains("GPU Worker", ignoreCase = true) }
+                                                }
+                                                6 -> { // 세 번째 LONOVO_POST - BC02 Post Worker (3번 lonovopost)
+                                                    android.util.Log.d("DataCenterComponents", "   Looking for Post Worker")
+                                                    response.nodes.find { it.nodeName.contains("Post Worker", ignoreCase = true) }
+                                                }
+                                                else -> {
+                                                    android.util.Log.d("DataCenterComponents", "   Default LONOVO_POST fallback")
+                                                    response.nodes.find { it.nodeName.contains("Post", ignoreCase = true) }
+                                                }
                                             }
-                                            5 -> { // 두 번째 LONOVO_POST - BC02 3080Ti GPU Worker (2번 lonovopost)
-                                                android.util.Log.d("DataCenterComponents", "   Looking for 3080Ti GPU Worker")
-                                                response.nodes.find { it.nodeName.contains("3080Ti", ignoreCase = true) || it.nodeName.contains("GPU Worker", ignoreCase = true) }
-                                            }
-                                            6 -> { // 세 번째 LONOVO_POST - BC02 Post Worker (3번 lonovopost)
-                                                android.util.Log.d("DataCenterComponents", "   Looking for Post Worker")
-                                                response.nodes.find { it.nodeName.contains("Post Worker", ignoreCase = true) }
-                                            }
-                                            else -> {
-                                                android.util.Log.d("DataCenterComponents", "   Default LONOVO_POST fallback")
-                                                response.nodes.find { it.nodeName.contains("Post", ignoreCase = true) }
-                                            }
+                                        } else {
+                                            // 다른 데이터센터는 기본 Post Worker 찾기
+                                            response.nodes.find { it.nodeName.contains("Post", ignoreCase = true) }
                                         }
-                                    } else {
-                                        // 다른 데이터센터는 기본 Post Worker 찾기
-                                        response.nodes.find { it.nodeName.contains("Post", ignoreCase = true) }
                                     }
-                                }
                                 ImageType.NODE_MINER -> {
                                     when {
                                         isBC01 -> {
@@ -391,8 +394,8 @@ fun ClickableImageItem(
                                         android.util.Log.d("DataCenterComponents", "   Score: ${score?.averageScore ?: "N/A"}")
                                         
                                         // BC01과 BC02의 경우 전체 정보 카드 표시, 다른 데이터센터는 디스크 사용량 카드 표시
-                                        if (isBC01 || isBC02) {
-                                            android.util.Log.d("DataCenterComponents", "   Using NodeInfoCard for BC01/BC02")
+                                        if (isBC01) {
+                                            android.util.Log.d("DataCenterComponents", "   Using NodeInfoCard for BC01")
                                             NodeInfoCard(
                                                 node = node,
                                                 hardwareSpec = hardwareSpec,
@@ -400,6 +403,17 @@ fun ClickableImageItem(
                                                 nodeUsage = nodeUsage,
                                                 displayName = displayName,
                                                 showNameCard = true // 이름 카드 표시
+                                            )
+                                        } else if (isBC02) {
+                                            android.util.Log.d("DataCenterComponents", "   Using BC02 NAS Sector Graph for BC02")
+                                            // BC02의 경우 NAS 섹터 그래프 사용
+                                            BC02NASSectorGraph(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                nodeUsage = nodeUsage,
+                                                score = score,
+                                                displayName = displayName,
+                                                lastRefreshTime = repository.lastRefreshTime.value
                                             )
                                         } else {
                                             android.util.Log.d("DataCenterComponents", "   Using FilecoinDiskUsageCard for other centers")
@@ -412,31 +426,66 @@ fun ClickableImageItem(
                                         }
                                     }
                                     ImageType.LONOVO_POST -> {
-                                        // BC02의 LONOVO_POST는 전체 정보 표시
+                                        // BC02의 LONOVO_POST는 섹터별 그래프 적용
                                         val hardwareSpec = response.hardwareSpecs.find { it.nodeId == node.nodeId }
                                         val score = response.scores.find { it.nodeId == node.nodeId }
                                         val nodeUsage = response.nodeUsage.find { it.nodeId == node.nodeId }
                                         
-                                        // BC02의 경우 LONOVO_POST 이미지별로 다른 표시 이름 사용
-                                        val displayName = if (isBC02) {
-                                            when (imageIndex) {
+                                        // BC02의 경우 LONOVO_POST 이미지별로 다른 표시 이름과 섹터별 그래프 사용
+                                        if (isBC02) {
+                                            val displayName = when (imageIndex) {
                                                 4 -> "BC02 Filecoin Miner"
                                                 5 -> "BC02 3080Ti GPU Worker"
                                                 6 -> "BC02 Post Worker"
                                                 else -> "BC02 Post Worker"
                                             }
+                                            
+                                            // 섹터별 그래프 적용
+                                            val category = BC02DataMapper.getBC02NodeCategory(imageIndex)
+                                            when (category) {
+                                                BC02DataMapper.BC02NodeCategory.POST_WORKER -> {
+                                                    BC02PostWorkerSectorGraph(
+                                                        node = node,
+                                                        hardwareSpec = hardwareSpec,
+                                                        nodeUsage = nodeUsage,
+                                                        score = score,
+                                                        displayName = displayName,
+                                                        lastRefreshTime = repository.lastRefreshTime.value
+                                                    )
+                                                }
+                                                BC02DataMapper.BC02NodeCategory.NODE_MINER -> {
+                                                    BC02NodeMinerSectorGraph(
+                                                        node = node,
+                                                        hardwareSpec = hardwareSpec,
+                                                        nodeUsage = nodeUsage,
+                                                        score = score,
+                                                        displayName = displayName,
+                                                        lastRefreshTime = repository.lastRefreshTime.value
+                                                    )
+                                                }
+                                                else -> {
+                                                    // 기본 카드 (UNKNOWN)
+                                                    NodeInfoCard(
+                                                        node = node,
+                                                        hardwareSpec = hardwareSpec,
+                                                        score = score,
+                                                        nodeUsage = nodeUsage,
+                                                        displayName = displayName,
+                                                        showNameCard = true
+                                                    )
+                                                }
+                                            }
                                         } else {
-                                            "GY01 POSTWORKER"
+                                            // 다른 데이터센터는 기존 방식
+                                            NodeInfoCard(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                score = score,
+                                                nodeUsage = nodeUsage,
+                                                displayName = "GY01 POSTWORKER",
+                                                showNameCard = true
+                                            )
                                         }
-                                        
-                                        NodeInfoCard(
-                                            node = node,
-                                            hardwareSpec = hardwareSpec,
-                                            score = score,
-                                            nodeUsage = nodeUsage,
-                                            displayName = displayName,
-                                            showNameCard = true // 이름 카드 표시
-                                        )
                                     }
                                     ImageType.NODE_MINER -> {
                                         // NODE_MINER는 전체 정보 표시 (GY01 NODE MINER로 표기)

@@ -61,6 +61,9 @@ fun EnhancedUsageGraphSection(
             GraphLayoutPattern.HORIZONTAL_BARS -> HorizontalBarsLayout(extendedData)
             GraphLayoutPattern.MIXED_LAYOUT -> MixedLayout(extendedData)
             GraphLayoutPattern.DASHBOARD -> DashboardLayout(extendedData)
+            GraphLayoutPattern.STORAGE_FOCUSED -> StorageFocusedLayout(extendedData)
+            GraphLayoutPattern.POST_WORKER_FOCUSED -> PostWorkerFocusedLayout(extendedData)
+            GraphLayoutPattern.NAS_FOCUSED -> NasFocusedLayout(extendedData)
         }
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -435,6 +438,434 @@ private fun DashboardLayout(data: ExtendedUsageData) {
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+        }
+    }
+}
+
+/**
+ * Storage 중심 레이아웃 (BC02 Storage 노드 전용)
+ * Storage 메트릭을 강조하고 다른 메트릭들은 간단하게 표시
+ */
+@Composable
+private fun StorageFocusedLayout(data: ExtendedUsageData) {
+    // Storage 메트릭을 최우선으로 표시
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    // 기본 시스템 메트릭 (간단하게 표시)
+    val basicMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null
+    )
+    
+    // Health 관련 메트릭
+    val healthMetrics = listOfNotNull(
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null
+    )
+    
+    // 온도 메트릭
+    val tempMetrics = listOfNotNull(
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // 상단: Storage 메트릭을 크게 강조
+        if (storageMetrics.isNotEmpty()) {
+            Text(
+                text = "Storage Status",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = UsageMetrics.TEXT_ACCENT,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            storageMetrics.forEach { storageMetric ->
+                // Storage를 큰 가로 바 그래프로 표시
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(UsageMetrics.CARD_BACKGROUND.copy(alpha = 0.3f))
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = storageMetric.name,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UsageMetrics.TEXT_PRIMARY
+                        )
+                        Text(
+                            text = if (storageMetric.value.isNotEmpty()) storageMetric.value else "${storageMetric.percentage.toInt()}%",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = storageMetric.color
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // 큰 진행률 바
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(UsageMetrics.BACKGROUND_DARK)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(storageMetric.percentage / 100f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(storageMetric.color)
+                        )
+                    }
+                }
+            }
+        }
+        
+        // 중단: 기본 시스템 메트릭을 작은 원형 그래프로
+        if (basicMetrics.isNotEmpty()) {
+            Text(
+                text = "System Overview",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                basicMetrics.forEach { metricData ->
+                    CircularProgressGraph(
+                        data = metricData,
+                        modifier = Modifier.weight(1f),
+                        size = 60.dp
+                    )
+                }
+                // 빈 공간 채우기
+                repeat(2 - basicMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // 하단: Health 및 온도 메트릭
+        val additionalMetrics = healthMetrics + tempMetrics
+        if (additionalMetrics.isNotEmpty()) {
+            Text(
+                text = "Health Monitoring",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            additionalMetrics.forEach { metricData ->
+                HorizontalBarGraph(
+                    data = metricData,
+                    modifier = Modifier.fillMaxWidth(),
+                    compact = true
+                )
+            }
+        }
+    }
+}
+
+/**
+ * PostWorker 중심 레이아웃 (BC02 PostWorker 노드 전용)
+ * CPU, GPU, Memory 등 작업 처리 성능 메트릭을 강조
+ */
+@Composable
+private fun PostWorkerFocusedLayout(data: ExtendedUsageData) {
+    // 주요 작업 처리 메트릭 (CPU, Memory, GPU)
+    val performanceMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
+        if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage else null,
+        if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
+    )
+    
+    // 온도 모니터링
+    val thermalMetrics = listOfNotNull(
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
+    )
+    
+    // Health 메트릭
+    val healthMetrics = listOfNotNull(
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null
+    )
+    
+    // Storage 메트릭 (간단하게 표시)
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // 상단: 작업 처리 성능 메트릭을 큰 원형 그래프로 강조
+        if (performanceMetrics.isNotEmpty()) {
+            Text(
+                text = "Processing Performance",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = UsageMetrics.TEXT_ACCENT,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            // 메트릭을 2개씩 배치하여 큰 원형 그래프로 표시
+            performanceMetrics.chunked(2).forEach { rowMetrics ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    rowMetrics.forEach { metricData ->
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LargeCircularProgressGraph(
+                                data = metricData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                    // 홀수 개일 경우 빈 공간 채우기
+                    if (rowMetrics.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        
+        // 중단: 온도 모니터링을 게이지로 표시
+        if (thermalMetrics.isNotEmpty()) {
+            Text(
+                text = "Thermal Monitoring",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                thermalMetrics.forEach { tempData ->
+                    GaugeGraph(
+                        data = tempData,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // 빈 공간 채우기
+                repeat(2 - thermalMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // 하단: Health 및 Storage 메트릭을 간단하게 표시
+        val additionalMetrics = healthMetrics + storageMetrics
+        if (additionalMetrics.isNotEmpty()) {
+            Text(
+                text = "System Health",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            additionalMetrics.forEach { metricData ->
+                HorizontalBarGraph(
+                    data = metricData,
+                    modifier = Modifier.fillMaxWidth(),
+                    compact = true
+                )
+            }
+        }
+    }
+}
+
+/**
+ * NAS 중심 레이아웃 (BC02 NAS 노드 전용)
+ * 스토리지와 네트워크 관련 메트릭을 강조하며 안정적인 저장소 운영에 필요한 정보 제공
+ */
+@Composable
+private fun NasFocusedLayout(data: ExtendedUsageData) {
+    // Storage 메트릭을 최우선으로 표시 (NAS의 핵심 기능)
+    val storageMetrics = listOfNotNull(
+        if (!data.storageUsage.percentage.isNaN() || (data.storageUsage.value.isNotEmpty() && data.storageUsage.value != "null")) data.storageUsage else null
+    )
+    
+    // 시스템 안정성 메트릭 (CPU, Memory - 안정적인 운영을 위해 필요)
+    val stabilityMetrics = listOfNotNull(
+        if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
+        if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null
+    )
+    
+    // Health & 온도 메트릭 (장기간 안정적인 운영을 위한 모니터링)
+    val healthMetrics = listOfNotNull(
+        if (!data.ssdHealth.percentage.isNaN() && data.ssdHealth.value.isNotEmpty() && data.ssdHealth.value != "null") data.ssdHealth else null,
+        if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // 상단: Storage 상태를 가장 크게 강조 표시
+        if (storageMetrics.isNotEmpty()) {
+            Text(
+                text = "Storage Status",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = UsageMetrics.TEXT_ACCENT,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            storageMetrics.forEach { storageMetric ->
+                // Storage를 대형 가로 바 그래프로 표시 (가시성 극대화)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(UsageMetrics.CARD_BACKGROUND.copy(alpha = 0.5f))
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = storageMetric.name,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = UsageMetrics.TEXT_PRIMARY
+                            )
+                            Text(
+                                text = "Network Attached Storage",
+                                fontSize = 12.sp,
+                                color = UsageMetrics.TEXT_SECONDARY
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = if (storageMetric.value.isNotEmpty()) storageMetric.value else "${storageMetric.percentage.toInt()}%",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = storageMetric.color
+                            )
+                            Text(
+                                text = "${storageMetric.percentage.toInt()}% Used",
+                                fontSize = 12.sp,
+                                color = UsageMetrics.TEXT_SECONDARY
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // 대형 진행률 바 (높이 증가)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(32.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(UsageMetrics.BACKGROUND_DARK)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(storageMetric.percentage / 100f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(storageMetric.color)
+                        )
+                    }
+                }
+            }
+        }
+        
+        // 중단: 시스템 안정성 메트릭을 원형 그래프로 간결하게 표시
+        if (stabilityMetrics.isNotEmpty()) {
+            Text(
+                text = "System Stability",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                stabilityMetrics.forEach { metricData ->
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressGraph(
+                            data = metricData,
+                            modifier = Modifier.fillMaxWidth(),
+                            size = 80.dp
+                        )
+                    }
+                }
+                // 빈 공간 채우기
+                repeat(2 - stabilityMetrics.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        
+        // 하단: Health & 온도 모니터링을 컴팩트한 바 그래프로 표시
+        if (healthMetrics.isNotEmpty()) {
+            Text(
+                text = "Health Monitoring",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = UsageMetrics.TEXT_SECONDARY,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            
+            healthMetrics.forEach { healthMetric ->
+                HorizontalBarGraph(
+                    data = healthMetric,
+                    modifier = Modifier.fillMaxWidth(),
+                    compact = true
+                )
+            }
+        }
+        
+        // 추가 정보 표시 (NAS 운영 상태)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(UsageMetrics.BACKGROUND_DARK.copy(alpha = 0.3f))
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Network Storage",
+                fontSize = 11.sp,
+                color = UsageMetrics.TEXT_SECONDARY
+            )
+            Text(
+                text = "Active",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF10B981) // 초록색으로 활성 상태 표시
+            )
         }
     }
 }

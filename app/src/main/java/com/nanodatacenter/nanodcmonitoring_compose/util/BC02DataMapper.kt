@@ -16,7 +16,19 @@ import com.nanodatacenter.nanodcmonitoring_compose.network.model.Node
  * - STORAGE_1 (imageIndex 12) → BC02 NAS4
  * - STORAGE_1 (imageIndex 13) → BC02 NAS5
  */
+
 object BC02DataMapper {
+    
+    /**
+     * BC02 노드 카테고리 분류
+     * 각 카테고리별로 다른 그래프 레이아웃을 적용하기 위함
+     */
+    enum class BC02NodeCategory {
+        POST_WORKER,  // Post Worker
+        NODE_MINER,   // Filecoin Miner, 3080Ti GPU Worker
+        NAS,          // NAS1-5
+        UNKNOWN       // 매핑되지 않은 노드
+    }
     
     /**
      * BC02 이미지 인덱스별 노드 이름 매핑
@@ -47,6 +59,25 @@ object BC02DataMapper {
         11 to "BC02 NAS3",
         12 to "BC02 NAS4",
         13 to "BC02 NAS5"
+    )
+    
+    /**
+     * BC02 이미지 인덱스별 카테고리 매핑
+     */
+    private val BC02_CATEGORY_MAPPING = mapOf(
+        // Node Miner 카테고리 (Filecoin Miner, 3080Ti GPU Worker)
+        4 to BC02NodeCategory.NODE_MINER,
+        5 to BC02NodeCategory.NODE_MINER,
+        
+        // PostWorker 카테고리 (Post Worker)
+        6 to BC02NodeCategory.POST_WORKER,
+        
+        // NAS 카테고리 (NAS1-5)
+        9 to BC02NodeCategory.NAS,
+        10 to BC02NodeCategory.NAS,
+        11 to BC02NodeCategory.NAS,
+        12 to BC02NodeCategory.NAS,
+        13 to BC02NodeCategory.NAS
     )
     
     /**
@@ -117,6 +148,16 @@ object BC02DataMapper {
     }
     
     /**
+     * BC02 이미지 인덱스별 노드 카테고리를 가져옵니다.
+     * 
+     * @param imageIndex 이미지 순서 인덱스
+     * @return BC02 노드 카테고리
+     */
+    fun getBC02NodeCategory(imageIndex: Int): BC02NodeCategory {
+        return BC02_CATEGORY_MAPPING[imageIndex] ?: BC02NodeCategory.UNKNOWN
+    }
+    
+    /**
      * 이미지 인덱스가 BC02 매핑 대상인지 확인합니다.
      * 
      * @param imageIndex 이미지 순서 인덱스
@@ -133,7 +174,34 @@ object BC02DataMapper {
         android.util.Log.d("BC02DataMapper", "📋 BC02 Mapping Information:")
         BC02_IMAGE_NODE_MAPPING.forEach { (index, nodeName) ->
             val displayName = BC02_DISPLAY_NAMES[index]
-            android.util.Log.d("BC02DataMapper", "   Index $index: $nodeName → $displayName")
+            val category = BC02_CATEGORY_MAPPING[index]
+            android.util.Log.d("BC02DataMapper", "   Index $index: $nodeName → $displayName (Category: $category)")
         }
+    }
+    
+    /**
+     * 노드 이름으로부터 BC02 섹터를 판별합니다.
+     * 
+     * @param nodeName 노드 이름 (예: "BC02 Post Worker", "BC02 Filecoin Miner" 등)
+     * @return BC02 노드 카테고리
+     */
+    fun getBC02SectorFromNodeName(nodeName: String): BC02NodeCategory {
+        return when {
+            nodeName.contains("Post Worker", ignoreCase = true) -> BC02NodeCategory.POST_WORKER
+            nodeName.contains("Filecoin", ignoreCase = true) && nodeName.contains("Miner", ignoreCase = true) -> BC02NodeCategory.NODE_MINER
+            nodeName.contains("3080Ti", ignoreCase = true) || nodeName.contains("GPU Worker", ignoreCase = true) -> BC02NodeCategory.NODE_MINER
+            nodeName.contains("NAS", ignoreCase = true) -> BC02NodeCategory.NAS
+            else -> BC02NodeCategory.UNKNOWN
+        }
+    }
+    
+    /**
+     * 노드가 BC02 데이터센터 소속인지 확인합니다.
+     * 
+     * @param nodeName 노드 이름
+     * @return BC02 소속 여부
+     */
+    fun isBC02Node(nodeName: String): Boolean {
+        return nodeName.contains("BC02", ignoreCase = true)
     }
 }

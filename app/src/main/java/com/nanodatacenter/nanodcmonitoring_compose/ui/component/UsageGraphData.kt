@@ -1,6 +1,7 @@
 package com.nanodatacenter.nanodcmonitoring_compose.ui.component
 
 import androidx.compose.ui.graphics.Color
+import com.nanodatacenter.nanodcmonitoring_compose.util.BC02DataMapper
 
 /**
  * 사용률 그래프 데이터 클래스
@@ -36,7 +37,10 @@ enum class GraphLayoutPattern {
     VERTICAL_BARS, // 세로 바 그래프 레이아웃
     MIXED_LAYOUT,  // 혼합 레이아웃 (원형 + 바)
     HORIZONTAL_BARS,// 가로 바 그래프 레이아웃
-    DASHBOARD      // 대시보드 스타일 레이아웃
+    DASHBOARD,     // 대시보드 스타일 레이아웃
+    STORAGE_FOCUSED, // Storage 중심 레이아웃 (BC02 Storage 전용)
+    POST_WORKER_FOCUSED, // PostWorker 중심 레이아웃 (BC02 PostWorker 전용)
+    NAS_FOCUSED    // NAS 중심 레이아웃 (BC02 NAS 전용)
 }
 
 /**
@@ -80,9 +84,22 @@ object UsageMetrics {
 /**
  * 노드별 그래프 레이아웃 패턴 결정
  * 노드 이름이나 인덱스에 따라 다른 레이아웃 패턴 반환
+ * BC02 노드의 경우 카테고리별로 특별한 레이아웃 적용
  */
 fun getLayoutPatternForNode(nodeIndex: Int, nodeName: String): GraphLayoutPattern {
+    // BC02 노드 확인 및 카테고리별 레이아웃 적용
     return when {
+        // BC02 노드 식별 및 카테고리별 처리
+        isBC02Node(nodeName) -> {
+            val category = getBC02CategoryFromNodeName(nodeName)
+            when (category) {
+                BC02DataMapper.BC02NodeCategory.POST_WORKER -> GraphLayoutPattern.POST_WORKER_FOCUSED // PostWorker 계열: PostWorker 중심 레이아웃
+                BC02DataMapper.BC02NodeCategory.NODE_MINER -> GraphLayoutPattern.MIXED_LAYOUT         // NodeMiner 계열: 혼합 레이아웃
+                BC02DataMapper.BC02NodeCategory.NAS -> GraphLayoutPattern.NAS_FOCUSED                 // NAS 계열: NAS 중심 레이아웃
+                BC02DataMapper.BC02NodeCategory.UNKNOWN -> GraphLayoutPattern.GRID_2X2                // 알 수 없는 BC02 노드: 기본 그리드
+            }
+        }
+        // 기존 일반 노드 처리
         nodeName.contains("Supra", ignoreCase = true) -> GraphLayoutPattern.VERTICAL_BARS
         nodeName.contains("PostWorker", ignoreCase = true) -> GraphLayoutPattern.HORIZONTAL_BARS
         nodeName.contains("Filecoin", ignoreCase = true) -> GraphLayoutPattern.MIXED_LAYOUT
@@ -95,6 +112,27 @@ fun getLayoutPatternForNode(nodeIndex: Int, nodeName: String): GraphLayoutPatter
             else -> GraphLayoutPattern.GRID_2X2
         }
     }
+}
+
+/**
+ * BC02 노드인지 확인하는 함수
+ * BC02DataMapper의 기능을 재사용하여 일관성 유지
+ */
+private fun isBC02Node(nodeName: String): Boolean {
+    return BC02DataMapper.isBC02Node(nodeName) ||
+           nodeName.startsWith("BC02", ignoreCase = true) ||
+           (nodeName.contains("Filecoin", ignoreCase = true) && nodeName.contains("Miner", ignoreCase = true)) ||
+           (nodeName.contains("3080Ti", ignoreCase = true) || nodeName.contains("GPU Worker", ignoreCase = true)) ||
+           nodeName.contains("Post Worker", ignoreCase = true) ||
+           nodeName.matches(Regex(".*NAS[1-5].*", RegexOption.IGNORE_CASE))
+}
+
+/**
+ * BC02 노드 이름에서 카테고리를 추출하는 함수
+ * BC02DataMapper의 기능을 재사용하여 일관성 유지
+ */
+private fun getBC02CategoryFromNodeName(nodeName: String): BC02DataMapper.BC02NodeCategory {
+    return BC02DataMapper.getBC02SectorFromNodeName(nodeName)
 }
 
 /**
