@@ -112,6 +112,7 @@ fun NodeInfoCard(
     nodeUsage: NodeUsage?,
     displayName: String? = null, // 커스텀 표시 이름
     nodeIndex: Int = 0, // 노드 인덱스 (레이아웃 패턴 결정용)
+    showNameCard: Boolean = true, // 노드 이름 카드 표시 여부
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -120,8 +121,10 @@ fun NodeInfoCard(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 노드 이름 카드
-        NodeNameCard(node = node, displayName = displayName)
+        // 노드 이름 카드 (BC02의 경우 숨김 처리 가능)
+        if (showNameCard) {
+            NodeNameCard(node = node, displayName = displayName)
+        }
         
         // 스코어 카드
         if (score != null) {
