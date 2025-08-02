@@ -406,15 +406,24 @@ fun ClickableImageItem(
                                             )
                                         } else if (isBC02) {
                                             android.util.Log.d("DataCenterComponents", "   Using BC02 NAS Sector Graph for BC02")
-                                            // BC02의 경우 NAS 섹터 그래프 사용
-                                            BC02NASSectorGraph(
-                                                node = node,
-                                                hardwareSpec = hardwareSpec,
-                                                nodeUsage = nodeUsage,
-                                                score = score,
-                                                displayName = displayName,
-                                                lastRefreshTime = repository.lastRefreshTime.value
-                                            )
+                                            // BC02의 경우 NAS 섹터 그래프와 별도 Hardware Specifications 카드 표시
+                                            Column(
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                BC02NASSectorGraph(
+                                                    node = node,
+                                                    hardwareSpec = hardwareSpec,
+                                                    nodeUsage = nodeUsage,
+                                                    score = score,
+                                                    displayName = displayName,
+                                                    lastRefreshTime = repository.lastRefreshTime.value
+                                                )
+                                                
+                                                // 별도의 Hardware Specifications 카드 추가
+                                                if (hardwareSpec != null) {
+                                                    BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
+                                                }
+                                            }
                                         } else {
                                             android.util.Log.d("DataCenterComponents", "   Using FilecoinDiskUsageCard for other centers")
                                             FilecoinDiskUsageCard(
@@ -442,37 +451,48 @@ fun ClickableImageItem(
                                             
                                             // 섹터별 그래프 적용
                                             val category = BC02DataMapper.getBC02NodeCategory(imageIndex)
-                                            when (category) {
-                                                BC02DataMapper.BC02NodeCategory.POST_WORKER -> {
-                                                    BC02PostWorkerSectorGraph(
-                                                        node = node,
-                                                        hardwareSpec = hardwareSpec,
-                                                        nodeUsage = nodeUsage,
-                                                        score = score,
-                                                        displayName = displayName,
-                                                        lastRefreshTime = repository.lastRefreshTime.value
-                                                    )
+                                            
+                                            // 섹터별 그래프와 별도 Hardware Specifications 카드 표시
+                                            Column(
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                when (category) {
+                                                    BC02DataMapper.BC02NodeCategory.POST_WORKER -> {
+                                                        BC02PostWorkerSectorGraph(
+                                                            node = node,
+                                                            hardwareSpec = hardwareSpec,
+                                                            nodeUsage = nodeUsage,
+                                                            score = score,
+                                                            displayName = displayName,
+                                                            lastRefreshTime = repository.lastRefreshTime.value
+                                                        )
+                                                    }
+                                                    BC02DataMapper.BC02NodeCategory.NODE_MINER -> {
+                                                        BC02NodeMinerSectorGraph(
+                                                            node = node,
+                                                            hardwareSpec = hardwareSpec,
+                                                            nodeUsage = nodeUsage,
+                                                            score = score,
+                                                            displayName = displayName,
+                                                            lastRefreshTime = repository.lastRefreshTime.value
+                                                        )
+                                                    }
+                                                    else -> {
+                                                        // 기본 카드 (UNKNOWN)
+                                                        NodeInfoCard(
+                                                            node = node,
+                                                            hardwareSpec = hardwareSpec,
+                                                            score = score,
+                                                            nodeUsage = nodeUsage,
+                                                            displayName = displayName,
+                                                            showNameCard = true
+                                                        )
+                                                    }
                                                 }
-                                                BC02DataMapper.BC02NodeCategory.NODE_MINER -> {
-                                                    BC02NodeMinerSectorGraph(
-                                                        node = node,
-                                                        hardwareSpec = hardwareSpec,
-                                                        nodeUsage = nodeUsage,
-                                                        score = score,
-                                                        displayName = displayName,
-                                                        lastRefreshTime = repository.lastRefreshTime.value
-                                                    )
-                                                }
-                                                else -> {
-                                                    // 기본 카드 (UNKNOWN)
-                                                    NodeInfoCard(
-                                                        node = node,
-                                                        hardwareSpec = hardwareSpec,
-                                                        score = score,
-                                                        nodeUsage = nodeUsage,
-                                                        displayName = displayName,
-                                                        showNameCard = true
-                                                    )
+                                                
+                                                // 별도의 Hardware Specifications 카드 추가
+                                                if (hardwareSpec != null) {
+                                                    BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
                                                 }
                                             }
                                         } else {

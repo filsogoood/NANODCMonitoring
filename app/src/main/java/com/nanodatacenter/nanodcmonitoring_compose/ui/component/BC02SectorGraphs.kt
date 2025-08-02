@@ -163,11 +163,6 @@ fun BC02NodeMinerSectorGraph(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 하드웨어 상세 정보
-            NodeMinerHardwareDetails(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage
-            )
         }
     }
 }
@@ -222,6 +217,41 @@ fun BC02NASSectorGraph(
                 nodeUsage = nodeUsage,
                 score = score
             )
+        }
+    }
+}
+
+/**
+ * BC02용 독립적인 하드웨어 스펙 카드
+ * GY01의 NodeHardwareSpecCard와 동일한 스타일로 별도 카드 구현
+ */
+@Composable
+fun BC02HardwareSpecCard(
+    hardwareSpec: HardwareSpec,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Hardware Specifications",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF60A5FA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            BC02HardwareSpecSection(hardwareSpec = hardwareSpec)
         }
     }
 }
@@ -739,50 +769,6 @@ private fun NodeMinerStats(
     }
 }
 
-@Composable
-private fun NodeMinerHardwareDetails(
-    hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?
-) {
-    Column {
-        Text(
-            text = "Hardware Details",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF9CA3AF),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        hardwareSpec?.let { spec ->
-            Text(
-                text = "CPU: ${spec.cpuModel}",
-                fontSize = 12.sp,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            
-            spec.gpuModel?.takeIf { it != "N/A" }?.let { gpu ->
-                Text(
-                    text = "GPU: $gpu",
-                    fontSize = 12.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
-            
-            // BC02는 CPU 온도를 제공하지 않으므로 표시하지 않음
-            nodeUsage?.let { usage ->
-                Text(
-                    text = "Note: CPU temperature not available for BC02",
-                    fontSize = 10.sp,
-                    color = Color(0xFF9CA3AF),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
 // ===== NAS 섹션 컴포넌트들 =====
 
 @Composable
@@ -1087,5 +1073,52 @@ private fun StorageDetailCard(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+/**
+ * BC02용 하드웨어 스펙 섹션
+ * GY01의 HardwareSpecSection과 동일한 방식으로 정보 표시
+ */
+@Composable
+private fun BC02HardwareSpecSection(hardwareSpec: HardwareSpec) {
+    Column {
+        BC02InfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
+        BC02InfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
+        BC02InfoRow("RAM", "${hardwareSpec.totalRamGb}GB")
+        BC02InfoRow("NVMe Count", hardwareSpec.nvmeCount)
+    }
+}
+
+/**
+ * BC02용 정보 행 표시 컴포넌트
+ * GY01의 NodeInfoRow와 동일한 스타일
+ */
+@Composable
+private fun BC02InfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = Color(0xFF9CA3AF),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
