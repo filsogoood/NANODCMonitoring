@@ -418,11 +418,6 @@ fun ClickableImageItem(
                                                     displayName = displayName,
                                                     lastRefreshTime = repository.lastRefreshTime.value
                                                 )
-                                                
-                                                // 별도의 Hardware Specifications 카드 추가
-                                                if (hardwareSpec != null) {
-                                                    BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
-                                                }
                                             }
                                         } else {
                                             android.util.Log.d("DataCenterComponents", "   Using FilecoinDiskUsageCard for other centers")
@@ -488,11 +483,6 @@ fun ClickableImageItem(
                                                             showNameCard = true
                                                         )
                                                     }
-                                                }
-                                                
-                                                // 별도의 Hardware Specifications 카드 추가
-                                                if (hardwareSpec != null) {
-                                                    BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
                                                 }
                                             }
                                         } else {

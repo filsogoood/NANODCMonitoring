@@ -9,10 +9,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -30,6 +32,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.HardwareSpec
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.Node
 import com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage
@@ -65,41 +76,93 @@ fun BC02PostWorkerSectorGraph(
     lastRefreshTime: Long = 0, // Last update 시간 추가
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+    // 디버깅 로그 추가
+    android.util.Log.d("BC02PostWorkerSectorGraph", "🎯 PostWorker Debug Info:")
+    android.util.Log.d("BC02PostWorkerSectorGraph", "   Node: ${node.nodeName}")
+    android.util.Log.d("BC02PostWorkerSectorGraph", "   DisplayName: $displayName")
+    android.util.Log.d("BC02PostWorkerSectorGraph", "   Score: ${score?.averageScore ?: "NULL"}")
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+        // 1. 타이틀 카드 (Last update 제거)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            // 헤더 섹션 (Last update 포함)
-            PostWorkerHeader(
-                displayName = displayName,
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 메인 메트릭 섹션 (라인 차트 형태)
-            PostWorkerMetricsChart(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 성능 인디케이터
-            PostWorkerPerformanceIndicators(
-                nodeUsage = nodeUsage,
-                score = score
-            )
+            Box(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                PostWorkerHeader(displayName = displayName)
+            }
+        }
+        
+        // 2. 스코어 카드
+        if (score != null) {
+            ExpandedScoreCard(score = score)
+        }
+        
+        // 3. 하드웨어 스펙 카드
+        if (hardwareSpec != null) {
+            BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
+        }
+        
+        // 4. 사용량 카드 (Last update를 오른쪽 구석에 포함)
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                // 사용량 헤더 (Last update 포함)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Current Usage",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF60A5FA)
+                    )
+                    
+                    // 오른쪽 구석에 Last update 정보
+                    PostWorkerTimeDisplay(
+                        nodeUsage = nodeUsage,
+                        lastRefreshTime = lastRefreshTime
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 메인 메트릭 섹션 (라인 차트 형태)
+                PostWorkerMetricsChart(
+                    hardwareSpec = hardwareSpec,
+                    nodeUsage = nodeUsage
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 성능 인디케이터
+                PostWorkerPerformanceIndicators(
+                    nodeUsage = nodeUsage,
+                    score = score
+                )
+            }
         }
     }
 }
@@ -118,51 +181,100 @@ fun BC02NodeMinerSectorGraph(
     lastRefreshTime: Long = 0, // Last update 시간 추가
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+    // 디버깅 로그 추가
+    android.util.Log.d("BC02NodeMinerSectorGraph", "🎯 NodeMiner Debug Info:")
+    android.util.Log.d("BC02NodeMinerSectorGraph", "   Node: ${node.nodeName}")
+    android.util.Log.d("BC02NodeMinerSectorGraph", "   DisplayName: $displayName")
+    android.util.Log.d("BC02NodeMinerSectorGraph", "   Score: ${score?.averageScore ?: "NULL"}")
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+        // 1. 타이틀 카드 (Last update 제거)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            // 헤더 섹션 (Last update 포함)
-            NodeMinerHeader(
-                displayName = displayName,
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 메인 섹션 - 원형 차트와 마이닝 정보
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            Box(
+                modifier = Modifier.padding(20.dp)
             ) {
-                // 왼쪽: 리소스 사용량 원형 차트
-                NodeMinerResourceChart(
-                    hardwareSpec = hardwareSpec,
-                    nodeUsage = nodeUsage,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // 오른쪽: 마이닝 통계
-                NodeMinerStats(
-                    hardwareSpec = hardwareSpec,
-                    nodeUsage = nodeUsage,
-                    score = score,
-                    modifier = Modifier.weight(1f)
-                )
+                NodeMinerHeader(displayName = displayName)
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
+        }
+        
+        // 2. 스코어 카드
+        if (score != null) {
+            ExpandedScoreCard(score = score)
+        }
+        
+        // 3. 하드웨어 스펙 카드
+        if (hardwareSpec != null) {
+            BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
+        }
+        
+        // 4. 사용량 카드 (Last update를 오른쪽 구석에 포함)
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                // 사용량 헤더 (Last update 포함)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Current Usage",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF60A5FA)
+                    )
+                    
+                    // 오른쪽 구석에 Last update 정보
+                    NodeMinerTimeDisplay(
+                        nodeUsage = nodeUsage,
+                        lastRefreshTime = lastRefreshTime
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 메인 섹션 - 원형 차트와 마이닝 정보
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // 왼쪽: 리소스 사용량 원형 차트
+                    NodeMinerResourceChart(
+                        hardwareSpec = hardwareSpec,
+                        nodeUsage = nodeUsage,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // 오른쪽: 마이닝 통계
+                    NodeMinerStats(
+                        hardwareSpec = hardwareSpec,
+                        nodeUsage = nodeUsage,
+                        score = score,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }
@@ -181,42 +293,94 @@ fun BC02NASSectorGraph(
     lastRefreshTime: Long = 0, // Last update 시간 추가
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+    // 디버깅 로그 추가
+    android.util.Log.d("BC02NASSectorGraph", "🎯 NAS Debug Info:")
+    android.util.Log.d("BC02NASSectorGraph", "   Node: ${node.nodeName}")
+    android.util.Log.d("BC02NASSectorGraph", "   DisplayName: $displayName")
+    android.util.Log.d("BC02NASSectorGraph", "   Score: ${score?.averageScore ?: "NULL"}")
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+        // 1. 타이틀 카드 (Last update 제거)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            // 헤더 섹션 (Last update 포함)
-            NASHeader(
-                displayName = displayName,
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 메인 섹션 - 스토리지 사용량 세로 막대 차트
-            NASStorageChart(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 스토리지 상세 정보
-            NASStorageDetails(
-                hardwareSpec = hardwareSpec,
-                nodeUsage = nodeUsage,
-                score = score
-            )
+            Box(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                NASHeader(displayName = displayName)
+            }
+        }
+        
+        // 2. 스코어 카드
+        if (score != null) {
+            ExpandedScoreCard(score = score)
+        }
+        
+        // 3. 하드웨어 스펙 카드
+        if (hardwareSpec != null) {
+            BC02HardwareSpecCard(hardwareSpec = hardwareSpec)
+        }
+        
+        // 4. 사용량 카드 (Last update를 오른쪽 구석에 포함)
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1F2937)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                // 사용량 헤더 (Last update 포함)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Current Usage",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF60A5FA)
+                    )
+                    
+                    // 오른쪽 구석에 Last update 정보
+                    NASTimeDisplay(
+                        nodeUsage = nodeUsage,
+                        lastRefreshTime = lastRefreshTime
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 메인 섹션 - 스토리지 사용량 세로 막대 차트
+                NASStorageChart(
+                    hardwareSpec = hardwareSpec,
+                    nodeUsage = nodeUsage
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 스토리지 상세 정보
+                NASStorageDetails(
+                    hardwareSpec = hardwareSpec,
+                    nodeUsage = nodeUsage,
+                    score = score
+                )
+            }
         }
     }
 }
@@ -259,40 +423,24 @@ fun BC02HardwareSpecCard(
 // ===== Post Worker 섹션 컴포넌트들 =====
 
 @Composable
-private fun PostWorkerHeader(
-    displayName: String,
-    nodeUsage: NodeUsage?,
-    lastRefreshTime: Long = 0
-) {
-    Column {
-        // 첫 번째 줄: 아이콘과 제목
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Computer,
-                contentDescription = "Post Worker",
-                tint = Color(0xFF3B82F6),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = displayName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        
-        // 두 번째 줄: 시간 정보 (타이틀 아래)
-        if (nodeUsage != null || lastRefreshTime > 0) {
-            Spacer(modifier = Modifier.height(4.dp))
-            PostWorkerTimeDisplay(
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-        }
+private fun PostWorkerHeader(displayName: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.Computer,
+            contentDescription = "Post Worker",
+            tint = Color(0xFF3B82F6),
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = displayName,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
     }
 }
 
@@ -312,17 +460,17 @@ private fun PostWorkerTimeDisplay(
     }
     
     Column(
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.End
     ) {
         Text(
-            text = "Last update : ${nodeUsage?.timestamp ?: "N/A"}",
+            text = "Last Update: ${nodeUsage?.timestamp ?: "N/A"}",
             fontSize = 10.sp,
             color = Color(0xFF9CA3AF)
         )
         Text(
-            text = "refreshed  : $refreshTime",
+            text = "Refreshed: $refreshTime",
             fontSize = 10.sp,
-            color = Color(0xFF60A5FA) // 파란색
+            color = Color(0xFF60A5FA)
         )
     }
 }
@@ -343,17 +491,17 @@ private fun NodeMinerTimeDisplay(
     }
     
     Column(
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.End
     ) {
         Text(
-            text = "Last update : ${nodeUsage?.timestamp ?: "N/A"}",
+            text = "Last Update: ${nodeUsage?.timestamp ?: "N/A"}",
             fontSize = 10.sp,
             color = Color(0xFF9CA3AF)
         )
         Text(
-            text = "refreshed  : $refreshTime",
+            text = "Refreshed: $refreshTime",
             fontSize = 10.sp,
-            color = Color(0xFF60A5FA) // 파란색
+            color = Color(0xFF60A5FA)
         )
     }
 }
@@ -374,17 +522,17 @@ private fun NASTimeDisplay(
     }
     
     Column(
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.End
     ) {
         Text(
-            text = "Last update : ${nodeUsage?.timestamp ?: "N/A"}",
+            text = "Last Update: ${nodeUsage?.timestamp ?: "N/A"}",
             fontSize = 10.sp,
             color = Color(0xFF9CA3AF)
         )
         Text(
-            text = "refreshed  : $refreshTime",
+            text = "Refreshed: $refreshTime",
             fontSize = 10.sp,
-            color = Color(0xFF60A5FA) // 파란색
+            color = Color(0xFF60A5FA)
         )
     }
 }
@@ -617,40 +765,24 @@ private fun PostWorkerPerformanceIndicators(
 // ===== Node Miner 섹션 컴포넌트들 =====
 
 @Composable
-private fun NodeMinerHeader(
-    displayName: String,
-    nodeUsage: NodeUsage?,
-    lastRefreshTime: Long = 0
-) {
-    Column {
-        // 첫 번째 줄: 아이콘과 제목
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Psychology,
-                contentDescription = "Node Miner",
-                tint = Color(0xFF8B5CF6),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = displayName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        
-        // 두 번째 줄: 시간 정보 (타이틀 아래)
-        if (nodeUsage != null || lastRefreshTime > 0) {
-            Spacer(modifier = Modifier.height(4.dp))
-            NodeMinerTimeDisplay(
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-        }
+private fun NodeMinerHeader(displayName: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.Psychology,
+            contentDescription = "Node Miner",
+            tint = Color(0xFF8B5CF6),
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = displayName,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
     }
 }
 
@@ -760,52 +892,35 @@ private fun NodeMinerStats(
             value = "${hardwareSpec?.storageTotalGb ?: "N/A"} GB"
         )
         
-        score?.averageScore?.let { avgScore ->
-            MiningStatItem(
-                label = "Performance",
-                value = "${avgScore.toIntOrNull() ?: "N/A"}/100"
-            )
-        }
+        // 스코어를 항상 표시하도록 수정
+        MiningStatItem(
+            label = "Performance",
+            value = "${score?.averageScore?.let { String.format("%.1f", it.toFloatOrNull() ?: 0f) } ?: "N/A"}/100"
+        )
     }
 }
 
 // ===== NAS 섹션 컴포넌트들 =====
 
 @Composable
-private fun NASHeader(
-    displayName: String,
-    nodeUsage: NodeUsage?,
-    lastRefreshTime: Long = 0
-) {
-    Column {
-        // 첫 번째 줄: 아이콘과 제목
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Storage,
-                contentDescription = "NAS Storage",
-                tint = Color(0xFF10B981),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = displayName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-        
-        // 두 번째 줄: 시간 정보 (타이틀 아래)
-        if (nodeUsage != null || lastRefreshTime > 0) {
-            Spacer(modifier = Modifier.height(4.dp))
-            NASTimeDisplay(
-                nodeUsage = nodeUsage,
-                lastRefreshTime = lastRefreshTime
-            )
-        }
+private fun NASHeader(displayName: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.Storage,
+            contentDescription = "NAS Storage",
+            tint = Color(0xFF10B981),
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = displayName,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
     }
 }
 
@@ -897,7 +1012,7 @@ private fun NASStorageDetails(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(90.dp), // 수치가 잘리지 않도록 높이를 증가
+                .height(100.dp), // 텍스트가 잘리지 않도록 높이를 더 증가
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 총 용량
@@ -925,6 +1040,16 @@ private fun NASStorageDetails(
                 title = "SSD Health",
                 value = "${nodeUsage?.ssdHealthPercent ?: "N/A"}%",
                 color = Color(0xFFF59E0B),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight() // Row의 전체 높이를 채우도록 설정
+            )
+            
+            // 스코어 추가
+            StorageDetailCard(
+                title = "Score",
+                value = "${score?.averageScore?.let { String.format("%.1f", it.toFloatOrNull() ?: 0f) } ?: "N/A"}",
+                color = Color(0xFF8B5CF6),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight() // Row의 전체 높이를 채우도록 설정
@@ -1067,7 +1192,7 @@ private fun StorageDetailCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
-                fontSize = 10.sp,
+                fontSize = 9.sp, // 제목 폰트 크기 더 줄임
                 color = Color(0xFF9CA3AF),
                 textAlign = TextAlign.Center,
                 maxLines = 2 // 제목이 2줄까지 표시되도록 설정
@@ -1075,7 +1200,7 @@ private fun StorageDetailCard(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = value,
-                fontSize = 11.sp, // 폰트 크기를 약간 줄여서 공간 확보
+                fontSize = 10.sp, // 값 폰트 크기도 더 줄임
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center,
@@ -1129,5 +1254,306 @@ private fun BC02InfoRow(
             color = Color.White,
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+/**
+ * BC02용 육각형 스코어 카드
+ * NodeComponents.kt의 NodeScoreCard와 동일한 육각형 차트를 표시
+ */
+@Composable
+fun BC02HexagonScoreCard(
+    score: Score,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더 (NodeComponents.kt와 동일한 스타일)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .height(24.dp)
+                        .background(
+                            Color(0xFF3B82F6),
+                            RoundedCornerShape(3.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Score",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.Shield,
+                    contentDescription = "Score",
+                    tint = Color(0xFF60A5FA),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 점수 표시 부분
+            BC02ScoreDisplaySection(score = score)
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 육각형 차트
+            BC02HexagonChart(score = score)
+        }
+    }
+}
+
+/**
+ * BC02용 스코어 표시 섹션
+ */
+@Composable
+private fun BC02ScoreDisplaySection(score: Score) {
+    val averageScore = score.averageScore.toFloatOrNull() ?: 0f
+    
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFF111827), // 웹과 동일한 더 어두운 배경
+        border = BorderStroke(
+            1.dp, 
+            Color(0xFF374151).copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = String.format("%.2f", averageScore),
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFBBF24) // 웹과 동일한 황색
+            )
+        }
+    }
+}
+
+/**
+ * BC02용 육각형 차트
+ */
+@Composable
+private fun BC02HexagonChart(score: Score?) {
+    val metrics = extractBC02Metrics(score)
+    
+    Box(
+        modifier = Modifier
+            .size(320.dp)
+            .background(Color.Transparent),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .size(280.dp)
+        ) {
+            drawBC02HexagonChart(this, metrics)
+        }
+        
+        // 메트릭 라벨들
+        BC02HexagonLabels(metrics = metrics)
+    }
+}
+
+/**
+ * BC02용 Score 객체에서 메트릭 데이터 추출
+ */
+private fun extractBC02Metrics(score: Score?): List<BC02MetricData> {
+    return if (score != null) {
+        listOf(
+            BC02MetricData("CPU", score.cpuScore.toFloatOrNull() ?: 80f, Color(0xFF3B82F6)),
+            BC02MetricData("GPU", score.gpuScore.toFloatOrNull() ?: 80f, Color(0xFF8B5CF6)),
+            BC02MetricData("RAM", score.ramScore.toFloatOrNull() ?: 80f, Color(0xFF06B6D4)),
+            BC02MetricData("STORAGE", score.ssdScore.toFloatOrNull() ?: 80f, Color(0xFF10B981)),
+            BC02MetricData("NETWORK", score.networkScore.toFloatOrNull() ?: 80f, Color(0xFFF59E0B)),
+            BC02MetricData("HEALTH", score.hardwareHealthScore.toFloatOrNull() ?: 80f, Color(0xFFEF4444))
+        )
+    } else {
+        // 기본값 (모든 값 80점)
+        listOf(
+            BC02MetricData("CPU", 80f, Color(0xFF3B82F6)),
+            BC02MetricData("GPU", 80f, Color(0xFF8B5CF6)),
+            BC02MetricData("RAM", 80f, Color(0xFF06B6D4)),
+            BC02MetricData("STORAGE", 80f, Color(0xFF10B981)),
+            BC02MetricData("NETWORK", 80f, Color(0xFFF59E0B)),
+            BC02MetricData("HEALTH", 80f, Color(0xFFEF4444))
+        )
+    }
+}
+
+/**
+ * BC02용 메트릭 데이터 클래스
+ */
+data class BC02MetricData(
+    val name: String,
+    val value: Float,
+    val color: Color
+)
+
+/**
+ * BC02용 육각형 차트 그리기 함수
+ */
+private fun drawBC02HexagonChart(drawScope: androidx.compose.ui.graphics.drawscope.DrawScope, metrics: List<BC02MetricData>) {
+    with(drawScope) {
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val radius = size.minDimension / 2f * 0.8f
+        val vertices = mutableListOf<Offset>()
+        
+        // 육각형 꼭짓점 계산
+        for (i in 0 until 6) {
+            val angle = (i * 60 - 90) * (kotlin.math.PI / 180).toFloat()
+            val x = center.x + radius * kotlin.math.cos(angle.toDouble()).toFloat()
+            val y = center.y + radius * kotlin.math.sin(angle.toDouble()).toFloat()
+            vertices.add(Offset(x, y))
+        }
+        
+        // 기준선 그리기 (회색 육각형들)
+        for (scale in listOf(0.2f, 0.4f, 0.6f, 0.8f, 1.0f)) {
+            val scaledVertices = vertices.map { vertex ->
+                val dx = vertex.x - center.x
+                val dy = vertex.y - center.y
+                Offset(center.x + dx * scale, center.y + dy * scale)
+            }
+            
+            // 육각형 그리기
+            for (i in scaledVertices.indices) {
+                val start = scaledVertices[i]
+                val end = scaledVertices[(i + 1) % scaledVertices.size]
+                drawLine(
+                    color = androidx.compose.ui.graphics.Color(0xFF374151),
+                    start = start,
+                    end = end,
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+        }
+        
+        // 중심에서 꼭짓점으로 가는 선 그리기
+        vertices.forEach { vertex ->
+            drawLine(
+                color = androidx.compose.ui.graphics.Color(0xFF374151),
+                start = center,
+                end = vertex,
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+        
+        // 실제 데이터 육각형 그리기
+        val dataVertices = mutableListOf<Offset>()
+        for (i in metrics.indices) {
+            val angle = (i * 60 - 90) * (kotlin.math.PI / 180).toFloat()
+            val normalizedValue = (metrics[i].value / 100f).coerceIn(0f, 1f)
+            val dataRadius = radius * normalizedValue
+            val x = center.x + dataRadius * kotlin.math.cos(angle.toDouble()).toFloat()
+            val y = center.y + dataRadius * kotlin.math.sin(angle.toDouble()).toFloat()
+            dataVertices.add(Offset(x, y))
+        }
+        
+        // 데이터 육각형의 면 채우기
+        if (dataVertices.size >= 3) {
+            val path = androidx.compose.ui.graphics.Path()
+            path.moveTo(dataVertices[0].x, dataVertices[0].y)
+            for (i in 1 until dataVertices.size) {
+                path.lineTo(dataVertices[i].x, dataVertices[i].y)
+            }
+            path.close()
+            
+            drawPath(
+                path = path,
+                color = androidx.compose.ui.graphics.Color(0xFF3B82F6).copy(alpha = 0.3f)
+            )
+        }
+        
+        // 데이터 육각형의 선 그리기
+        for (i in dataVertices.indices) {
+            val start = dataVertices[i]
+            val end = dataVertices[(i + 1) % dataVertices.size]
+            drawLine(
+                color = androidx.compose.ui.graphics.Color(0xFF3B82F6),
+                start = start,
+                end = end,
+                strokeWidth = 2.dp.toPx()
+            )
+        }
+        
+        // 꼭짓점에 원 그리기
+        dataVertices.forEachIndexed { index, vertex ->
+            drawCircle(
+                color = metrics[index].color,
+                radius = 4.dp.toPx(),
+                center = vertex
+            )
+        }
+    }
+}
+
+/**
+ * BC02용 육각형 라벨 컴포넌트
+ */
+@Composable
+private fun BC02HexagonLabels(metrics: List<BC02MetricData>) {
+    val labelPositions = listOf(
+        Pair(0.7f, 0.15f),   // CPU (위)
+        Pair(0.95f, 0.5f),   // GPU (오른쪽 위)
+        Pair(0.75f, 0.85f),  // RAM (오른쪽 아래)
+        Pair(0.25f, 0.85f),  // STORAGE (아래)
+        Pair(0.05f, 0.5f),   // NETWORK (왼쪽 아래)
+        Pair(0.25f, 0.15f),  // HEALTH (왼쪽 위)
+    )
+    
+    metrics.forEachIndexed { index, metric ->
+        val position = labelPositions[index]
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.TopStart)
+                .offset(
+                    x = (320.dp * position.first) - 40.dp,
+                    y = (320.dp * position.second) - 20.dp
+                )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = metric.name,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF9CA3AF),
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = String.format("%.2f", metric.value),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
