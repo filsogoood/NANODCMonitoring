@@ -571,14 +571,26 @@ fun ClickableImageItem(
                                         Column(
                                             verticalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            // 첫 번째 카드: 헤더 정보
-                                            NodeInfoHeaderCard()
+                                            // 첫 번째 카드: 헤더 정보 (데이터센터별 주소 표시)
+                                            NodeInfoHeaderCard(
+                                                dataCenterName = when {
+                                                    isBC01 -> "BC01"
+                                                    isBC02 -> "BC02"
+                                                    else -> "GY01"
+                                                },
+                                                node = node
+                                            )
 
                                             // 분리된 카드들: Miner Overview, Adjusted Power
                                             NodeSeparateCards(
                                                 node = node,
                                                 hardwareSpec = hardwareSpec,
-                                                nodeUsage = nodeUsage
+                                                nodeUsage = nodeUsage,
+                                                dataCenterName = when {
+                                                    isBC01 -> "BC01"
+                                                    isBC02 -> "BC02"
+                                                    else -> "GY01"
+                                                }
                                             )
                                         }
                                     }
@@ -1438,7 +1450,10 @@ fun NodeMiningDashboard(
             modifier = Modifier.padding(20.dp)
         ) {
             // 헤더 정보 카드 (제목 + Address 통합)
-            NodeInfoHeaderCard()
+            NodeInfoHeaderCard(
+                dataCenterName = "GY01", // 기본값으로 GY01 사용
+                node = node
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -1579,7 +1594,18 @@ fun NodeMiningDashboardWithoutHeader(
  * NODE_INFO 전용 헤더 카드 (제목 + Address 통합)
  */
 @Composable
-fun NodeInfoHeaderCard() {
+fun NodeInfoHeaderCard(
+    dataCenterName: String = "GY01",
+    node: Node? = null
+) {
+    // 데이터센터별 주소 정보
+    val addressInfo = when (dataCenterName.uppercase()) {
+        "BC01" -> Pair("BC01 ADDRESS: ", "f03091958") // BC01용 주소
+        "BC02" -> Pair("BC02 ADDRESS: ", "f03134685") // BC02용 주소 (이미지 값)
+        "GY01" -> Pair("GY01 ADDRESS: ", "f03132919") // GY01용 주소 (기존)
+        else -> Pair("ADDRESS: ", "f03132919") // 기본값
+    }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1603,14 +1629,14 @@ fun NodeInfoHeaderCard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "GY01 ADDRESS: ",
+                    text = addressInfo.first,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "f03132919",
+                    text = addressInfo.second,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -1625,7 +1651,18 @@ fun NodeInfoHeaderCard() {
  * 노드 마이너 헤더 (노드 이름과 주소)
  */
 @Composable
-fun NodeMinerHeader(node: Node) {
+fun NodeMinerHeader(
+    node: Node,
+    dataCenterName: String = "GY01"
+) {
+    // 데이터센터별 주소 정보
+    val addressValue = when (dataCenterName.uppercase()) {
+        "BC01" -> "f03091958" // BC01용 주소
+        "BC02" -> "f03134685" // BC02용 주소 (이미지 값)
+        "GY01" -> "f03132919" // GY01용 주소 (기존)
+        else -> "f03132919" // 기본값
+    }
+    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -1636,7 +1673,7 @@ fun NodeMinerHeader(node: Node) {
             color = Color.White
         )
         Text(
-            text = "Address f03132919", // 실제 환경에서는 node에서 가져올 수 있도록 수정
+            text = "Address $addressValue", // 데이터센터별 동적 주소
             fontSize = 14.sp,
             color = Color(0xFF9CA3AF),
             modifier = Modifier.padding(top = 4.dp)
@@ -1832,20 +1869,41 @@ fun NodeBalanceLegendItem(
 @Composable
 fun NodePowerInfo(
     hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?
+    nodeUsage: NodeUsage?,
+    dataCenterName: String = "GY01"
 ) {
+    // 데이터센터별 Power 정보
+    val powerInfo = when (dataCenterName.uppercase()) {
+        "BC01" -> Pair(
+            Triple("Adjusted Power", "4.07 PiB", "Rate: 0.015%"),
+            Triple("Total Reward", "4,407.94 FIL", "Win Count: 708")
+        )
+        "BC02" -> Pair(
+            Triple("Adjusted Power", "3.84 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,763.23 FIL", "Win Count: 598")
+        )
+        "GY01" -> Pair(
+            Triple("Adjusted Power", "3.88 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,426.10 FIL", "Win Count: 557")
+        )
+        else -> Pair(
+            Triple("Adjusted Power", "3.88 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,426.10 FIL", "Win Count: 557")
+        )
+    }
+    
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         NodePowerInfoItem(
-            label = "Adjusted Power",
-            value = "3.88 PiB",
-            subInfo = "Rate: 0.02%"
+            label = powerInfo.first.first,
+            value = powerInfo.first.second,
+            subInfo = powerInfo.first.third
         )
         NodePowerInfoItem(
-            label = "Total Reward",
-            value = "3,397.90 FIL",
-            subInfo = "Win Count: 552"
+            label = powerInfo.second.first,
+            value = powerInfo.second.second,
+            subInfo = powerInfo.second.third
         )
     }
 }
@@ -2050,6 +2108,7 @@ fun NodeSeparateCards(
     node: Node,
     hardwareSpec: HardwareSpec?,
     nodeUsage: NodeUsage?,
+    dataCenterName: String = "GY01",
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -2059,13 +2118,15 @@ fun NodeSeparateCards(
         // Miner Overview 카드
         NodeMinerOverviewCard(
             hardwareSpec = hardwareSpec,
-            nodeUsage = nodeUsage
+            nodeUsage = nodeUsage,
+            dataCenterName = dataCenterName
         )
 
         // Adjusted Power 카드
         NodeAdjustedPowerCard(
             hardwareSpec = hardwareSpec,
-            nodeUsage = nodeUsage
+            nodeUsage = nodeUsage,
+            dataCenterName = dataCenterName
         )
     }
 }
@@ -2076,7 +2137,8 @@ fun NodeSeparateCards(
 @Composable
 fun NodeMinerOverviewCard(
     hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?
+    nodeUsage: NodeUsage?,
+    dataCenterName: String = "GY01"
 ) {
     Card(
         modifier = Modifier
@@ -2111,11 +2173,13 @@ fun NodeMinerOverviewCard(
                 NodeBalanceChartOnly(
                     hardwareSpec = hardwareSpec,
                     nodeUsage = nodeUsage,
+                    dataCenterName = dataCenterName,
                     modifier = Modifier.weight(1f)
                 )
 
                 // 오른쪽: 범례
                 NodeBalanceLegendOnly(
+                    dataCenterName = dataCenterName,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -2129,8 +2193,29 @@ fun NodeMinerOverviewCard(
 @Composable
 fun NodeAdjustedPowerCard(
     hardwareSpec: HardwareSpec?,
-    nodeUsage: NodeUsage?
+    nodeUsage: NodeUsage?,
+    dataCenterName: String = "GY01"
 ) {
+    // 데이터센터별 Power 정보
+    val powerInfo = when (dataCenterName.uppercase()) {
+        "BC01" -> Pair(
+            Triple("Adjusted Power", "2.15 PiB", "Rate: 0.015%"),
+            Triple("Total Reward", "2,847.32 FIL", "Win Count: 445")
+        )
+        "BC02" -> Pair(
+            Triple("Adjusted Power", "3.84 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,763.23 FIL", "Win Count: 598")
+        )
+        "GY01" -> Pair(
+            Triple("Adjusted Power", "3.88 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,426.10 FIL", "Win Count: 557")
+        )
+        else -> Pair(
+            Triple("Adjusted Power", "3.88 PiB", "Rate: 0.02%"),
+            Triple("Total Reward", "3,426.10 FIL", "Win Count: 557")
+        )
+    }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -2161,17 +2246,17 @@ fun NodeAdjustedPowerCard(
                 // 왼쪽: Adjusted Power (회색 박스)
                 PowerStatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Adjusted Power",
-                    value = "3.88 PiB",
-                    subtitle = "Rate: 0.02%"
+                    title = powerInfo.first.first,
+                    value = powerInfo.first.second,
+                    subtitle = powerInfo.first.third
                 )
 
                 // 오른쪽: Total Reward (회색 박스)
                 PowerStatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Total Reward",
-                    value = "3,397.90 FIL",
-                    subtitle = "Win Count: 552"
+                    title = powerInfo.second.first,
+                    value = powerInfo.second.second,
+                    subtitle = powerInfo.second.third
                 )
             }
         }
@@ -2186,12 +2271,37 @@ fun NodeAdjustedPowerCard(
 fun NodeBalanceChartOnly(
     hardwareSpec: HardwareSpec?,
     nodeUsage: NodeUsage?,
+    dataCenterName: String = "GY01",
     modifier: Modifier = Modifier
 ) {
-    // 샘플 데이터 - 실제 환경에서는 API에서 가져와야 함
-    val addressBalance = 18072.2546f
-    val availableBalance = 445.0850f
-    val lockedRewards = 773.8689f
+    // 데이터센터별 Balance 정보 (이미지 참고)
+    // Available Balance = Address Balance - Initial Pledge - Locked Rewards
+    val balanceInfo = when (dataCenterName.uppercase()) {
+        "BC01" -> Triple(
+            20143.6398f, // Address Balance
+            677.8146f,   // Available Balance
+            960.1557f    // Locked Rewards
+        )
+        "BC02" -> Triple(
+            18482.8764f, // Address Balance (이미지 값)
+            572.8343f,   // Available Balance
+            749.1920f    // Locked Rewards (이미지 값)
+        )
+        "GY01" -> Triple(
+            18100.2043f, // Address Balance (이미지 값)
+            475.5337f,   // Available Balance (이미지 값)
+            770.1835f    // Locked Rewards (이미지 값)
+        )
+        else -> Triple(
+            18100.2043f, // 기본값 (GY01과 동일)
+            475.5337f,
+            770.1835f
+        )
+    }
+    
+    val addressBalance = balanceInfo.first
+    val availableBalance = balanceInfo.second
+    val lockedRewards = balanceInfo.third
     val initialPledge = addressBalance - availableBalance - lockedRewards
 
     Column(
@@ -2253,19 +2363,46 @@ fun NodeBalanceChartOnly(
 }
 
 /**
- * 범례만 표시하는 컴포넌트 (차트 제외)
+ * 범례만 표시하는 컴포넌트
  */
 @Composable
 fun NodeBalanceLegendOnly(
+    dataCenterName: String = "GY01",
     modifier: Modifier = Modifier
 ) {
-    // 샘플 데이터 - 실제 환경에서는 API에서 가져와야 함
-    val availableBalance = 445.0850f
-    val initialPledge = 16853.3007f
-    val lockedRewards = 773.8689f
-
+    // 데이터센터별 Balance 정보 (이미지 참고)
+    // Available Balance = Address Balance - Initial Pledge - Locked Rewards
+    val balanceInfo = when (dataCenterName.uppercase()) {
+        "BC01" -> Triple(
+            20143.6398f, // Address Balance
+            677.8146f,   // Available Balance  
+            960.1557f    // Locked Rewards
+        )
+        "BC02" -> Triple(
+            18482.8764f, // Address Balance (이미지 값)
+            572.8343f,   // Available Balance
+            749.1920f    // Locked Rewards (이미지 값)
+        )
+        "GY01" -> Triple(
+            18100.2043f, // Address Balance (이미지 값)
+            475.5337f,   // Available Balance (이미지 값)
+            770.1835f    // Locked Rewards (이미지 값)
+        )
+        else -> Triple(
+            18100.2043f, // 기본값 (GY01과 동일)
+            475.5337f,
+            770.1835f
+        )
+    }
+    
+    val addressBalance = balanceInfo.first
+    val availableBalance = balanceInfo.second
+    val lockedRewards = balanceInfo.third
+    val initialPledge = addressBalance - availableBalance - lockedRewards
+    
     Column(
         modifier = modifier,
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         NodeBalanceLegendItem(
@@ -2285,6 +2422,8 @@ fun NodeBalanceLegendOnly(
         )
     }
 }
+
+
 
 /**
  * Power 통계 카드 (회색 박스, 중앙 정렬)

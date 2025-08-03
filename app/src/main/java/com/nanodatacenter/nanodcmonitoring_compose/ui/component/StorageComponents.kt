@@ -217,7 +217,7 @@ fun BC01NodeInfoCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 노드 이름 카드 (GY01과 동일한 스타일)
