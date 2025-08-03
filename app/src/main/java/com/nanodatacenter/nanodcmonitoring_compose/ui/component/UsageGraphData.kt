@@ -54,7 +54,7 @@ data class ExtendedUsageData(
     val storageUsage: UsageGraphData,
     val cpuTemp: UsageGraphData,
     val gpuTemp: UsageGraphData?,
-    val ssdHealth: UsageGraphData,
+    val ssdHealth: UsageGraphData?, // null이면 그래프 자체를 안보이게 변경
     val cpuVram: UsageGraphData?
 )
 
@@ -142,13 +142,13 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
     return ExtendedUsageData(
         cpuUsage = UsageGraphData(
             name = "CPU Usage",
-            percentage = this.cpuUsagePercent.toFloatOrNull() ?: 0f,
+            percentage = this.cpuUsagePercent?.toFloatOrNull() ?: 0f,
             color = UsageMetrics.CPU_COLOR,
             type = GraphType.CIRCULAR
         ),
         memoryUsage = UsageGraphData(
             name = "Memory",
-            percentage = this.memUsagePercent.toFloatOrNull() ?: 0f,
+            percentage = this.memUsagePercent?.toFloatOrNull() ?: 0f,
             color = UsageMetrics.MEMORY_COLOR,
             type = GraphType.CIRCULAR
         ),
@@ -163,7 +163,7 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
             percentage = this.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
             color = UsageMetrics.STORAGE_COLOR,
             type = GraphType.BAR,
-            value = "${this.usedStorageGb}GB"
+            value = "${this.usedStorageGb ?: "N/A"}GB"
         ),
         cpuTemp = UsageGraphData(
             name = "CPU Temperature",
@@ -173,7 +173,7 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
             },
             color = UsageMetrics.TEMPERATURE_COLOR,
             type = GraphType.BAR,
-            value = "${this.cpuTemp}°C",
+            value = "${this.cpuTemp ?: "N/A"}°C",
             maxValue = 100f
         ),
         gpuTemp = this.gpuTemp?.let { temp ->
@@ -188,13 +188,15 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
                 maxValue = 100f
             )
         },
-        ssdHealth = UsageGraphData(
-            name = "SSD Health",
-            percentage = this.ssdHealthPercent?.toFloatOrNull() ?: 100f,
-            color = UsageMetrics.HEALTH_COLOR,
-            type = GraphType.BAR,
-            value = "${this.ssdHealthPercent}%"
-        ),
+        ssdHealth = this.ssdHealthPercent?.let { healthPercent ->
+            UsageGraphData(
+                name = "SSD Health",
+                percentage = healthPercent.toFloatOrNull() ?: 0f,
+                color = UsageMetrics.HEALTH_COLOR,
+                type = GraphType.BAR,
+                value = "${healthPercent}%"
+            )
+        }, // null이면 그래프 자체가 안보임
         cpuVram = this.gpuVramPercent?.let { vram ->
             UsageGraphData(
                 name = "GPU VRAM",

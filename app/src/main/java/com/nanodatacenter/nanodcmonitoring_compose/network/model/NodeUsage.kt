@@ -16,28 +16,28 @@ data class NodeUsage(
     val timestamp: String,
     
     @SerializedName("cpu_usage_percent")
-    val cpuUsagePercent: String,
+    val cpuUsagePercent: String?,
     
     @SerializedName("mem_usage_percent")
-    val memUsagePercent: String,
+    val memUsagePercent: String?,
     
     @SerializedName("cpu_temp")
     val cpuTemp: String?,
     
     @SerializedName("gpu_usage_percent")
-    val gpuUsagePercent: String,
+    val gpuUsagePercent: String?,
     
     @SerializedName("gpu_temp")
-    val gpuTemp: String,
+    val gpuTemp: String?,
     
     @SerializedName("used_storage_gb")
-    val usedStorageGb: String,
+    val usedStorageGb: String?,
     
     @SerializedName("ssd_health_percent")
-    val ssdHealthPercent: String,
+    val ssdHealthPercent: String?, // API에서 null이 올 수 있으므로 nullable로 변경
     
     @SerializedName("gpu_vram_percent")
-    val gpuVramPercent: String,
+    val gpuVramPercent: String?,
     
     @SerializedName("harddisk_used_percent")
     val harddiskUsedPercent: String?,

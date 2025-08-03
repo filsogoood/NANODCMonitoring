@@ -375,13 +375,13 @@ private fun StorageInfoSection(hardwareSpec: HardwareSpec) {
         ) {
             InfoCard(
                 title = "CPU",
-                value = "${hardwareSpec.cpuCores} cores",
+                value = "${hardwareSpec.cpuCores ?: 0} cores",
                 icon = "🔧"
             )
             
             InfoCard(
                 title = "RAM",
-                value = "${hardwareSpec.totalRamGb} GB",
+                value = "${hardwareSpec.totalRamGb ?: 0} GB",
                 icon = "⚡"
             )
         }
@@ -409,13 +409,13 @@ private fun MinerHardwareSection(hardwareSpec: HardwareSpec) {
         ) {
             InfoCard(
                 title = "CPU",
-                value = "${hardwareSpec.cpuCores} cores",
+                value = "${hardwareSpec.cpuCores ?: 0} cores",
                 icon = "🔧"
             )
             
             InfoCard(
                 title = "GPU",
-                value = "${hardwareSpec.gpuCount} x ${hardwareSpec.gpuVramGb}GB",
+                value = "${hardwareSpec.gpuCount ?: 0} x ${hardwareSpec.gpuVramGb ?: 0}GB",
                 icon = "🎮"
             )
         }
@@ -428,13 +428,13 @@ private fun MinerHardwareSection(hardwareSpec: HardwareSpec) {
         ) {
             InfoCard(
                 title = "RAM",
-                value = "${hardwareSpec.totalRamGb} GB",
+                value = "${hardwareSpec.totalRamGb ?: 0} GB",
                 icon = "⚡"
             )
             
             InfoCard(
                 title = "Storage",
-                value = "${hardwareSpec.storageTotalGb} GB",
+                value = "${hardwareSpec.storageTotalGb ?: 0} GB",
                 icon = "💾"
             )
         }
@@ -459,7 +459,7 @@ private fun UsageSection(nodeUsage: NodeUsage) {
         // CPU 사용률
         UsageBar(
             label = "CPU",
-            percentage = nodeUsage.cpuUsagePercent.toFloatOrNull() ?: 0f,
+            percentage = nodeUsage.cpuUsagePercent?.toFloatOrNull() ?: 0f,
             color = Color(0xFF06B6D4)
         )
         
@@ -468,7 +468,7 @@ private fun UsageSection(nodeUsage: NodeUsage) {
         // 메모리 사용률
         UsageBar(
             label = "Memory",
-            percentage = nodeUsage.memUsagePercent.toFloatOrNull() ?: 0f,
+            percentage = nodeUsage.memUsagePercent?.toFloatOrNull() ?: 0f,
             color = Color(0xFF10B981)
         )
         
