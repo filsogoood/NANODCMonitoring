@@ -184,7 +184,7 @@ private fun NodeNameCard(
  * 스코어를 표시하는 개별 카드 (ScoreComponents.kt와 동일한 UI 스타일)
  */
 @Composable
-private fun NodeScoreCard(
+internal fun NodeScoreCard(
     score: Score,
     modifier: Modifier = Modifier
 ) {
@@ -246,7 +246,7 @@ private fun NodeScoreCard(
  * 하드웨어 스펙을 표시하는 개별 카드
  */
 @Composable
-private fun NodeHardwareSpecCard(
+internal fun NodeHardwareSpecCard(
     hardwareSpec: HardwareSpec,
     modifier: Modifier = Modifier
 ) {
@@ -285,7 +285,7 @@ private fun NodeHardwareSpecCard(
  * 사용률을 표시하는 개별 카드
  */
 @Composable
-private fun NodeUsageCard(
+internal fun NodeUsageCard(
     nodeUsage: NodeUsage,
     nodeIndex: Int = 0,
     nodeName: String = "",
@@ -750,7 +750,7 @@ private fun ScoreItem(
  * 하드웨어 스펙 섹션 - 하드웨어 정보 표시
  */
 @Composable
-private fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
+internal fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
     Column {
         NodeInfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
         NodeInfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
@@ -821,7 +821,7 @@ private fun AdditionalUsageInfoCard(
  * 노드 정보 행을 표시하는 재사용 가능한 컴포넌트
  */
 @Composable
-private fun NodeInfoRow(
+internal fun NodeInfoRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier
