@@ -281,11 +281,11 @@ private fun NodeNameCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = displayName ?: node.nodeName,
@@ -293,30 +293,6 @@ private fun NodeNameCard(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 노드 상태 표시
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusBadge(status = node.status)
-
-                // 노드 타입 표시
-                val nodeType = when {
-                    node.nodeName.contains("NAS", ignoreCase = true) -> "Storage Node"
-                    node.nodeName.contains("SAI", ignoreCase = true) -> "AI Computing Node"
-                    node.nodeName.contains("Filecoin-Miner", ignoreCase = true) -> "Mining Node"
-                    else -> "Compute Node"
-                }
-
-                Text(
-                    text = nodeType,
-                    fontSize = 14.sp,
-                    color = Color(0xFF60A5FA)
-                )
-            }
         }
     }
 }

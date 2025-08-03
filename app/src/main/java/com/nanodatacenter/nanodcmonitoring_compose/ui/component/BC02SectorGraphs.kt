@@ -424,20 +424,13 @@ fun BC02HardwareSpecCard(
 
 @Composable
 private fun PostWorkerHeader(displayName: String) {
-    Row(
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            Icons.Default.Computer,
-            contentDescription = "Post Worker",
-            tint = Color(0xFF3B82F6),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = displayName,
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
@@ -766,20 +759,13 @@ private fun PostWorkerPerformanceIndicators(
 
 @Composable
 private fun NodeMinerHeader(displayName: String) {
-    Row(
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            Icons.Default.Psychology,
-            contentDescription = "Node Miner",
-            tint = Color(0xFF8B5CF6),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = displayName,
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
@@ -904,20 +890,13 @@ private fun NodeMinerStats(
 
 @Composable
 private fun NASHeader(displayName: String) {
-    Row(
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            Icons.Default.Storage,
-            contentDescription = "NAS Storage",
-            tint = Color(0xFF10B981),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = displayName,
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
