@@ -95,6 +95,9 @@ fun ClickableImageItem(
     val repository = remember { NanoDcRepository.getInstance() }
     val adminManager = remember { AdminAccessManager.getInstance() }
     val context = LocalContext.current
+    
+    // StateFlow 구독
+    val lastRefreshTime by repository.lastRefreshTime.collectAsState()
 
     // 현재 nanoDcId 결정 (매개변수로 받거나 DeviceConfigurationManager에서 가져오기)
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
@@ -596,7 +599,7 @@ fun ClickableImageItem(
                                     }
 
                                     ImageType.FILECOIN -> {
-                                        // FILECOIN은 하드디스크 사용량 그래프 표시
+                                        // FILECOIN은 하드디스크 사용량 그래프 표시 (GY01 전용)
                                         val hardwareSpec =
                                             response.hardwareSpecs.find { it.nodeId == node.nodeId }
                                         val nodeUsage =
@@ -606,7 +609,10 @@ fun ClickableImageItem(
                                             node = node,
                                             hardwareSpec = hardwareSpec,
                                             nodeUsage = nodeUsage,
-                                            displayName = "GY01 STORAGE"
+                                            displayName = when {
+                                                isBC02 -> "BC02 Filecoin Miner"
+                                                else -> "GY01 STORAGE"
+                                            }
                                         )
                                     }
 
@@ -705,14 +711,14 @@ fun ClickableImageItem(
                                             Column(
                                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
-                                                BC02NASSectorGraph(
-                                                    node = node,
-                                                    hardwareSpec = hardwareSpec,
-                                                    nodeUsage = nodeUsage,
-                                                    score = score,
-                                                    displayName = displayName,
-                                                    lastRefreshTime = repository.lastRefreshTime.value
-                                                )
+                                                                                            BC02NASSectorGraph(
+                                                node = node,
+                                                hardwareSpec = hardwareSpec,
+                                                nodeUsage = nodeUsage,
+                                                score = score,
+                                                displayName = displayName,
+                                                lastRefreshTime = lastRefreshTime
+                                            )
                                             }
                                         } else {
                                             android.util.Log.d(
@@ -764,7 +770,7 @@ fun ClickableImageItem(
                                                             nodeUsage = nodeUsage,
                                                             score = score,
                                                             displayName = displayName,
-                                                            lastRefreshTime = repository.lastRefreshTime.value
+                                                            lastRefreshTime = lastRefreshTime
                                                         )
                                                     }
 
@@ -775,7 +781,7 @@ fun ClickableImageItem(
                                                             nodeUsage = nodeUsage,
                                                             score = score,
                                                             displayName = displayName,
-                                                            lastRefreshTime = repository.lastRefreshTime.value
+                                                            lastRefreshTime = lastRefreshTime
                                                         )
                                                     }
 
@@ -1259,6 +1265,7 @@ fun DataCenterMonitoringScreen(
     val repository = remember { NanoDcRepository.getInstance() }
     val apiResponse by repository.apiResponseState.collectAsState()
     val isLoading by repository.isLoading.collectAsState()
+    val lastRefreshTime by repository.lastRefreshTime.collectAsState()
 
     val currentNanoDcId = currentDataCenter.nanoDcId
 

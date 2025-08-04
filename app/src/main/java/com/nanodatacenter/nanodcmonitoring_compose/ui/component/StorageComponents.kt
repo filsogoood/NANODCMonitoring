@@ -248,9 +248,10 @@ fun BC01NodeInfoCard(
                 hardwareSpec = hardwareSpec
             )
 
-            // 스토리지 노드인 경우 스토리지 상태 카드 나중에 표시 (사용량)
+            // 스토리지 노드와 FileCoin Miner인 경우 스토리지 상태 카드 표시 (사용량)
             if (node.nodeName.contains("NAS", ignoreCase = true) ||
-                node.nodeName.contains("SAI Server", ignoreCase = true)
+                node.nodeName.contains("SAI Server", ignoreCase = true) ||
+                node.nodeName.contains("Filecoin-Miner", ignoreCase = true)
             ) {
                 // 스토리지 상태 카드 (GY01 스타일) - 사용량으로 분류
                 StorageStatusCard(
