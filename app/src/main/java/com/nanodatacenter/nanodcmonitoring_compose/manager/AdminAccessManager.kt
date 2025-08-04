@@ -62,7 +62,7 @@ class AdminAccessManager private constructor() {
             clickCount >= TOAST_START_THRESHOLD -> {
                 // 3번 터치 이후 토스트 표시
                 val remainingClicks = REQUIRED_CLICKS_FOR_ADMIN - clickCount
-                toastMessage = "${remainingClicks}번 더 터치하면 관리자 팝업이 나옵니다"
+                toastMessage = "Touch ${remainingClicks} again to display the administrator pop-up."
                 shouldShowToast = true
             }
         }
