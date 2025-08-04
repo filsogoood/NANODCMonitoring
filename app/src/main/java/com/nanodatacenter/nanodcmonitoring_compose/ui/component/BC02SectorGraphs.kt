@@ -155,13 +155,7 @@ fun BC02PostWorkerSectorGraph(
                     nodeUsage = nodeUsage
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 성능 인디케이터
-                PostWorkerPerformanceIndicators(
-                    nodeUsage = nodeUsage,
-                    score = score
-                )
+
             }
         }
     }
@@ -720,40 +714,7 @@ private fun HorizontalMetricBar(
     }
 }
 
-@Composable
-private fun PostWorkerPerformanceIndicators(
-    nodeUsage: NodeUsage?,
-    score: Score?
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // CPU 사용량 인디케이터
-        PerformanceIndicator(
-            title = "CPU",
-            value = "${nodeUsage?.cpuUsagePercent ?: "0"}%",
-            color = Color(0xFF3B82F6),
-            modifier = Modifier.weight(1f)
-        )
-        
-        // 메모리 사용량 인디케이터
-        PerformanceIndicator(
-            title = "Memory",
-            value = "${nodeUsage?.memUsagePercent ?: "0"}%",
-            color = Color(0xFF10B981),
-            modifier = Modifier.weight(1f)
-        )
-        
-        // 스코어 인디케이터
-        PerformanceIndicator(
-            title = "Score",
-            value = "${score?.averageScore?.toIntOrNull() ?: "N/A"}",
-            color = Color(0xFFF59E0B),
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
+
 
 // ===== Node Miner 섹션 컴포넌트들 =====
 
