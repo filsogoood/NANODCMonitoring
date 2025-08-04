@@ -163,7 +163,26 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
             percentage = this.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
             color = UsageMetrics.STORAGE_COLOR,
             type = GraphType.BAR,
-            value = "${this.usedStorageGb ?: "N/A"}GB"
+            // Storage 사용량을 더 명확하게 표시: GB 용량과 퍼센트 모두 표시
+            value = buildString {
+                val usedGb = this@toExtendedUsageData.usedStorageGb
+                val percentage = this@toExtendedUsageData.harddiskUsedPercent
+                
+                when {
+                    !usedGb.isNullOrEmpty() && !percentage.isNullOrEmpty() -> {
+                        append("${usedGb}GB (${percentage}%)")
+                    }
+                    !usedGb.isNullOrEmpty() -> {
+                        append("${usedGb}GB")
+                    }
+                    !percentage.isNullOrEmpty() -> {
+                        append("${percentage}%")
+                    }
+                    else -> {
+                        append("N/A")
+                    }
+                }
+            }
         ),
         cpuTemp = UsageGraphData(
             name = "CPU Temperature",
@@ -180,12 +199,17 @@ fun com.nanodatacenter.nanodcmonitoring_compose.network.model.NodeUsage.toExtend
             UsageGraphData(
                 name = "GPU Temperature",
                 percentage = (temp.toFloatOrNull() ?: 0f).let { tempFloat ->
-                    (tempFloat / 100f * 100f).coerceIn(0f, 100f)
+                    // GPU 온도를 더 현실적인 범위로 조정 (0-90도 기준, 25도는 약 28%)
+                    when {
+                        tempFloat <= 0f -> 0f
+                        tempFloat >= 90f -> 100f
+                        else -> (tempFloat / 90f * 100f).coerceIn(0f, 100f)
+                    }
                 },
                 color = UsageMetrics.TEMPERATURE_COLOR,
                 type = GraphType.BAR,
                 value = "${temp}°C",
-                maxValue = 100f
+                maxValue = 90f
             )
         },
         ssdHealth = this.ssdHealthPercent?.let { healthPercent ->

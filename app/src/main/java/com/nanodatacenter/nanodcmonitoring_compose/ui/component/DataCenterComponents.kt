@@ -103,6 +103,13 @@ fun ClickableImageItem(
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
     val currentNanoDcId = nanoDcId ?: deviceConfigManager.getSelectedDataCenter().nanoDcId
 
+    // BC01에서 AETHIR일 때만 실제 aethir.jpg 이미지 사용하고 클릭 가능하게 설정
+    val isBC01 = currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)
+    val isAethirInBC01 = imageType == ImageType.AETHIR && isBC01
+    
+    // BC01의 AETHIR은 클릭 가능, 다른 경우는 원래 설정 따름
+    val isClickableImage = if (isAethirInBC01) true else imageType.showsInfoCard
+
     // 토스트 메시지 표시
     LaunchedEffect(adminManager.shouldShowToast) {
         if (adminManager.shouldShowToast) {
@@ -125,15 +132,28 @@ fun ClickableImageItem(
                 )
             }
 
-            imageType.showsInfoCard -> {
-                // 일반 클릭 가능한 이미지: 기존 로직 유지
-                SeamlessImageItem(
-                    imageType = imageType,
-                    modifier = Modifier.clickable {
-                        isExpanded = !isExpanded
-                    },
-                    contentScale = contentScale
-                )
+            isClickableImage -> {
+                // 클릭 가능한 이미지: BC01의 AETHIR 포함
+                if (isAethirInBC01) {
+                    // BC01의 AETHIR은 실제 aethir.jpg 이미지 사용
+                    Image(
+                        painter = painterResource(id = com.nanodatacenter.nanodcmonitoring_compose.R.drawable.aethir),
+                        contentDescription = "BC01 Aethir Server",
+                        modifier = Modifier.clickable {
+                            isExpanded = !isExpanded
+                        }.fillMaxWidth(),
+                        contentScale = contentScale
+                    )
+                } else {
+                    // 기존 클릭 가능한 이미지들
+                    SeamlessImageItem(
+                        imageType = imageType,
+                        modifier = Modifier.clickable {
+                            isExpanded = !isExpanded
+                        },
+                        contentScale = contentScale
+                    )
+                }
             }
 
             else -> {
@@ -146,8 +166,8 @@ fun ClickableImageItem(
             }
         }
 
-        // 확장 정보 카드 (일반 클릭 가능한 이미지에만 표시)
-        if (imageType.showsInfoCard) {
+        // 확장 정보 카드 (일반 클릭 가능한 이미지와 BC01의 AETHIR에 표시)
+        if (isClickableImage) {
             // 커스텀 스케일 이미지의 경우 카드 겹침 방지를 위한 여백 추가
             if (ImageScaleUtil.hasCustomScale(imageType)) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -172,8 +192,8 @@ fun ClickableImageItem(
                         // Aethir 노드 정보를 간단하게 표시
                         AethirNodeInfoCard()
                     }
-                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO, NOT_STORAGE, STORAGE, LONOVO_POST 이미지의 경우 노드 정보 표시
-                    imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO || imageType == ImageType.NOT_STORAGE || imageType == ImageType.STORAGE_1 || imageType == ImageType.STORAGE_2 || imageType == ImageType.STORAGE_3 || imageType == ImageType.STORAGE_4 || imageType == ImageType.STORAGE_5 || imageType == ImageType.STORAGE_6 || imageType == ImageType.LONOVO_POST -> {
+                    // SUPRA, POSTWORKER, FILECOIN, NODE_MINER, NODE_INFO, NOT_STORAGE, STORAGE, LONOVO_POST, AETHIR 이미지의 경우 노드 정보 표시 (BC01의 AETHIR만 클릭 가능)
+                    (imageType == ImageType.SUPRA || imageType == ImageType.POSTWORKER || imageType == ImageType.FILECOIN || imageType == ImageType.NODE_MINER || imageType == ImageType.NODE_INFO || imageType == ImageType.NOT_STORAGE || imageType == ImageType.STORAGE_1 || imageType == ImageType.STORAGE_2 || imageType == ImageType.STORAGE_3 || imageType == ImageType.STORAGE_4 || imageType == ImageType.STORAGE_5 || imageType == ImageType.STORAGE_6 || imageType == ImageType.LONOVO_POST || isAethirInBC01) -> {
                         apiResponse?.let { response ->
                             // 디버그 로그 추가
                             android.util.Log.d("DataCenterComponents", "🔍 Debug Info:")
@@ -531,6 +551,21 @@ fun ClickableImageItem(
                                 }
 
                                 ImageType.NODE_INFO -> response.nodes.firstOrNull() // NODE_INFO는 첫 번째 노드 사용 또는 특정 노드 지정
+                                
+                                // BC01의 AETHIR인 경우에만 처리 (isAethirInBC01이 true일 때만 이 조건에 도달)
+                                ImageType.AETHIR -> {
+                                    if (isBC01) {
+                                        response.nodes.find {
+                                            it.nodeName.contains(
+                                                "Aethir",
+                                                ignoreCase = true
+                                            )
+                                        }
+                                    } else {
+                                        null // BC01이 아닌 경우 null 반환 (실제로는 여기에 도달하지 않음)
+                                    }
+                                }
+                                
                                 else -> null
                             }
 
@@ -855,6 +890,14 @@ fun ClickableImageItem(
                                         val displayName = when (imageType) {
                                             ImageType.SUPRA -> "GY01 SUPRA WORKER"
                                             ImageType.POSTWORKER -> "GY01 POSTWORKER"
+                                            ImageType.AETHIR -> {
+                                                // BC01의 Aethir인 경우 BC01 Aethir Node로 표시
+                                                if (isBC01) {
+                                                    "BC01 Aethir Node"
+                                                } else {
+                                                    "Aethir Node"
+                                                }
+                                            }
                                             else -> "GY01 NODE"
                                         }
 

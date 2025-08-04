@@ -34,8 +34,7 @@ data class ImageConfiguration(
             ImageType.SUPRA_NONE_3,
             ImageType.SYSTEMTOAI,
             ImageType.SYSTEMTOAI_NONE,
-            ImageType.AETHIR,
-            ImageType.AETHIR_NONE,
+            ImageType.AETHIR_NONE,  // GY01은 AETHIR_NONE 사용 (클릭 불가)
             ImageType.FILECOIN,
             ImageType.FILECOIN_NONE_1,
             ImageType.FILECOIN_NONE_2,
@@ -53,7 +52,7 @@ data class ImageConfiguration(
          * - NODE_INFO_AETHIR: node_info_aethir.png
          * - SWITCH_100G: switch_100g.png [클릭 불가]
          * - SYSTEMTOAI: systemtoai_none.png [90% 스케일]
-         * - AETHIR: aethir_none.png [90% 스케일]
+         * - AETHIR: aethir.jpg [90% 스케일, 클릭 가능] - BC01에서만 실제 이미지 사용
          * - FILECOIN: filecoin_none.png [90% 스케일]
          * - STORAGE 1~5: storage2.png (5개)
          * - STORAGE2_NONE: storage2_none.png [클릭 불가]

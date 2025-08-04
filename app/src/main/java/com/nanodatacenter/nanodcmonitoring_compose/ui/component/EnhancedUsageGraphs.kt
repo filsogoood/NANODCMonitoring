@@ -122,17 +122,9 @@ private fun Grid2x2Layout(data: ExtendedUsageData) {
         // 추가 메트릭 (온도, SSD Health) - NULL 값 필터링 적용
         AdditionalMetricsRow(data)
         
-        // Storage 항목을 하단에 가로 바 그래프로 표시
+        // Storage 항목을 하단에 가로 바 그래프로 표시 (제목 제거)
         if (storageMetrics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Storage Information",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = UsageMetrics.TEXT_SECONDARY,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
             
             storageMetrics.forEach { storageMetric ->
                 HorizontalBarGraph(
@@ -157,15 +149,16 @@ private fun VerticalBarsLayout(data: ExtendedUsageData) {
         if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage.copy(type = GraphType.BAR) else null,
         // GPU Usage는 값이 유효할 때만 표시
         if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage.copy(type = GraphType.BAR) else null,
-        // CPU 온도는 값이 유효할 때만 표시 (BC02에서 사용하지 않음)
-        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
-        // GPU 온도는 값이 유효할 때만 표시
-        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         // SSD Health는 null이 아닐 때만 표시
         data.ssdHealth,
         // GPU VRAM은 값이 유효할 때만 표시
         if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram.copy(type = GraphType.BAR) else null
     ).filter { it != null } // null이 아닌 값만 필터링
+    
+    // GPU 온도 메트릭 분리 (가로 바 그래프용)
+    val gpuTempMetrics = listOfNotNull(
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
+    )
     
     // Storage 메트릭은 별도로 분리 (가로 바 그래프용)
     val storageMetrics = listOfNotNull(
@@ -206,17 +199,21 @@ private fun VerticalBarsLayout(data: ExtendedUsageData) {
             }
         }
         
-        // Storage 항목을 하단에 가로 바 그래프로 표시
-        if (storageMetrics.isNotEmpty()) {
+        // GPU 온도를 가로 바 그래프로 표시
+        if (gpuTempMetrics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             
-//            Text(
-//                text = "Storage Information2",
-//                fontSize = 12.sp,
-//                fontWeight = FontWeight.Medium,
-//                color = UsageMetrics.TEXT_SECONDARY,
-//                modifier = Modifier.padding(vertical = 8.dp)
-//            )
+            gpuTempMetrics.forEach { tempMetric ->
+                HorizontalBarGraph(
+                    data = tempMetric,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        
+        // Storage 항목을 하단에 가로 바 그래프로 표시 (제목 제거)
+        if (storageMetrics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
             
             storageMetrics.forEach { storageMetric ->
                 HorizontalBarGraph(
@@ -238,8 +235,7 @@ private fun HorizontalBarsLayout(data: ExtendedUsageData) {
         if (!data.cpuUsage.percentage.isNaN()) data.cpuUsage else null,
         if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null,
         if (!data.gpuUsage.percentage.isNaN()) data.gpuUsage else null,
-        // CPU 온도는 BC02에서 사용하지 않음
-        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // GPU 온도를 가로 바 그래프로 표시
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         data.ssdHealth?.takeIf { !it.percentage.isNaN() && it.value.isNotEmpty() && it.value != "null" },
         if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
@@ -259,7 +255,7 @@ private fun HorizontalBarsLayout(data: ExtendedUsageData) {
             )
         }
         
-        // Storage 항목을 하단에 분리 표시
+        // Storage 항목을 하단에 분리 표시 (제목 제거)
         if (storageMetrics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -285,10 +281,9 @@ private fun MixedLayout(data: ExtendedUsageData) {
         if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
     )
     
-    // 중단 바 그래프용 메트릭 필터링 (NULL만 제외, Storage 제외)
+    // 중단 바 그래프용 메트릭 필터링 (NULL만 제외, Storage 제외) - GPU 온도 포함
     val barMetrics = listOfNotNull(
-        // CPU 온도는 BC02에서 사용하지 않음
-        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
+        // GPU 온도를 가로 바 그래프로 표시
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
         data.ssdHealth?.takeIf { !it.percentage.isNaN() && it.value.isNotEmpty() && it.value != "null" }
     )
@@ -326,18 +321,10 @@ private fun MixedLayout(data: ExtendedUsageData) {
             )
         }
         
-        // Storage 항목을 하단에 분리 표시
+        // Storage 항목을 하단에 분리 표시 (제목 제거)
         if (storageMetrics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            
-//            Text(
-//                text = "Storage Information",
-//                fontSize = 12.sp,
-//                fontWeight = FontWeight.Medium,
-//                color = UsageMetrics.TEXT_SECONDARY,
-//                modifier = Modifier.padding(vertical = 8.dp)
-//            )
-//
+
             storageMetrics.forEach { storageMetric ->
                 HorizontalBarGraph(
                     data = storageMetric,
@@ -359,10 +346,8 @@ private fun DashboardLayout(data: ExtendedUsageData) {
         if (!data.memoryUsage.percentage.isNaN()) data.memoryUsage else null
     )
     
-    // 온도 게이지 메트릭 필터링 (NULL만 제외)
+    // 온도 메트릭을 가로 바 그래프로 표시 (게이지에서 변경)
     val tempMetrics = listOfNotNull(
-        // CPU 온도는 BC02에서 사용하지 않음
-        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
         if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
     )
     
@@ -396,22 +381,13 @@ private fun DashboardLayout(data: ExtendedUsageData) {
             }
         }
         
-        // 중단: 온도 게이지들
+        // 중단: 온도를 가로 바 그래프로 표시 (게이지에서 변경)
         if (tempMetrics.isNotEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                tempMetrics.forEach { tempData ->
-                    GaugeGraph(
-                        data = tempData,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // 빈 공간 채우기
-                repeat(2 - tempMetrics.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+            tempMetrics.forEach { tempData ->
+                HorizontalBarGraph(
+                    data = tempData,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
         
@@ -423,17 +399,9 @@ private fun DashboardLayout(data: ExtendedUsageData) {
             )
         }
         
-        // Storage 항목을 하단에 분리 표시
+        // Storage 항목을 하단에 분리 표시 (제목 제거)
         if (storageMetrics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Storage Information",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = UsageMetrics.TEXT_SECONDARY,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
             
             storageMetrics.forEach { storageMetric ->
                 HorizontalBarGraph(
@@ -880,19 +848,20 @@ private fun NasFocusedLayout(data: ExtendedUsageData) {
  */
 @Composable
 private fun AdditionalMetricsRow(data: ExtendedUsageData) {
-    // NULL 값만 필터링 (0%는 표시)
-    val additionalMetrics = listOfNotNull(
-        // CPU 온도는 값이 유효할 때만 표시 (BC02에서 사용하지 않음)
-        // if (!data.cpuTemp.percentage.isNaN() && data.cpuTemp.value.isNotEmpty() && data.cpuTemp.value != "null") data.cpuTemp else null,
-        // GPU 온도는 값이 유효할 때만 표시
-        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null,
-        // SSD Health는 null이 아닐 때만 표시
+    // GPU 온도는 가로 바 그래프로 표시
+    val tempMetrics = listOfNotNull(
+        if (data.gpuTemp != null && !data.gpuTemp.percentage.isNaN() && data.gpuTemp.value.isNotEmpty() && data.gpuTemp.value != "null") data.gpuTemp else null
+    )
+    
+    // 원형 그래프로 표시할 메트릭들
+    val circularMetrics = listOfNotNull(
+        // SSD Health는 원형 그래프로 유지
         data.ssdHealth,
         // GPU VRAM은 값이 유효할 때만 표시
         if (data.cpuVram != null && !data.cpuVram.percentage.isNaN()) data.cpuVram else null
     )
     
-    if (additionalMetrics.isNotEmpty()) {
+    if (tempMetrics.isNotEmpty() || circularMetrics.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Additional Metrics",
@@ -902,28 +871,33 @@ private fun AdditionalMetricsRow(data: ExtendedUsageData) {
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             
-            additionalMetrics.chunked(2).forEach { rowData ->
-                Row(
+            // GPU 온도를 가로 바 그래프로 표시
+            tempMetrics.forEach { tempMetric ->
+                HorizontalBarGraph(
+                    data = tempMetric,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    rowData.forEach { metricData ->
-                        when (metricData.type) {
-                            GraphType.BAR -> HorizontalBarGraph(
-                                data = metricData,
-                                modifier = Modifier.weight(1f),
-                                compact = true
-                            )
-                            else -> CircularProgressGraph(
+                    compact = true
+                )
+            }
+            
+            // 원형 그래프로 표시할 메트릭들 (2개씩 배치)
+            if (circularMetrics.isNotEmpty()) {
+                circularMetrics.chunked(2).forEach { rowData ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        rowData.forEach { metricData ->
+                            CircularProgressGraph(
                                 data = metricData,
                                 modifier = Modifier.weight(1f),
                                 size = 60.dp
                             )
                         }
-                    }
-                    // 홀수 개일 경우 빈 공간 채우기
-                    if (rowData.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
+                        // 홀수 개일 경우 빈 공간 채우기
+                        if (rowData.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -1135,17 +1109,53 @@ fun HorizontalBarGraph(
                 fontWeight = FontWeight.Medium,
                 color = UsageMetrics.TEXT_SECONDARY
             )
-            Text(
-                text = if (data.value.isNotEmpty()) data.value else "${data.percentage.toInt()}%",
-                fontSize = fontSize,
-                fontWeight = FontWeight.Bold,
-                color = data.color
-            )
+            
+            // 값을 더 명확하게 표시
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                // 메인 값 표시 (Storage의 경우 GB와 %를 모두 표시)
+                Text(
+                    text = if (data.value.isNotEmpty()) data.value else "${data.percentage.toInt()}%",
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = data.color
+                )
+                
+                // Storage의 경우 추가 정보 표시
+                if (data.name.contains("Storage", ignoreCase = true) && data.percentage > 0f) {
+                    Text(
+                        text = "${data.percentage.toInt()}% used",
+                        fontSize = (fontSize.value - 1).sp,
+                        color = UsageMetrics.TEXT_SECONDARY
+                    )
+                }
+                
+                // 온도의 경우 상태 표시
+                if (data.name.contains("Temperature", ignoreCase = true) && data.percentage > 0f) {
+                    val tempStatus = when {
+                        data.percentage < 30f -> "Cool"
+                        data.percentage < 60f -> "Normal"
+                        data.percentage < 80f -> "Warm"
+                        else -> "Hot"
+                    }
+                    Text(
+                        text = tempStatus,
+                        fontSize = (fontSize.value - 1).sp,
+                        color = when {
+                            data.percentage < 30f -> Color(0xFF10B981) // 초록색
+                            data.percentage < 60f -> Color(0xFF3B82F6) // 파란색
+                            data.percentage < 80f -> Color(0xFFF59E0B) // 주황색
+                            else -> Color(0xFFEF4444) // 빨간색
+                        }
+                    )
+                }
+            }
         }
         
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(if (compact) 3.dp else 4.dp))
         
-        // 바 그래프
+        // 바 그래프 - 그라데이션 효과 추가
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1153,13 +1163,46 @@ fun HorizontalBarGraph(
                 .clip(RoundedCornerShape(barHeight / 2))
                 .background(UsageMetrics.BACKGROUND_DARK)
         ) {
+            // 진행률 바 - 색상 강도 조절
             Box(
                 modifier = Modifier
                     .fillMaxWidth(animatedProgress)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(barHeight / 2))
-                    .background(data.color)
+                    .background(
+                        when {
+                            data.name.contains("Temperature", ignoreCase = true) -> {
+                                // 온도에 따른 색상 변화
+                                when {
+                                    data.percentage < 30f -> Color(0xFF10B981)
+                                    data.percentage < 60f -> Color(0xFF3B82F6)
+                                    data.percentage < 80f -> Color(0xFFF59E0B)
+                                    else -> Color(0xFFEF4444)
+                                }
+                            }
+                            data.name.contains("Storage", ignoreCase = true) -> {
+                                // Storage 사용률에 따른 색상 변화
+                                when {
+                                    data.percentage < 50f -> Color(0xFF10B981)
+                                    data.percentage < 80f -> Color(0xFFF59E0B)
+                                    else -> Color(0xFFEF4444)
+                                }
+                            }
+                            else -> data.color
+                        }
+                    )
             )
+            
+            // 진행률이 매우 낮을 때 최소 표시 바
+            if (animatedProgress > 0f && animatedProgress < 0.05f) {
+                Box(
+                    modifier = Modifier
+                        .width(barHeight)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(barHeight / 2))
+                        .background(data.color.copy(alpha = 0.8f))
+                )
+            }
         }
     }
 }

@@ -261,13 +261,6 @@ internal fun NodeHardwareSpecCard(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            // Text(
-            //     text = "Storage Information",
-            //     fontSize = 16.sp,
-            //     fontWeight = FontWeight.SemiBold,
-            //     color = Color(0xFF60A5FA),
-            //     modifier = Modifier.padding(bottom = 16.dp)
-            // )
             Text(
                 text = "Hardware Specifications",
                 fontSize = 16.sp,
@@ -755,7 +748,6 @@ internal fun HardwareSpecSection(hardwareSpec: HardwareSpec) {
         NodeInfoRow("CPU", "${hardwareSpec.cpuModel} (${hardwareSpec.cpuCores} cores)")
         NodeInfoRow("GPU", "${hardwareSpec.gpuModel} (${hardwareSpec.gpuVramGb}GB VRAM)")
         NodeInfoRow("RAM", "${hardwareSpec.totalRamGb}GB")
-        // NodeInfoRow("Storage", "${hardwareSpec.storageType} ${hardwareSpec.storageTotalGb}GB") // Storage Information 제거
         NodeInfoRow("NVMe Count", hardwareSpec.nvmeCount)
     }
 }
