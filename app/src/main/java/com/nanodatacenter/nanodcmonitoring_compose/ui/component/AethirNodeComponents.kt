@@ -98,14 +98,14 @@ fun getAethirWalletInfoForDataCenter(isBC01: Boolean): DataCenterAethirWalletInf
             reward = "386.07"
         )
     } else {
-        // 다른 데이터센터는 동일한 수치 (나중에 수정 가능)
+        // BC02 및 다른 데이터센터 수치
         DataCenterAethirWalletInfo(
-            vestingClaim = "18424.20",
-            claimable = "12406.76",
-            cashOutTotal = "128000.40", 
-            staking = "72000.72",
-            unstaking = "221000.48",
-            reward = "386.07"
+            vestingClaim = "7403.95",
+            claimable = "5747.79",
+            cashOutTotal = "56089.60", 
+            staking = "35114.40",
+            unstaking = "91250.90",
+            reward = "171.93"
         )
     }
 }
@@ -509,23 +509,21 @@ private fun AethirWalletBalanceCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 지갑 밸런스 정보
+            // 지갑 밸런스 정보 - 균등한 간격과 크기로 조정
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp) // 균등한 간격 적용
             ) {
                 AethirTokenCard(
                     title = "VESTING CLAIM",
                     amount = walletInfo.vestingClaim,
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 AethirTokenCard(
-                    title = "CLAIMABLE",
+                    title = "CLAIMABLE", 
                     amount = walletInfo.claimable,
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 AethirTokenCard(
                     title = "CASH OUT",
                     amount = walletInfo.cashOutTotal,
@@ -592,10 +590,10 @@ private fun AethirStakingInfoCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 스테이킹 데이터 가로 배치
+            // 스테이킹 데이터 가로 배치 - 균등한 간격과 크기로 조정
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(8.dp) // 균등한 간격 적용
             ) {
                 AethirStakingCard(
                     title = "STAKING",
@@ -603,14 +601,12 @@ private fun AethirStakingInfoCard(
                     color = Color(0xFF10B981),
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
                 AethirStakingCard(
-                    title = "UNSTAKING",
+                    title = "UNSTAKING", 
                     amount = walletInfo.unstaking,
                     color = Color(0xFFF59E0B),
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
                 AethirStakingCard(
                     title = "REWARD",
                     amount = walletInfo.reward,
@@ -863,47 +859,55 @@ private fun AethirStakingCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(120.dp), // 고정 높이로 모든 박스 크기 통일
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF111827),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
+        color = Color(0xFF111827)
+        // 박스선 제거 - border 속성 삭제
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             // 스테이킹 상태 아이콘
             Box(
                 modifier = Modifier
-                    .size(8.dp)
-                    .background(color, RoundedCornerShape(4.dp))
+                    .size(10.dp)
+                    .background(color, RoundedCornerShape(5.dp))
             )
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 제목
+            // 제목 - 텍스트 크기 2pt 줄임 (11sp → 9sp)
             Text(
                 text = title,
-                fontSize = 14.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF9CA3AF),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2, // 최대 2줄까지 허용
+                lineHeight = 10.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             
-            // 금액
+            // 금액 - 텍스트 크기 2pt 줄임 (14sp → 12sp)
             Text(
-                text = "$amount",
-                fontSize = 16.sp,
+                text = amount,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2 // 긴 숫자의 경우 줄바꿈 허용
             )
             Spacer(modifier = Modifier.height(4.dp))
             
-            // ATH 단위
+            // ATH 단위 - 텍스트 크기 2pt 줄임 (10sp → 8sp)
             Text(
                 text = "ATH",
-                fontSize = 12.sp,
+                fontSize = 8.sp,
                 fontWeight = FontWeight.Medium,
                 color = color,
                 textAlign = TextAlign.Center
@@ -922,29 +926,36 @@ private fun AethirTokenCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(90.dp), // 고정 높이로 모든 박스 크기 통일
         shape = RoundedCornerShape(8.dp),
         color = Color(0xFF111827),
         border = BorderStroke(1.dp, Color(0xFF374151).copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = title,
-                fontSize = 10.sp,
+                fontSize = 9.sp, // 폰트 크기 줄임
                 color = Color(0xFF9CA3AF),
                 textAlign = TextAlign.Center,
-                maxLines = 2
+                maxLines = 3, // 최대 3줄까지 허용
+                lineHeight = 10.sp
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "$amount ATH",
-                fontSize = 12.sp,
+                fontSize = 11.sp, // 폰트 크기 줄임
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2 // 긴 숫자의 경우 줄바꿈 허용
             )
         }
     }
