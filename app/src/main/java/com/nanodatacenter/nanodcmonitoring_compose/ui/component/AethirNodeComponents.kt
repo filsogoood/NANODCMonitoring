@@ -60,6 +60,57 @@ data class AethirWalletInfo(
 )
 
 /**
+ * BC01 전용 Aethir 지갑 정보 데이터 클래스
+ */
+data class BC01AethirWalletInfo(
+    val vestingClaim: String = "18424.20",
+    val claimable: String = "12406.76",
+    val cashOutTotal: String = "128000.40",
+    val staking: String = "72000.72",
+    val unstaking: String = "221000.48",
+    val reward: String = "386.07"
+)
+
+/**
+ * 데이터센터별 Aethir 지갑 정보를 위한 통합 데이터 클래스
+ */
+data class DataCenterAethirWalletInfo(
+    val vestingClaim: String,
+    val claimable: String,
+    val cashOutTotal: String,
+    val staking: String,
+    val unstaking: String,
+    val reward: String
+)
+
+/**
+ * 데이터센터별 Aethir 지갑 정보를 가져오는 함수
+ */
+fun getAethirWalletInfoForDataCenter(isBC01: Boolean): DataCenterAethirWalletInfo {
+    return if (isBC01) {
+        // BC01 데이터
+        DataCenterAethirWalletInfo(
+            vestingClaim = "18424.20",
+            claimable = "12406.76", 
+            cashOutTotal = "128000.40",
+            staking = "72000.72",
+            unstaking = "221000.48",
+            reward = "386.07"
+        )
+    } else {
+        // 다른 데이터센터는 동일한 수치 (나중에 수정 가능)
+        DataCenterAethirWalletInfo(
+            vestingClaim = "18424.20",
+            claimable = "12406.76",
+            cashOutTotal = "128000.40", 
+            staking = "72000.72",
+            unstaking = "221000.48",
+            reward = "386.07"
+        )
+    }
+}
+
+/**
  * Aethir 대시보드 정보 데이터 클래스
  */
 data class AethirDashboardInfo(
@@ -142,9 +193,22 @@ fun AethirNodeImageWithInfo(
  */
 @Composable
 fun AethirNodeInfoCard(
-    aethirNodeInfo: AethirNodeInfo,
+    aethirNodeInfo: AethirNodeInfo? = null,
+    isBC01: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val nodeInfo = aethirNodeInfo ?: if (isBC01) {
+        AethirNodeInfo(
+            nodeName = "BC01 Aethir Node",
+            walletInfo = AethirWalletInfo(),
+            dashboardInfo = AethirDashboardInfo(),
+            incomeInfo = AethirIncomeInfo(),
+            isOnline = true
+        )
+    } else {
+        AethirNodeInfo()
+    }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -152,16 +216,19 @@ fun AethirNodeInfoCard(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 노드 이름 카드
-        AethirNodeNameCard(nodeName = aethirNodeInfo.nodeName)
+        val nodeName = if (isBC01) "BC01 Aethir Node" else "Aethir Node"
+        AethirNodeNameCard(nodeName = nodeName)
         
-        // 지갑 정보 카드
-        AethirWalletCard(walletInfo = aethirNodeInfo.walletInfo)
+        // 모든 데이터센터에서 지갑 밸런스 카드와 스테이킹 정보 카드 표시
+        val walletInfo = getAethirWalletInfoForDataCenter(isBC01)
+        AethirWalletBalanceCard(walletInfo = walletInfo)
+        AethirStakingInfoCard(walletInfo = walletInfo)
         
-        // 대시보드 정보 카드
-        AethirDashboardCard(dashboardInfo = aethirNodeInfo.dashboardInfo)
+        // 대시보드 정보 카드 - 삭제됨
+        // AethirDashboardCard(dashboardInfo = nodeInfo.dashboardInfo)
         
-        // 수입 정보 카드
-        AethirIncomeCard(incomeInfo = aethirNodeInfo.incomeInfo)
+        // 수입 정보 카드 - 삭제됨
+        // AethirIncomeCard(incomeInfo = nodeInfo.incomeInfo)
     }
 }
 
@@ -386,6 +453,170 @@ private fun AethirWalletCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 데이터센터별 지갑 밸런스 카드
+ */
+@Composable
+private fun AethirWalletBalanceCard(
+    walletInfo: DataCenterAethirWalletInfo,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 헤더
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .height(24.dp)
+                        .background(
+                            Color(0xFFFBBF24),
+                            RoundedCornerShape(3.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Wallet Balance",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.AccountBalanceWallet,
+                    contentDescription = "Wallet",
+                    tint = Color(0xFFFBBF24),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 지갑 밸런스 정보
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AethirTokenCard(
+                    title = "VESTING CLAIM",
+                    amount = walletInfo.vestingClaim,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenCard(
+                    title = "CLAIMABLE",
+                    amount = walletInfo.claimable,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                AethirTokenCard(
+                    title = "CASH OUT",
+                    amount = walletInfo.cashOutTotal,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 진행 막대 추가
+            AethirWalletProgressBar(walletInfo = walletInfo)
+        }
+    }
+}
+
+/**
+ * 데이터센터별 스테이킹 정보 카드
+ */
+@Composable
+private fun AethirStakingInfoCard(
+    walletInfo: DataCenterAethirWalletInfo,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 스테이킹 정보 헤더
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .height(24.dp)
+                        .background(
+                            Color(0xFFFBBF24),
+                            RoundedCornerShape(3.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "STAKING INFO",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.Savings,
+                    contentDescription = "Staking",
+                    tint = Color(0xFFFBBF24),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 스테이킹 데이터 가로 배치
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                AethirStakingCard(
+                    title = "STAKING",
+                    amount = walletInfo.staking,
+                    color = Color(0xFF10B981),
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                AethirStakingCard(
+                    title = "UNSTAKING",
+                    amount = walletInfo.unstaking,
+                    color = Color(0xFFF59E0B),
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                AethirStakingCard(
+                    title = "REWARD",
+                    amount = walletInfo.reward,
+                    color = Color(0xFF8B5CF6),
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -939,6 +1170,78 @@ private fun AethirProgressLabel(
             fontSize = 8.sp,
             color = Color(0xFF9CA3AF)
         )
+    }
+}
+
+/**
+ * 데이터센터별 지갑 진행 막대
+ */
+@Composable
+private fun AethirWalletProgressBar(
+    walletInfo: DataCenterAethirWalletInfo,
+    modifier: Modifier = Modifier
+) {
+    // 실제 데이터를 기반으로 비율 계산
+    val vestingClaimValue = walletInfo.vestingClaim.toDoubleOrNull() ?: 0.0
+    val claimableValue = walletInfo.claimable.toDoubleOrNull() ?: 0.0
+    val cashOutValue = walletInfo.cashOutTotal.toDoubleOrNull() ?: 0.0
+    
+    val totalValue = vestingClaimValue + claimableValue + cashOutValue
+    
+    // 비율 계산 (총합이 0이면 기본값 사용)
+    val vestingClaimRatio = if (totalValue > 0) (vestingClaimValue / totalValue).toFloat() else 0.144f
+    val claimableRatio = if (totalValue > 0) (claimableValue / totalValue).toFloat() else 0.097f
+    val cashOutRatio = if (totalValue > 0) (cashOutValue / totalValue).toFloat() else 0.759f
+    
+    // 최소값 보장 (weight는 0보다 커야 함)
+    val minWeight = 0.001f
+    val finalVestingClaimRatio = if (vestingClaimRatio > 0) vestingClaimRatio.coerceAtLeast(minWeight) else minWeight
+    val finalClaimableRatio = if (claimableRatio > 0) claimableRatio.coerceAtLeast(minWeight) else minWeight  
+    val finalCashOutRatio = if (cashOutRatio > 0) cashOutRatio.coerceAtLeast(minWeight) else minWeight
+    
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(4.dp),
+        color = Color(0xFF374151)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+        ) {
+            // Vesting Claim 부분
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(finalVestingClaimRatio)
+                    .background(Color(0xFF10B981), RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
+            )
+            // Claimable 부분  
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(finalClaimableRatio)
+                    .background(Color(0xFFFBBF24))
+            )
+            // Cash Out 부분
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(finalCashOutRatio)
+                    .background(Color(0xFFEF4444), RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
+            )
+        }
+    }
+    
+    // 진행 막대 라벨 - 실제 값이 있는 것만 표시
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        AethirProgressLabel("Vesting Claim", Color(0xFF10B981))
+        AethirProgressLabel("Claimable", Color(0xFFFBBF24))
+        AethirProgressLabel("Cash Out", Color(0xFFEF4444))
     }
 }
 
