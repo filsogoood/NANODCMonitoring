@@ -64,7 +64,7 @@ Monitoring via large-screen tablets (Tlong) installed in NANO DC for continuous 
 
 NANO DC 의 인프라 관리를 위해 설계된 종합적인 실시간 모니터링 솔루션입니다. 여러 데이터센터 위치에 걸친 다양한 서버 노드, 스토리지 시스템, 컴퓨팅 리소스의 운영 상태를 지속적으로 파악할 수 있도록 합니다.
 
-<img width="363" height="1318" alt="Screenshot_20250915_135234" src="https://github.com/user-attachments/assets/e7a57003-8540-4d48-b13d-ba7ee9bb1a3d" />
+<img src="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b"  width="182" style="display: inline-block; margin-right: 10px;" alt="image">
 
 
 ## 핵심 목적
