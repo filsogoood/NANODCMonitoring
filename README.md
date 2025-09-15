@@ -1,8 +1,7 @@
 # NANO DC Monitoring System
 <img src="https://github.com/user-attachments/assets/edb26027-0092-4d96-84e3-27f7b52922ca" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
-<img src="https://github.com/user-attachments/assets/196107a9-bfc3-490e-a418-91b98c78f3cd" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
-<img src="https://github.com/user-attachments/assets/1eb1d5a8-2210-476b-8e59-c2ccc0990ac7" width="182" style="display: inline-block;" alt="image">
-
+<img src="https://github.com/user-attachments/assets/0570285c-30ea-4aae-acaf-b4e1a780e919" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/d2686897-bde1-4655-a400-bcda27a4ee57" width="182" style="display: inline-block;" alt="image">
 
 ## Project Overview
 A comprehensive real-time monitoring solution designed for NANO DC's infrastructure management. It enables continuous tracking of the operational status of diverse server nodes, storage systems, and computing resources across multiple data center locations.
@@ -50,9 +49,9 @@ Monitoring via large-screen tablets (Tlong) installed in NANO DC for continuous 
 ---
 
 # NANO DC 모니터링 시스템
-<img src="https://github.com/user-attachments/assets/95265fd5-3d4b-40ab-90dd-7a931ce3a9db" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
-<img src="https://github.com/user-attachments/assets/bc1ebedd-2217-4d8f-a2a9-402ea384a01e" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
-<img src="https://github.com/user-attachments/assets/cadab6a9-3d6e-425f-879d-0497f100b0da" width="182" style="display: inline-block;" alt="image">
+<img src="https://github.com/user-attachments/assets/edb26027-0092-4d96-84e3-27f7b52922ca" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/0570285c-30ea-4aae-acaf-b4e1a780e919" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/d2686897-bde1-4655-a400-bcda27a4ee57" width="182" style="display: inline-block;" alt="image">
 
 
 ## 프로젝트 개요
