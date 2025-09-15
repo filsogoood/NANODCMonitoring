@@ -7,7 +7,7 @@
 ## Project Overview
 A comprehensive real-time monitoring solution designed for NANO DC's infrastructure management. It enables continuous tracking of the operational status of diverse server nodes, storage systems, and computing resources across multiple data center locations.
 
-<imgsrc="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b"  width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b"  width="182" style="display: inline-block; margin-right: 10px;" alt="image">
 
 
 ## Core Purpose
