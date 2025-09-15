@@ -1,7 +1,7 @@
 # NANO DC Monitoring System
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/edb26027-0092-4d96-84e3-27f7b52922ca" />
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/196107a9-bfc3-490e-a418-91b98c78f3cd" />
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/1eb1d5a8-2210-476b-8e59-c2ccc0990ac7" />
+<img src="https://github.com/user-attachments/assets/edb26027-0092-4d96-84e3-27f7b52922ca" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/196107a9-bfc3-490e-a418-91b98c78f3cd" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/1eb1d5a8-2210-476b-8e59-c2ccc0990ac7" width="182" style="display: inline-block;" alt="image">
 
 
 ## Project Overview
