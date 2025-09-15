@@ -1,6 +1,15 @@
 # NANO DC Monitoring System
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/edb26027-0092-4d96-84e3-27f7b52922ca" />
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/196107a9-bfc3-490e-a418-91b98c78f3cd" />
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/1eb1d5a8-2210-476b-8e59-c2ccc0990ac7" />
+
+
 ## Project Overview
 A comprehensive real-time monitoring solution designed for NANO DC's infrastructure management. It enables continuous tracking of the operational status of diverse server nodes, storage systems, and computing resources across multiple data center locations.
+
+<img width="363" height="1318" alt="Screenshot_20250915_135234" src="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b" />
+
+
 ## Core Purpose
 This system serves as a centralized monitoring dashboard for NANO DC, enabling administrators and operators to:
 - Track real-time performance metrics of distributed server infrastructure
@@ -41,10 +50,17 @@ Monitoring via large-screen tablets (Tlong) installed in NANO DC for continuous 
 ---
 
 # NANO DC 모니터링 시스템
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/95265fd5-3d4b-40ab-90dd-7a931ce3a9db" />
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/bc1ebedd-2217-4d8f-a2a9-402ea384a01e" />
+<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/cadab6a9-3d6e-425f-879d-0497f100b0da" />
+
 
 ## 프로젝트 개요
 
 NANO DC 의 인프라 관리를 위해 설계된 종합적인 실시간 모니터링 솔루션입니다. 여러 데이터센터 위치에 걸친 다양한 서버 노드, 스토리지 시스템, 컴퓨팅 리소스의 운영 상태를 지속적으로 파악할 수 있도록 합니다.
+
+<img width="363" height="1318" alt="Screenshot_20250915_135234" src="https://github.com/user-attachments/assets/e7a57003-8540-4d48-b13d-ba7ee9bb1a3d" />
+
 
 ## 핵심 목적
 
