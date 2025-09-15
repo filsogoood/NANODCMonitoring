@@ -1,406 +1,265 @@
-# NANO DC Monitoring Compose
-
-## 📋 개요
-NANO DC Monitoring Compose는 안드로이드 Jetpack Compose를 사용하여 구축된 데이터센터 모니터링 애플리케이션입니다. 
-여러 기기에서 사용되며, 기기별로 다른 이미지 순서를 설정할 수 있는 확장 가능한 구조로 설계되었습니다.
-
-## ✨ 주요 특징
-- 🎯 **기기별 커스터마이징**: 각 기기마다 다른 이미지 순서 설정 가능
-- 🔧 **확장 가능한 구조**: 새로운 기기 타입 쉽게 추가 가능
-- 🎨 **다양한 레이아웃**: 세로 목록, 가로 스크롤, 그리드 지원
-- 🛡️ **타입 안전성**: Kotlin Enum을 통한 컴파일 타임 안전성 보장
-- 🔄 **재사용 가능한 컴포넌트**: 클린코드 원칙에 따른 모듈화된 설계
-- ⚡ **런타임 변경**: 앱 실행 중에도 설정 변경 가능
-- 🔐 **관리자 접근**: LOGO_ZETACUBE 8번 클릭으로 관리자 기능 접근
-- 🌐 **Aethir 노드 모니터링**: 전용 Aethir 노드 정보 표시 및 관리
-
-## 🚀 새로운 기능
-
-### BC01 Storage UI 개선 (2025.01.06)
-BC01 데이터센터의 Storage 카드가 GY01과 동일한 UI 구조로 통합되었습니다.
-
-#### 주요 변경사항
-- **통합된 UI 구조**: GY01과 동일한 카드 기반 레이아웃 적용
-- **개별 정보 카드**: 노드 이름, 스코어, 하드웨어 스펙, 사용률을 각각 별도 카드로 표시
-- **육각형 차트**: GY01과 동일한 성능 점수 시각화
-- **확장 가능한 구조**: 이미지 클릭 시 정보 카드 확장/축소
-- **노드 타입별 최적화**: Storage Node, Mining Node, AI Computing Node에 따른 정보 표시
-
-### BC02 섹터별 그래프
-
-### BC02 데이터센터 전용 섹터 분류 시스템
-BC02 데이터센터의 노드들을 3개의 서로 다른 섹터로 분류하여 각 섹터별로 최적화된 그래프 레이아웃을 제공합니다.
-
-#### 📊 3개 섹터 분류
-**1. POST_WORKER 섹터**
-- 대상 노드: BC02 Post Worker
-- 특징: 라인 차트와 성능 메트릭 중심
-- 표시 정보: 시스템 성능 트렌드, CPU/메모리 사용량, 성능 인디케이터
-
-**2. NODE_MINER 섹터**  
-- 대상 노드: BC02 Filecoin Miner, BC02 3080Ti GPU Worker
-- 특징: 원형 차트와 마이닝 통계 중심
-- 표시 정보: 리소스 사용량 원형 차트, 마이닝 통계, 하드웨어 상세 정보
-
-**3. NAS 섹터**
-- 대상 노드: BC02 NAS1, BC02 NAS2, BC02 NAS3, BC02 NAS4, BC02 NAS5
-- 특징: 세로 막대 차트와 스토리지 정보 중심
-- 표시 정보: 스토리지 사용량 막대 차트, 용량 정보, SSD 상태
-
-#### 🎨 섹터별 그래프 특징
-**POST_WORKER 그래프**
-- 라인 차트로 성능 트렌드 시각화
-- CPU, 메모리, 스코어 인디케이터 카드
-- 파란색(#3B82F6) 테마로 컴퓨터 아이콘 사용
-
-**NODE_MINER 그래프**
-- 원형 차트로 평균 리소스 사용량 표시
-- 마이닝 통계 정보 (CPU 코어, 총 RAM, 스토리지)
-- 보라색(#8B5CF6) 테마로 Psychology 아이콘 사용
-
-**NAS 그래프**
-- 세로 막대 차트로 SSD, HDD, 메모리, CPU 사용량 비교
-- 스토리지 상세 정보 (총 용량, 사용된 공간, SSD 상태)
-- 초록색(#10B981) 테마로 Storage 아이콘 사용
-
-#### 💻 구현 특징
-- **자동 섹터 분류**: 노드 이름을 기반으로 자동 섹터 판별
-- **CPU 온도 제외**: BC02는 CPU 온도 데이터가 없으므로 표시하지 않음
-- **섹터별 최적화**: 각 섹터의 특성에 맞는 그래프 타입 적용
-- **확장 가능한 구조**: 새로운 섹터 추가 용이
-- **일관성 있는 디자인**: 공통 컴포넌트 재사용으로 UI 일관성 보장
-
-#### 🔧 섹터 분류 로직
-```kotlin
-enum class BC02NodeCategory {
-    POST_WORKER,  // Post Worker
-    NODE_MINER,   // Filecoin Miner, 3080Ti GPU Worker  
-    NAS,          // NAS1-5
-    UNKNOWN       // 매핑되지 않은 노드
-}
-
-// 노드 이름으로 섹터 자동 판별
-fun getBC02SectorFromNodeName(nodeName: String): BC02NodeCategory {
-    return when {
-        nodeName.contains("Post Worker", ignoreCase = true) -> BC02NodeCategory.POST_WORKER
-        nodeName.contains("Filecoin", ignoreCase = true) && nodeName.contains("Miner", ignoreCase = true) -> BC02NodeCategory.NODE_MINER
-        nodeName.contains("3080Ti", ignoreCase = true) || nodeName.contains("GPU Worker", ignoreCase = true) -> BC02NodeCategory.NODE_MINER
-        nodeName.contains("NAS", ignoreCase = true) -> BC02NodeCategory.NAS
-        else -> BC02NodeCategory.UNKNOWN
-    }
-}
-```
-
-## 🚀 새로운 기능: Aethir 노드 정보
-
-### 3번째 위치 - NODE_INFO_AETHIR
-3번째 위치에 배치된 `node_info_aethir` 이미지를 클릭하면 Aethir 네트워크 노드의 상세 정보를 확인할 수 있습니다.
-
-#### 📊 표시되는 정보
-**1. 지갑 정보 (Wallet Information)**
-- CLAIMABLE - SERVICE FEE: 클레임 가능한 서비스 수수료
-- CLAIMABLE - POC & POD REWARDS: POC 및 POD 리워드
-- WITHDRAWABLE: 출금 가능한 금액
-- VESTING CLAIM: 베스팅 클레임 정보
-- VESTING WITHDRAW: 베스팅 출금 정보
-- CASH OUT TOTAL: 총 현금화 금액
-- STAKED: 스테이킹된 ATH 토큰
-- UNSTAKING: 언스테이킹 중인 ATH 토큰
-- UNSTAKED: 언스테이킹 완료된 ATH 토큰
-
-**2. 리소스 개요 (Resource Overview)**
-- TOTAL LOCATIONS: 총 위치 수
-- TOTAL SERVERS: 총 서버 수
-- MY AETHIR EARTH: 내 Aethir Earth 자원
-- MY AETHIR ATMOSPHERE: 내 Aethir Atmosphere 자원
-
-**3. 일일 수입 정보 (Daily Income)**
-- SERVICE FEE: 서비스 수수료 수입
-- POC REWARD: POC 리워드 수입
-- POD REWARD: POD 리워드 수입
-- Total Daily Earnings: 일일 총 수익
-
-#### 🎨 UI 특징
-- **색상 구분**: 각 정보 카테고리별로 다른 색상 테마 적용
-- **진행 막대**: 베스팅 정보를 시각적으로 표시
-- **하이라이트**: 중요한 수치들을 강조 표시
-- **카드 레이아웃**: 정보별로 구분된 카드 형태의 깔끔한 UI
-
-#### 💻 구현 특징
-- **확장 가능한 구조**: 새로운 Aethir 정보 추가 용이
-- **재사용 가능한 컴포넌트**: 다른 노드 타입에도 적용 가능
-- **실시간 데이터 지원**: API 연동을 통한 실시간 정보 업데이트 준비
-- **글로벌 대응**: 영어 기반 UI로 글로벌 환경 지원
-
-## 🎯 이미지 순서 (기본 설정)
-현재 설정된 기본 이미지 순서는 다음과 같습니다:
-
-1. **ndp_info** - NDP 정보
-2. **node_info** - 노드 정보  
-3. **node_info_aethir** - Aethir 노드 정보 (NEW!)
-4. **switch_100g** - 100G 스위치
-5. **node_miner** - 노드 마이너
-6. **postworker** - 포스트워커
-7. **supra** - 수프라
-8. **supra_none** (3개) - 수프라 없음
-9. **systemtoai** - 시스템투AI
-10. **systemtoai_none** - 시스템투AI 없음
-11. **aethir** - 에이서
-12. **aethir_none**  에이서 없음
-13. **filecoin** - 파일코인
-14. **filecoin_none** (2개) - 파일코인 없음
-15. **not_storage** - 스토리지 없음
-16. **upscontroller** - UPS 컨트롤러
-17. **logo_zetacube** - 제타큐브 로고
-
-## 🏗️ 프로젝트 구조
-
-```
-app/src/main/java/com/nanodatacenter/nanodcmonitoring_compose/
-├── data/
-│   ├── ImageType.kt              # 이미지 타입 정의 (Enum)
-│   └── ImageConfiguration.kt     # 기기별 설정 데이터 클래스
-├── manager/
-│   ├── ImageOrderManager.kt      # 이미지 순서 관리 (Singleton)
-│   └── AdminAccessManager.kt     # 관리자 접근 기능 관리 (Singleton)
-├── ui/component/
-│   ├── DataCenterComponents.kt      # 데이터센터 모니터링 UI 컴포넌트
-│   ├── AethirNodeComponents.kt      # Aethir 노드 전용 UI 컴포넌트 (NEW!)
-│   ├── NodeComponents.kt            # 일반 노드 정보 UI 컴포넌트
-│   ├── ScoreComponents.kt           # 스코어 표시 UI 컴포넌트
-│   └── AdminComponents.kt           # 관리자 접근 UI 컴포넌트
-├── util/
-│   └── ImageConfigurationHelper.kt   # 설정 생성 헬퍼
-├── sample/
-│   ├── ImageLayoutExamples.kt        # 레이아웃 예시
-│   └── ProductionUsageExamples.kt    # 실제 사용 예시
-└── MainActivity.kt               # 메인 액티비티
-```
-
-## 🚀 빠른 시작
-
-### 1. 기본 사용법
-```kotlin
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        // 설정 초기화
-        ImageConfigurationHelper.applyAllConfigurations()
-        val imageOrderManager = ImageOrderManager.getInstance()
-        imageOrderManager.setCurrentDeviceType(DeviceType.DEFAULT)
-        
-        setContent {
-            NANODCMonitoring_ComposeTheme {
-                // 세로 목록으로 이미지 표시 (기본)
-                MonitoringImageList(
-                    deviceType = DeviceType.DEFAULT
-                )
-            }
-        }
-    }
-}
-```
-
-### 2. 다양한 레이아웃 사용
-```kotlin
-// 세로 목록 (기본)
-MonitoringImageList(
-    deviceType = DeviceType.DEFAULT,
-    showDescriptions = false
-)
-
-// 가로 스크롤
-MonitoringImageRow(
-    deviceType = DeviceType.DEFAULT,
-    itemWidth = 300
-)
-
-// 그리드 (2열)
-MonitoringImageGrid(
-    deviceType = DeviceType.DEFAULT,
-    columns = 2
-)
-```
-
-### 3. 기기별 다른 순서 적용
-```kotlin
-// 기기 타입 변경
-val manager = ImageOrderManager.getInstance()
-manager.setCurrentDeviceType(DeviceType.DEVICE_A)  // 기기 A 순서로 변경
-```
-
-## 🔐 관리자 접근 기능
-
-### LOGO_ZETACUBE 클릭 시 관리자 기능
-LOGO_ZETACUBE 이미지를 8번 클릭하면 관리자 팝업이 나타납니다.
-
-#### 기능 상세
-- **3번 터치 후**: "X번 더 터치하면 관리자 팝업이 나옵니다" 토스트 메시지 표시
-- **8번 터치 완료**: 관리자 접근 다이얼로그 표시
-- **카운트 리셋**: 관리자 팝업이 표시되면 클릭 카운트 자동 리셋
-
-#### 구현 특징
-- **확장 가능한 구조**: `AdminAccessManager`를 통한 중앙화된 관리
-- **타입 안전성**: `ImageType.isAdminAccess` 프로퍼티로 관리자 접근 이미지 식별
-- **상태 관리**: Compose state를 활용한 반응형 UI
-- **사용자 피드백**: 토스트 메시지로 진행 상황 안내
-
-#### 사용 예시
-```kotlin
-// AdminAccessManager 인스턴스 가져오기
-val adminManager = AdminAccessManager.getInstance()
-
-// 현재 클릭 횟수 확인
-val currentClicks = adminManager.clickCount
-
-// 수동으로 관리자 기능 초기화 (필요시)
-adminManager.reset()
-
-// 디버그 정보 확인
-val debugInfo = adminManager.getDebugInfo()
-```
-
-#### 확장 가능성
-- **관리자 메뉴 추가**: `onAdminAccess` 콜백을 통해 추가 기능 구현 가능
-- **다른 이미지 지원**: `ImageType.ADMIN_ACCESS_TYPES`에 새로운 이미지 추가 가능
-- **클릭 횟수 조정**: `REQUIRED_CLICKS_FOR_ADMIN` 상수로 필요 클릭 횟수 변경 가능
-- **토스트 임계점 조정**: `TOAST_START_THRESHOLD` 상수로 토스트 시작 지점 변경 가능
-
-## 🔧 기기 설정 커스터마이징
-
-### 새로운 기기 타입 추가
-
-1. **DeviceType enum에 새로운 타입 추가**
-```kotlin
-enum class DeviceType(val displayName: String) {
-    DEFAULT("기본"),
-    DEVICE_A("기기 A"),
-    DEVICE_B("기기 B"),
-    NEW_DEVICE("새로운 기기")  // 새로 추가
-}
-```
-
-2. **ImageConfigurationHelper에 설정 메서드 추가**
-```kotlin
-fun createNewDeviceConfiguration(): ImageConfiguration {
-    val customOrder = listOf(
-        ImageType.LOGO_ZETACUBE,
-        ImageType.NDP_INFO,
-        ImageType.UPS_CONTROLLER,
-        // ... 원하는 순서대로 배치
-    )
-    return ImageConfiguration(DeviceType.NEW_DEVICE, customOrder)
-}
-```
-
-3. **applyAllConfigurations()에 추가**
-```kotlin
-fun applyAllConfigurations() {
-    val manager = ImageOrderManager.getInstance()
-    manager.addConfiguration(createDeviceAConfiguration())
-    manager.addConfiguration(createDeviceBConfiguration())
-    manager.addConfiguration(createNewDeviceConfiguration())  // 추가
-}
-```
-
-### 동적 순서 변경
-```kotlin
-// 런타임에 순서 변경
-val newOrder = listOf(
-    ImageType.UPS_CONTROLLER,
-    ImageType.LOGO_ZETACUBE,
-    ImageType.SWITCH_100G
-)
-
-ImageConfigurationHelper.updateOrderForDevice(DeviceType.DEFAULT, newOrder)
-```
-
-### 헬퍼 함수 활용
-```kotlin
-// 특정 이미지들을 우선순위로 설정
-val priorityConfig = ImageConfigurationHelper.createConfigurationWithPriority(
-    deviceType = DeviceType.DEVICE_A,
-    priorityImages = listOf(ImageType.UPS_CONTROLLER, ImageType.SWITCH_100G)
-)
-
-// 특정 이미지들 제외
-val excludeConfig = ImageConfigurationHelper.createConfigurationWithExclusions(
-    deviceType = DeviceType.DEVICE_B,
-    excludeImages = listOf(ImageType.FILECOIN, ImageType.FILECOIN_NONE_1)
-)
-
-// 완전 커스텀 순서
-val customConfig = ImageConfigurationHelper.createCustomConfiguration(
-    deviceType = DeviceType.DEVICE_C,
-    imageOrder = listOf(ImageType.LOGO_ZETACUBE, ImageType.NDP_INFO)
-)
-```
-
-## 🎨 레이아웃 옵션
-
-### 세로 목록 (MonitoringImageList)
-- 전체 화면을 채우는 기본 레이아웃
-- 스크롤 가능한 세로 목록
-- 이미지만 표시 또는 설명 포함 옵션
-
-### 가로 스크롤 (MonitoringImageRow)
-- 수평 스크롤이 가능한 이미지 목록
-- 화면 상단이나 특정 섹션에서 사용
-- 아이템 너비 커스터마이징 가능
-
-### 그리드 (MonitoringImageGrid)
-- 격자 형태로 이미지 배치
-- 열 개수 조정 가능
-- 제한된 공간에서 효율적
-
-## 🔍 디버깅 및 확인
-
-### 현재 설정 정보 확인
-```kotlin
-// 현재 순서 출력
-val orderInfo = ImageConfigurationHelper.printCurrentOrder(DeviceType.DEFAULT)
-println(orderInfo)
-
-// 지원되는 기기 타입 확인
-val manager = ImageOrderManager.getInstance()
-val supportedDevices = manager.getSupportedDeviceTypes()
-val imageCount = manager.getTotalImageCount(DeviceType.DEFAULT)
-```
-
-### 설정 리셋
-```kotlin
-// 모든 설정을 기본값으로 리셋
-ImageConfigurationHelper.resetAllToDefault()
-```
-
-## 📁 샘플 코드
-
-프로젝트의 `sample` 패키지에는 다음과 같은 예시들이 포함되어 있습니다:
-
-- **ImageLayoutExamples.kt**: 다양한 레이아웃 옵션들의 사용법
-- **ProductionUsageExamples.kt**: 실제 프로덕션 환경에서의 사용 시나리오
-
-## 🛠️ 개발 가이드
-
-### 새로운 이미지 추가
-1. `res/drawable/`에 이미지 파일 추가
-2. `ImageType` enum에 새로운 항목 추가
-3. 필요한 기기별 설정에 해당 이미지 추가
-
-### 새로운 레이아웃 추가
-1. `MonitoringImageComponents.kt`에 새로운 Composable 함수 생성
-2. 기존 `MonitoringImageItem` 재사용
-3. 적절한 Layout Composable 사용 (LazyColumn, LazyRow 등)
-
-## 🎯 확장성 및 유지보수
-
-이 시스템은 다음과 같은 확장성을 제공합니다:
-
-- **기기 타입별 설정**: 각 기기마다 완전히 다른 이미지 순서 가능
-- **런타임 변경**: 앱 실행 중에도 설정 변경 가능
-- **코드 재사용**: 기존 컴포넌트를 재사용하여 새로운 레이아웃 생성
-- **타입 안전성**: 컴파일 타임에 오류 검출
-- **설정 관리**: 중앙화된 설정 관리로 일관성 보장
-
-각 기기의 요구사항에 맞게 이미지 순서를 쉽게 조정할 수 있으며, 코드 변경 없이 설정만으로 순서를 변경할 수 있습니다.
+# NANO DC Monitoring System
+
+## Project Overview
+
+NANO DC Monitoring System is a comprehensive real-time monitoring solution designed for multi-site data center infrastructure management. Built as an Android application using Jetpack Compose, it provides continuous visibility into the operational status of various server nodes, storage systems, and computational resources across multiple data center locations.
+
+## Core Purpose
+
+This system serves as a centralized monitoring dashboard for NANO data centers, enabling administrators and operators to:
+
+- Track real-time performance metrics of distributed server infrastructure
+- Monitor cryptocurrency mining operations (Filecoin, Aethir)
+- Observe storage system health and utilization
+- Manage GPU computing resources and AI workloads
+- Oversee network equipment and power systems
+
+## Architecture Philosophy
+
+The application is architected with enterprise-grade scalability and maintainability in mind:
+
+### Multi-Site Support
+The system is designed to manage multiple data center locations (GY01, BC01, BC02) from a single interface, with each location having its unique configuration and monitoring requirements.
+
+### Device Adaptability
+Recognizing deployment across various Android devices with different screen sizes and specifications, the system implements a flexible configuration management system that allows per-device UI customization without code modification.
+
+### Real-Time Data Pipeline
+Utilizing a robust API integration layer, the system maintains a continuous data stream with 20-second refresh intervals, ensuring operators have near real-time visibility into system states.
+
+### Modular Component Design
+Following clean code principles, the application separates concerns into distinct modules:
+- **Network Layer**: Handles API communication and data synchronization
+- **Repository Pattern**: Manages data flow and caching strategies
+- **UI Components**: Reusable, composable interface elements
+- **Configuration Management**: Dynamic device and data center settings
+
+## Key Monitoring Capabilities
+
+### Server Node Monitoring
+- **Filecoin Mining Nodes**: Tracks mining performance, resource utilization, and operational status
+- **GPU Worker Nodes**: Monitors computational workloads, temperature, and processing efficiency
+- **Post Worker Systems**: Observes proof-of-spacetime operations and verification processes
+
+### Storage Infrastructure
+- **NAS Systems**: Displays storage capacity, usage patterns, and health indicators
+- **SSD/HDD Arrays**: Monitors disk performance, IOPS, and wear levels
+- **Distributed Storage**: Tracks replication status and data integrity
+
+### Network and Power Systems
+- **100G Network Switches**: Monitors network throughput and connectivity
+- **UPS Controllers**: Tracks power redundancy and battery status
+- **Environmental Sensors**: Observes temperature, humidity, and cooling efficiency
+
+### Specialized Workloads
+- **Aethir Network Nodes**: Displays earnings, staking status, and network participation
+- **AI Computing Resources**: Monitors deep learning workloads and model training
+- **Blockchain Operations**: Tracks various blockchain network participations
+
+## Technical Implementation
+
+### Data Visualization
+The system employs sophisticated visualization techniques to present complex data in an intuitive format:
+- **Hexagonal Performance Charts**: Provides multi-dimensional performance scoring
+- **Resource Utilization Graphs**: Shows CPU, memory, and storage usage trends
+- **Sector-Based Layouts**: Groups related nodes for logical organization
+- **Interactive Expandable Cards**: Allows drilling down into detailed metrics
+
+### Adaptive UI System
+The interface dynamically adjusts based on:
+- Device characteristics and screen dimensions
+- Data center specific requirements
+- Node types and their unique monitoring needs
+- User role and access levels
+
+### Performance Optimization
+Built with efficiency in mind for continuous 24/7 operation:
+- Memory-efficient image loading and caching
+- Optimized network calls with intelligent batching
+- Coroutine-based asynchronous operations
+- Hardware acceleration for smooth animations
+
+## Security and Access Control
+
+### Administrator Features
+The system includes a hidden administrator interface accessible through a specific interaction pattern, providing:
+- Data center switching capabilities
+- Configuration management
+- Debug information access
+- System diagnostics
+
+### Data Protection
+- Secure API communication
+- Configuration persistence with encryption
+- Role-based access control preparation
+
+## Deployment Scenarios
+
+The system is designed for deployment in various operational contexts:
+
+### Control Room Displays
+Large-screen tablets mounted in NOC (Network Operations Center) environments for continuous monitoring
+
+### Mobile Supervision
+Portable devices for on-site technicians and administrators requiring mobility
+
+### Multi-Screen Setups
+Synchronized displays across multiple devices for comprehensive coverage
+
+## Global Readiness
+
+As a global project, the system maintains:
+- English-based UI for international operators
+- UTC time synchronization for multi-timezone operations
+- Standardized metric units
+- Culturally neutral iconography
+
+## Future Extensibility
+
+The architecture supports future enhancements including:
+- Additional data center locations
+- New node types and monitoring categories
+- Advanced analytics and predictive maintenance
+- Integration with external monitoring systems
+- Historical data analysis and reporting
+
+## System Requirements
+
+- Android 7.1.1 (API 25) or higher
+- Minimum 2GB RAM
+- Stable network connectivity
+- Landscape orientation support
+
+---
+
+# NANO DC 모니터링 시스템
+
+## 프로젝트 개요
+
+NANO DC 모니터링 시스템은 다중 사이트 데이터센터 인프라 관리를 위해 설계된 종합적인 실시간 모니터링 솔루션입니다. Jetpack Compose를 사용한 안드로이드 애플리케이션으로 구축되어, 여러 데이터센터 위치에 걸친 다양한 서버 노드, 스토리지 시스템, 컴퓨팅 리소스의 운영 상태를 지속적으로 파악할 수 있도록 합니다.
+
+## 핵심 목적
+
+이 시스템은 NANO 데이터센터를 위한 중앙집중식 모니터링 대시보드 역할을 하며, 관리자와 운영자가 다음을 수행할 수 있도록 합니다:
+
+- 분산 서버 인프라의 실시간 성능 지표 추적
+- 암호화폐 마이닝 운영 모니터링 (Filecoin, Aethir)
+- 스토리지 시스템 상태 및 활용도 관찰
+- GPU 컴퓨팅 리소스 및 AI 워크로드 관리
+- 네트워크 장비 및 전력 시스템 감독
+
+## 아키텍처 철학
+
+이 애플리케이션은 엔터프라이즈급 확장성과 유지보수성을 염두에 두고 설계되었습니다:
+
+### 다중 사이트 지원
+시스템은 단일 인터페이스에서 여러 데이터센터 위치(GY01, BC01, BC02)를 관리할 수 있도록 설계되었으며, 각 위치는 고유한 구성과 모니터링 요구사항을 가지고 있습니다.
+
+### 기기 적응성
+다양한 화면 크기와 사양을 가진 여러 안드로이드 기기에 배포되는 것을 인식하여, 코드 수정 없이 기기별 UI 커스터마이징을 허용하는 유연한 구성 관리 시스템을 구현합니다.
+
+### 실시간 데이터 파이프라인
+강력한 API 통합 레이어를 활용하여 20초 갱신 간격으로 지속적인 데이터 스트림을 유지하며, 운영자가 시스템 상태를 거의 실시간으로 파악할 수 있도록 합니다.
+
+### 모듈식 컴포넌트 설계
+클린 코드 원칙에 따라 애플리케이션은 관심사를 별개의 모듈로 분리합니다:
+- **네트워크 레이어**: API 통신 및 데이터 동기화 처리
+- **리포지토리 패턴**: 데이터 흐름 및 캐싱 전략 관리
+- **UI 컴포넌트**: 재사용 가능한 구성 가능한 인터페이스 요소
+- **구성 관리**: 동적 기기 및 데이터센터 설정
+
+## 주요 모니터링 기능
+
+### 서버 노드 모니터링
+- **Filecoin 마이닝 노드**: 마이닝 성능, 리소스 활용도, 운영 상태 추적
+- **GPU 워커 노드**: 컴퓨팅 워크로드, 온도, 처리 효율성 모니터링
+- **포스트 워커 시스템**: 시공간 증명 작업 및 검증 프로세스 관찰
+
+### 스토리지 인프라
+- **NAS 시스템**: 스토리지 용량, 사용 패턴, 상태 지표 표시
+- **SSD/HDD 어레이**: 디스크 성능, IOPS, 마모 수준 모니터링
+- **분산 스토리지**: 복제 상태 및 데이터 무결성 추적
+
+### 네트워크 및 전력 시스템
+- **100G 네트워크 스위치**: 네트워크 처리량 및 연결성 모니터링
+- **UPS 컨트롤러**: 전력 이중화 및 배터리 상태 추적
+- **환경 센서**: 온도, 습도, 냉각 효율성 관찰
+
+### 특수 워크로드
+- **Aethir 네트워크 노드**: 수익, 스테이킹 상태, 네트워크 참여 표시
+- **AI 컴퓨팅 리소스**: 딥러닝 워크로드 및 모델 훈련 모니터링
+- **블록체인 운영**: 다양한 블록체인 네트워크 참여 추적
+
+## 기술 구현
+
+### 데이터 시각화
+시스템은 복잡한 데이터를 직관적인 형식으로 제시하기 위해 정교한 시각화 기술을 사용합니다:
+- **육각형 성능 차트**: 다차원 성능 점수 제공
+- **리소스 활용도 그래프**: CPU, 메모리, 스토리지 사용 추세 표시
+- **섹터 기반 레이아웃**: 논리적 구성을 위한 관련 노드 그룹화
+- **대화형 확장 가능 카드**: 상세 지표로 드릴다운 가능
+
+### 적응형 UI 시스템
+인터페이스는 다음을 기반으로 동적으로 조정됩니다:
+- 기기 특성 및 화면 크기
+- 데이터센터별 요구사항
+- 노드 유형 및 고유한 모니터링 필요성
+- 사용자 역할 및 액세스 수준
+
+### 성능 최적화
+24/7 연속 운영을 위해 효율성을 염두에 두고 구축:
+- 메모리 효율적인 이미지 로딩 및 캐싱
+- 지능형 배치를 통한 최적화된 네트워크 호출
+- 코루틴 기반 비동기 작업
+- 부드러운 애니메이션을 위한 하드웨어 가속
+
+## 보안 및 액세스 제어
+
+### 관리자 기능
+시스템은 특정 상호작용 패턴을 통해 액세스 가능한 숨겨진 관리자 인터페이스를 포함하며 다음을 제공합니다:
+- 데이터센터 전환 기능
+- 구성 관리
+- 디버그 정보 액세스
+- 시스템 진단
+
+### 데이터 보호
+- 안전한 API 통신
+- 암호화를 통한 구성 지속성
+- 역할 기반 액세스 제어 준비
+
+## 배포 시나리오
+
+시스템은 다양한 운영 컨텍스트에서 배포되도록 설계되었습니다:
+
+### 제어실 디스플레이
+지속적인 모니터링을 위해 NOC(네트워크 운영 센터) 환경에 설치된 대형 화면 태블릿
+
+### 모바일 감독
+이동성이 필요한 현장 기술자 및 관리자를 위한 휴대용 기기
+
+### 다중 화면 설정
+포괄적인 커버리지를 위한 여러 기기 간 동기화된 디스플레이
+
+## 글로벌 준비성
+
+글로벌 프로젝트로서 시스템은 다음을 유지합니다:
+- 국제 운영자를 위한 영어 기반 UI
+- 다중 시간대 운영을 위한 UTC 시간 동기화
+- 표준화된 메트릭 단위
+- 문화적으로 중립적인 아이콘
+
+## 미래 확장성
+
+아키텍처는 다음을 포함한 향후 개선사항을 지원합니다:
+- 추가 데이터센터 위치
+- 새로운 노드 유형 및 모니터링 카테고리
+- 고급 분석 및 예측 유지보수
+- 외부 모니터링 시스템과의 통합
+- 과거 데이터 분석 및 보고
+
+## 시스템 요구사항
+
+- Android 7.1.1 (API 25) 이상
+- 최소 2GB RAM
+- 안정적인 네트워크 연결
+- 가로 방향 지원
