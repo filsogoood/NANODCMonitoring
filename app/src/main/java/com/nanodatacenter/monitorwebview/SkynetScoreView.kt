@@ -88,9 +88,10 @@ class SkynetScoreView @JvmOverloads constructor(
         return points
     }
 
-    // 육각형 격자선 그리기
+    // 육각형 격자선 그리기 - 100개 칸(칸당 1점)을 위한 격자선
     private fun drawHexagonGrid(canvas: Canvas, centerX: Float, centerY: Float) {
-        val radii = listOf(38f, 54f, 70f, 86f) // 현재의 80%로 재축소 (48→38, 68→54, 88→70, 108→86)
+        // 시각적 깔끔함을 위해 주요 격자선만 표시 (20, 40, 60, 80, 100점 위치)
+        val radii = listOf(17.2f, 34.4f, 51.6f, 68.8f, 86f) // 5개 주요 격자선 (20점 간격)
         
         // 격자선 색상을 좀 더 진하게 변경
         gridPaint.color = Color.parseColor("#6B7280")
@@ -115,23 +116,24 @@ class SkynetScoreView @JvmOverloads constructor(
         }
     }
 
-    // 데이터 섹션 그리기
+    // 데이터 섹션 그리기 - 100개 칸(칸당 1점)으로 세분화
     private fun drawDataSections(canvas: Canvas, centerX: Float, centerY: Float) {
         val metricsList = listOf(
             metrics.cpu, metrics.gpu, metrics.ram, 
             metrics.ssd, metrics.network, metrics.health
         )
         
-        val radii = listOf(38f, 54f, 70f, 86f) // 격자와 동일한 크기로 80% 재축소
+        // 100개 구간을 위한 반지름 배열 (1점 단위: 1, 2, 3, ..., 100)
+        val radii = (1..100).map { it * 0.86f }.toList() // 86f / 100 = 0.86f씩 증가
         
         for (sectionIndex in metricsList.indices) {
             val metricValue = metricsList[sectionIndex]
             
-            // 0 값인 경우 최소 5% 표시 (시각적 피드백을 위해)
-            val displayValue = if (metricValue == 0f) 5f else metricValue
+            // 0 값인 경우 최소 2.5% 표시 (시각적 피드백을 위해)
+            val displayValue = if (metricValue == 0f) 2.5f else metricValue
             
             for (layerIndex in radii.indices) {
-                val layerThreshold = (layerIndex + 1) * 25f // 25, 50, 75, 100
+                val layerThreshold = (layerIndex + 1) * 1f // 1점 단위: 1, 2, 3, ..., 100
                 
                 if (displayValue >= layerThreshold) {
                     val currentRadius = radii[layerIndex]
@@ -160,14 +162,15 @@ class SkynetScoreView @JvmOverloads constructor(
                         path.close()
                     }
                     
-                    // 레이어별 투명도 조정 (웹과 유사하게)
+                    // 레이어별 투명도 조정 (100개 구간에 맞게 조정)
                     val paint = sectionPaints[sectionIndex]
                     
                     // 0 값인 경우 투명도를 더 낮게 설정
                     val alphaValue = if (metricValue == 0f) {
                         50 // 매우 투명하게
                     } else {
-                        (200 - layerIndex * 25).coerceIn(80, 200)
+                        // 100개 구간에 맞게 투명도 계산 (외곽으로 갈수록 약간 더 투명)
+                        (220 - (layerIndex * 1.4).toInt()).coerceIn(80, 220)
                     }
                     
                     paint.alpha = alphaValue
@@ -178,7 +181,7 @@ class SkynetScoreView @JvmOverloads constructor(
         }
     }
 
-    // 라벨 그리기 - 웹과 동일한 위치로 조정
+    // 라벨 그리기 - 각 섹션의 중앙에 배치하고 해당 섹션 색상 적용
     private fun drawLabels(canvas: Canvas, centerX: Float, centerY: Float) {
         val labels = listOf("CPU", "GPU", "RAM", "STORAGE", "NETWORK", "HEALTH")
         val values = listOf(
@@ -190,14 +193,37 @@ class SkynetScoreView @JvmOverloads constructor(
             if (metrics.health == 0f) "none" else String.format("%.1f", metrics.health)
         )
         
-        // 라벨 위치를 현재의 80%로 재축소하여 뷰 안에 안전하게 배치
+        // 각 섹션 색상 정의 (sectionPaints와 동일)
+        val sectionColors = listOf(
+            Color.parseColor("#3b82f6"), // CPU - 파란색
+            Color.parseColor("#8b5cf6"), // GPU - 보라색  
+            Color.parseColor("#06b6d4"), // RAM - 청록색
+            Color.parseColor("#10b981"), // SSD - 초록색
+            Color.parseColor("#f59e0b"), // NETWORK - 주황색
+            Color.parseColor("#ef4444")  // HEALTH - 빨간색
+        )
+        
+        // 라벨 위치를 각 섹션의 중앙으로 이동 (각 섹션은 60도씩, 중앙은 30도 오프셋)
+        val labelRadius = 120f  // 라벨을 표시할 반지름
         val labelPositions = listOf(
-            PointF(centerX, centerY - 112f),           // CPU (위) - 80% 재축소 (140→112)
-            PointF(centerX + 97f, centerY - 56f),      // GPU (오른쪽 위) - 80% 재축소 (121→97)
-            PointF(centerX + 97f, centerY + 56f),      // RAM (오른쪽 아래) - 80% 재축소 (121→97)
-            PointF(centerX, centerY + 112f),           // STORAGE (아래) - 80% 재축소 (140→112)
-            PointF(centerX - 97f, centerY + 56f),      // NETWORK (왼쪽 아래) - 80% 재축소 (121→97)
-            PointF(centerX - 97f, centerY - 56f)       // HEALTH (왼쪽 위) - 80% 재축소 (121→97)
+            // CPU (위쪽 섹션 중앙): -90도 + 30도 = -60도
+            PointF(centerX + labelRadius * cos((-60) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((-60) * (PI / 180)).toFloat()),
+            // GPU (오른쪽 위 섹션 중앙): -30도 + 30도 = 0도
+            PointF(centerX + labelRadius * cos((0) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((0) * (PI / 180)).toFloat()),
+            // RAM (오른쪽 아래 섹션 중앙): 30도 + 30도 = 60도
+            PointF(centerX + labelRadius * cos((60) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((60) * (PI / 180)).toFloat()),
+            // STORAGE (아래쪽 섹션 중앙): 90도 + 30도 = 120도
+            PointF(centerX + labelRadius * cos((120) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((120) * (PI / 180)).toFloat()),
+            // NETWORK (왼쪽 아래 섹션 중앙): 150도 + 30도 = 180도
+            PointF(centerX + labelRadius * cos((180) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((180) * (PI / 180)).toFloat()),
+            // HEALTH (왼쪽 위 섹션 중앙): 210도 + 30도 = 240도
+            PointF(centerX + labelRadius * cos((240) * (PI / 180)).toFloat(), 
+                   centerY + labelRadius * sin((240) * (PI / 180)).toFloat())
         )
         
         for (i in labels.indices) {
@@ -211,18 +237,25 @@ class SkynetScoreView @JvmOverloads constructor(
                 else -> metrics.health
             }
             
-            // 점수에 따른 동적 색상 적용 (0일 때는 회색)
+            // 라벨 색상을 해당 섹션 색상과 맞춤
+            labelPaint.color = if (score == 0f) {
+                Color.parseColor("#9CA3AF")  // 회색 (none용)
+            } else {
+                sectionColors[i]  // 해당 섹션 색상 적용
+            }
+            
+            // 값 색상도 해당 섹션 색상과 맞춤
             valuePaint.color = if (score == 0f) {
                 Color.parseColor("#9CA3AF")  // 회색 (none용)
             } else {
-                getScoreColor(score)
+                sectionColors[i]  // 해당 섹션 색상 적용
             }
             
             // 라벨 이름
             canvas.drawText(labels[i], pos.x, pos.y, labelPaint)
             
-            // 라벨 값 (색상이 동적으로 변경됨) - 80% 재축소
-            canvas.drawText(values[i], pos.x, pos.y + 22f, valuePaint)  // 80% 재축소 (28→22)
+            // 라벨 값 (색상이 섹션 색상과 동일)
+            canvas.drawText(values[i], pos.x, pos.y + 22f, valuePaint)
         }
     }
 
