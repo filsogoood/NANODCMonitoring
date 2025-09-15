@@ -7,7 +7,7 @@
 ## Project Overview
 A comprehensive real-time monitoring solution designed for NANO DC's infrastructure management. It enables continuous tracking of the operational status of diverse server nodes, storage systems, and computing resources across multiple data center locations.
 
-<img width="363" height="1318" alt="Screenshot_20250915_135234" src="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b" />
+<imgsrc="https://github.com/user-attachments/assets/efc1fa8f-2af9-4458-bcd6-a9db4e6bd14b"  width="182" style="display: inline-block; margin-right: 10px;" alt="image">
 
 
 ## Core Purpose
@@ -50,9 +50,9 @@ Monitoring via large-screen tablets (Tlong) installed in NANO DC for continuous 
 ---
 
 # NANO DC 모니터링 시스템
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/95265fd5-3d4b-40ab-90dd-7a931ce3a9db" />
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/bc1ebedd-2217-4d8f-a2a9-402ea384a01e" />
-<img width="364" height="1872" alt="image" src="https://github.com/user-attachments/assets/cadab6a9-3d6e-425f-879d-0497f100b0da" />
+<img src="https://github.com/user-attachments/assets/95265fd5-3d4b-40ab-90dd-7a931ce3a9db" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/bc1ebedd-2217-4d8f-a2a9-402ea384a01e" width="182" style="display: inline-block; margin-right: 10px;" alt="image">
+<img src="https://github.com/user-attachments/assets/cadab6a9-3d6e-425f-879d-0497f100b0da" width="182" style="display: inline-block;" alt="image">
 
 
 ## 프로젝트 개요
