@@ -17,6 +17,12 @@ This system serves as a centralized monitoring dashboard for NANO DC, enabling a
 - Manage GPU computing resources and AI workloads
 - Supervise network equipment and power systems
 
+<img src="https://github.com/user-attachments/assets/e5e603d0-ee93-4d68-922b-0b564c16105e" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140300">
+<img src="https://github.com/user-attachments/assets/5eabb98b-61a5-487c-b48c-c245c22ad156" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140322">
+<img src="https://github.com/user-attachments/assets/3c5a7ba8-af06-4ae1-b48c-612709c13008" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140344">
+<img src="https://github.com/user-attachments/assets/9a431a5c-d217-4a7a-910f-2cf390226493" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140412">
+<img src="https://github.com/user-attachments/assets/d0fee85d-370c-4806-8726-ac761ab702f3" width="182" style="display: inline-block;" alt="Screenshot_20250915_140435">
+
 ### Multi-Site Support
 The system is designed to manage multiple data centers from a single interface, with each location having unique configurations and monitoring requirements.
 ### Real-Time Data Pipeline
@@ -70,6 +76,12 @@ NANO DC 의 인프라 관리를 위해 설계된 종합적인 실시간 모니�
 - 스토리지 시스템 상태 및 활용도 관찰
 - GPU 컴퓨팅 리소스 및 AI 워크로드 관리
 - 네트워크 장비 및 전력 시스템 감독
+
+<img src="https://github.com/user-attachments/assets/e5e603d0-ee93-4d68-922b-0b564c16105e" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140300">
+<img src="https://github.com/user-attachments/assets/5eabb98b-61a5-487c-b48c-c245c22ad156" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140322">
+<img src="https://github.com/user-attachments/assets/3c5a7ba8-af06-4ae1-b48c-612709c13008" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140344">
+<img src="https://github.com/user-attachments/assets/9a431a5c-d217-4a7a-910f-2cf390226493" width="182" style="display: inline-block; margin-right: 10px;" alt="Screenshot_20250915_140412">
+<img src="https://github.com/user-attachments/assets/d0fee85d-370c-4806-8726-ac761ab702f3" width="182" style="display: inline-block;" alt="Screenshot_20250915_140435">
 
 
 ### 다중 사이트 지원
