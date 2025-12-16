@@ -1319,8 +1319,17 @@ fun DataCenterMonitoringScreen(
 
     val currentNanoDcId = currentDataCenter.nanoDcId
 
-    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작
+    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작 (ZETACUBE 제외)
     LaunchedEffect(Unit) {
+        // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+        if (currentDataCenter == DataCenterType.ZETACUBE) {
+            android.util.Log.d(
+                "DataCenterMonitoringScreen",
+                "🏢 ZETACUBE uses local data only - skipping auto refresh"
+            )
+            return@LaunchedEffect
+        }
+
         // MainActivity에서 이미 시작했지만, 혹시 모를 상황을 대비한 안전장치
         if (repository.apiResponseState.value == null) {
             android.util.Log.d(

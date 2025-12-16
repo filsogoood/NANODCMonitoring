@@ -235,29 +235,38 @@ fun DataCenterSelectionDialog(
                                      selectedCenter = dataCenter
                                      isLoading = true
                                      loadingCenter = dataCenter
-                                     
-                                     // 실제 API 테스트 및 설정 저장
-                                     MainScope().launch {
-                                         try {
-                                             // API 연결 테스트
-                                             repository.testApiConnection(dataCenter.nanoDcId)
-                                             
-                                             // 설정 저장
-                                             deviceConfigManager.setSelectedDataCenter(dataCenter)
-                                             
-                                             // 성공적으로 완료
-                                             isLoading = false
-                                             loadingCenter = null
-                                             onDataCenterSelected(dataCenter)
-                                             
-                                         } catch (e: Exception) {
-                                             // 실패 시에도 설정은 저장하고 사용자에게 알림
-                                             android.util.Log.e("DataCenterSelection", "API test failed for ${dataCenter.displayName}: ${e.message}")
-                                             deviceConfigManager.setSelectedDataCenter(dataCenter)
-                                             
-                                             isLoading = false
-                                             loadingCenter = null
-                                             onDataCenterSelected(dataCenter)
+
+                                     // ZETACUBE는 로컬 데이터만 사용하므로 API 테스트 건너뛰기
+                                     if (dataCenter == DataCenterType.ZETACUBE) {
+                                         // ZETACUBE: API 테스트 없이 바로 설정 저장
+                                         deviceConfigManager.setSelectedDataCenter(dataCenter)
+                                         isLoading = false
+                                         loadingCenter = null
+                                         onDataCenterSelected(dataCenter)
+                                     } else {
+                                         // 다른 데이터센터: 실제 API 테스트 및 설정 저장
+                                         MainScope().launch {
+                                             try {
+                                                 // API 연결 테스트
+                                                 repository.testApiConnection(dataCenter.nanoDcId)
+
+                                                 // 설정 저장
+                                                 deviceConfigManager.setSelectedDataCenter(dataCenter)
+
+                                                 // 성공적으로 완료
+                                                 isLoading = false
+                                                 loadingCenter = null
+                                                 onDataCenterSelected(dataCenter)
+
+                                             } catch (e: Exception) {
+                                                 // 실패 시에도 설정은 저장하고 사용자에게 알림
+                                                 android.util.Log.e("DataCenterSelection", "API test failed for ${dataCenter.displayName}: ${e.message}")
+                                                 deviceConfigManager.setSelectedDataCenter(dataCenter)
+
+                                                 isLoading = false
+                                                 loadingCenter = null
+                                                 onDataCenterSelected(dataCenter)
+                                             }
                                          }
                                      }
                                  }

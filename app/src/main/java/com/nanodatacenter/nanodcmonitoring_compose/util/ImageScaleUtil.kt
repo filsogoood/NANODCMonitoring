@@ -41,24 +41,27 @@ object ImageScaleUtil {
     /**
      * 특정 이미지 타입들에 대한 스케일 설정
      * 확장성을 위해 Map으로 관리하여 추후 다른 이미지 타입 추가 가능
-     * 
+     *
      * 새로운 이미지 타입에 커스텀 스케일을 추가하려면:
      * 1. 아래 Map에 ImageType과 스케일 팩터(Float) 추가
      * 2. 0.9f = 90% 크기, 1.2f = 120% 크기 등으로 설정
-     * 
+     *
      * 현재 90% 스케일 적용 이미지들:
-     * - SYSTEMTOAI 계열 (SYSTEMTOAI, SYSTEMTOAI_NONE)
-     * - AETHIR 계열 (AETHIR, AETHIR_NONE)
-     * - FILECOIN 계열 (FILECOIN, FILECOIN_NONE_1, FILECOIN_NONE_2)
+     * - SYSTEMTOAI 계열 (SYSTEMTOAI, SYSTEMTOAI_NONE, SYSTEMTOAI_ACTIVE)
+     * - AETHIR 계열 (AETHIR, AETHIR_NONE, AETHIR_ACTIVE)
+     * - FILECOIN 계열 (FILECOIN, FILECOIN_NONE_1, FILECOIN_NONE_2, FILECOIN_ACTIVE)
      */
     private val CUSTOM_SCALE_MAP = mapOf(
         ImageType.SYSTEMTOAI to 0.9f,
         ImageType.SYSTEMTOAI_NONE to 0.9f,
+        ImageType.SYSTEMTOAI_ACTIVE to 0.9f,
         ImageType.AETHIR to 0.9f,
         ImageType.AETHIR_NONE to 0.9f,
+        ImageType.AETHIR_ACTIVE to 0.9f,
         ImageType.FILECOIN to 0.9f,
         ImageType.FILECOIN_NONE_1 to 0.9f,
-        ImageType.FILECOIN_NONE_2 to 0.9f
+        ImageType.FILECOIN_NONE_2 to 0.9f,
+        ImageType.FILECOIN_ACTIVE to 0.9f
     )
     
     /**

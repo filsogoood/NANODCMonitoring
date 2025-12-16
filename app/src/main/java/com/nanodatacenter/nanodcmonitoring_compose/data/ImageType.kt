@@ -21,11 +21,14 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     SUPRA_NONE_3(R.drawable.supra_none, "Supra Inactive 3"),
     SYSTEMTOAI(R.drawable.systemtoai_none, "SystemToAI"),
     SYSTEMTOAI_NONE(R.drawable.systemtoai_none, "SystemToAI Inactive"),
+    SYSTEMTOAI_ACTIVE(R.drawable.systemtoai, "SystemToAI Active"),
     AETHIR(R.drawable.aethir_none, "Aethir"),
     AETHIR_NONE(R.drawable.aethir_none, "Aethir Inactive"),
+    AETHIR_ACTIVE(R.drawable.aethir, "Aethir Active"),
     FILECOIN(R.drawable.filecoin_none, "Filecoin"),
     FILECOIN_NONE_1(R.drawable.filecoin_none, "Filecoin Inactive 1"),
     FILECOIN_NONE_2(R.drawable.filecoin_none, "Filecoin Inactive 2"),
+    FILECOIN_ACTIVE(R.drawable.filecoin, "Filecoin Active"),
     NOT_STORAGE(R.drawable.not_storage, "Storage"),
     STORAGE_1(R.drawable.storage2, "Storage 1"),
     STORAGE_2(R.drawable.storage2, "Storage 2"),
@@ -105,7 +108,8 @@ enum class DataCenterType(
 ) {
     BC01("BC01", "dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20"),
     BC02("BC02", "5e807a27-7c3a-4a22-8df2-20c392186ed3"),
-    GY01("GY01", "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01");
+    GY01("GY01", "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"),
+    ZETACUBE("ZETACUBE", "zetacube-0000-0000-0000-000000000000");
     
     companion object {
         /**

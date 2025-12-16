@@ -112,6 +112,39 @@ data class ImageConfiguration(
         )
 
         /**
+         * ZETACUBE 데이터센터 전용 이미지 순서
+         * 모든 이미지가 활성화 상태로 표시됩니다.
+         *
+         * 배치:
+         * - NDP_INFO: NDP 정보
+         * - NODE_INFO: Filecoin Info
+         * - NODE_INFO_AETHIR: Status
+         * - SWITCH_100G: 100G 스위치
+         * - NODE_MINER: 노드 마이너
+         * - SYSTEMTOAI_ACTIVE: SAI (활성화) [90% 스케일]
+         * - SUPRA: Supra (활성화)
+         * - SYSTEMTOAI_ACTIVE: Sai (활성화) [90% 스케일]
+         * - SYSTEMTOAI_ACTIVE: Sai (활성화) [90% 스케일]
+         * - UPS_CONTROLLER: UPS 컨트롤러
+         * - FILECOIN_ACTIVE: Filecoin (활성화) [90% 스케일]
+         * - LOGO_ZETACUBE: 제타큐브 로고 [관리자 접근]
+         */
+        val ZETACUBE_ORDER = listOf(
+            ImageType.NDP_INFO,           // 1. NDP 정보
+            ImageType.NODE_INFO,          // 2. Filecoin Info
+            ImageType.NODE_INFO_AETHIR,   // 3. Status
+            ImageType.SWITCH_100G,        // 4. 100G 스위치
+            ImageType.NODE_MINER,         // 5. 노드 마이너
+            ImageType.SYSTEMTOAI_ACTIVE,  // 6. SAI (활성화) [90% 스케일]
+            ImageType.SUPRA,              // 7. Supra (활성화)
+            ImageType.SYSTEMTOAI_ACTIVE,  // 8. Sai (활성화) [90% 스케일]
+            ImageType.SYSTEMTOAI_ACTIVE,  // 9. Sai (활성화) [90% 스케일]
+            ImageType.UPS_CONTROLLER,     // 10. UPS 컨트롤러
+            ImageType.FILECOIN_ACTIVE,    // 11. Filecoin (활성화) [90% 스케일]
+            ImageType.LOGO_ZETACUBE       // 12. 제타큐브 로고 [관리자 접근]
+        )
+
+        /**
          * 기본 설정을 생성합니다.
          */
         fun createDefault(deviceType: DeviceType = DeviceType.DEFAULT): ImageConfiguration {
@@ -133,6 +166,13 @@ data class ImageConfiguration(
         }
 
         /**
+         * ZETACUBE 데이터센터 전용 설정을 생성합니다.
+         */
+        fun createZETACUBE(): ImageConfiguration {
+            return ImageConfiguration(DeviceType.ZETACUBE, ZETACUBE_ORDER)
+        }
+
+        /**
          * 데이터센터 타입에 따라 적절한 이미지 순서를 반환합니다.
          */
         fun getOrderForDataCenter(dataCenterName: String): List<ImageType> {
@@ -140,6 +180,7 @@ data class ImageConfiguration(
                 "BC01" -> BC01_ORDER
                 "BC02" -> BC02_ORDER
                 "GY01" -> DEFAULT_ORDER
+                "ZETACUBE" -> ZETACUBE_ORDER
                 else -> DEFAULT_ORDER
             }
         }
@@ -155,10 +196,11 @@ enum class DeviceType(val displayName: String) {
     BC01("BC01"),
     BC02("BC02"),
     GY01("GY01"),
+    ZETACUBE("ZETACUBE"),
     DEVICE_A("기기 A"),
     DEVICE_B("기기 B"),
     DEVICE_C("기기 C");
-    
+
     companion object {
         fun fromString(value: String): DeviceType {
             return values().find { it.name.equals(value, ignoreCase = true) } ?: DEFAULT
@@ -172,6 +214,7 @@ enum class DeviceType(val displayName: String) {
                 "BC01" -> BC01
                 "BC02" -> BC02
                 "GY01" -> GY01
+                "ZETACUBE" -> ZETACUBE
                 else -> DEFAULT
             }
         }

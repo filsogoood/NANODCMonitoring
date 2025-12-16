@@ -36,7 +36,6 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.NANODCMonitoring_Compose"
-            android:screenOrientation="landscape"
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>

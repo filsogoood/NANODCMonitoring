@@ -69,7 +69,13 @@ class MainActivity : ComponentActivity() {
     private fun initializeDataCenter() {
         val selectedDataCenter = deviceConfigManager.getSelectedDataCenter()
         Log.d(TAG, "🏢 Initializing with data center: ${selectedDataCenter.displayName} (${selectedDataCenter.nanoDcId})")
-        
+
+        // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+        if (selectedDataCenter == DataCenterType.ZETACUBE) {
+            Log.d(TAG, "🏢 ZETACUBE uses local data only - skipping API connection")
+            return
+        }
+
         // API 연결 테스트 및 자동 갱신 시작
         testApiConnection(selectedDataCenter.nanoDcId)
         startAutoDataRefresh(selectedDataCenter.nanoDcId)
@@ -82,40 +88,49 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 Log.d(TAG, "🔄 Changing data center to: ${dataCenter.displayName} (${dataCenter.nanoDcId})")
-                
+
                 // 1. 기존 자동 갱신 완전히 중지
                 Log.d(TAG, "🛑 Stopping existing auto refresh...")
                 repository.stopAutoRefresh()
-                
+
                 // 2. 코루틴이 완전히 정리될 시간을 충분히 줌 (취소 처리 완료 대기)
                 kotlinx.coroutines.delay(500) // 100ms -> 500ms로 증가
-                
+
                 // 3. 새 데이터센터 설정 저장
                 Log.d(TAG, "💾 Saving new data center configuration...")
                 deviceConfigManager.setSelectedDataCenter(dataCenter)
-                
+
                 // 4. 저장된 설정 확인
                 val savedDataCenter = deviceConfigManager.getSelectedDataCenter()
                 Log.d(TAG, "✅ Saved data center: ${savedDataCenter.displayName} (${savedDataCenter.nanoDcId})")
-                
+
+                // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+                if (dataCenter == DataCenterType.ZETACUBE) {
+                    Log.d(TAG, "🏢 ZETACUBE uses local data only - skipping API operations")
+                    Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName}")
+                    return@launch
+                }
+
                 // 5. 새 데이터센터로 API 연결 테스트
                 Log.d(TAG, "🧪 Testing API connection with new data center...")
                 testApiConnection(dataCenter.nanoDcId)
-                
+
                 // 6. 새 데이터센터로 자동 갱신 시작
                 Log.d(TAG, "🚀 Starting auto refresh with new data center...")
                 startAutoDataRefresh(dataCenter.nanoDcId)
-                
+
                 Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName} (${dataCenter.nanoDcId})")
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Failed to change data center: ${e.message}", e)
-                
+
                 // 실패한 경우 기존 설정으로 복구 시도
                 try {
                     val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
                     Log.d(TAG, "🔄 Attempting to restore with current data center: ${currentDataCenter.displayName}")
-                    startAutoDataRefresh(currentDataCenter.nanoDcId)
+                    if (currentDataCenter != DataCenterType.ZETACUBE) {
+                        startAutoDataRefresh(currentDataCenter.nanoDcId)
+                    }
                 } catch (restoreException: Exception) {
                     Log.e(TAG, "❌ Failed to restore data center: ${restoreException.message}", restoreException)
                 }
