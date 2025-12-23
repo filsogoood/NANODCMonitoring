@@ -120,7 +120,7 @@ data class ImageConfiguration(
          * - NODE_INFO: Filecoin Info
          * - NODE_INFO_AETHIR: Status
          * - SWITCH_100G: 100G 스위치
-         * - NODE_MINER: 노드 마이너
+         * - WEBUI_SERVER: Web UI Server
          * - SYSTEMTOAI_ACTIVE: SAI (활성화) [90% 스케일]
          * - SUPRA: Supra (활성화)
          * - SYSTEMTOAI_ACTIVE: Sai (활성화) [90% 스케일]
@@ -134,7 +134,7 @@ data class ImageConfiguration(
             ImageType.NODE_INFO,          // 2. Filecoin Info
             ImageType.NODE_INFO_AETHIR,   // 3. Status
             ImageType.SWITCH_100G,        // 4. 100G 스위치
-            ImageType.NODE_MINER,         // 5. 노드 마이너
+            ImageType.WEBUI_SERVER,       // 5. Web UI Server
             ImageType.SYSTEMTOAI_ACTIVE,  // 6. SAI (활성화) [90% 스케일]
             ImageType.SUPRA,              // 7. Supra (활성화)
             ImageType.SYSTEMTOAI_ACTIVE,  // 8. Sai (활성화) [90% 스케일]

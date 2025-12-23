@@ -77,6 +77,7 @@ import ir.ehsannarmani.compose_charts.PieChart
 import ir.ehsannarmani.compose_charts.models.Pie
 import com.nanodatacenter.nanodcmonitoring_compose.ui.theme.DataCenterTheme
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageConfigurationHelper
+import com.nanodatacenter.nanodcmonitoring_compose.data.ZetacubeStaticData
 
 /**
  * 클릭 가능한 이미지 아이템 컴포넌트
@@ -112,9 +113,16 @@ fun ClickableImageItem(
     // BC01에서 AETHIR일 때만 실제 aethir.jpg 이미지 사용하고 클릭 가능하게 설정
     val isBC01 = currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)
     val isAethirInBC01 = imageType == ImageType.AETHIR && isBC01
-    
-    // BC01의 AETHIR은 클릭 가능, 다른 경우는 원래 설정 따름
-    val isClickableImage = if (isAethirInBC01) true else imageType.showsInfoCard
+
+    // ZETACUBE 데이터센터인지 확인
+    val isZetacube = ZetacubeStaticData.isZetacubeSelected(currentNanoDcId)
+
+    // BC01의 AETHIR은 클릭 가능, ZETACUBE 활성화 이미지도 클릭 가능, 다른 경우는 원래 설정 따름
+    val isClickableImage = when {
+        isAethirInBC01 -> true
+        isZetacube -> isZetacubeClickableImage(imageType)
+        else -> imageType.showsInfoCard
+    }
 
     // 토스트 메시지 표시
     LaunchedEffect(adminManager.shouldShowToast) {
@@ -185,6 +193,28 @@ fun ClickableImageItem(
                 exit = shrinkVertically()
             ) {
                 when {
+                    // ZETACUBE 인프라 장비 (Switch, UPS)
+                    isZetacube && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER) -> {
+                        val infraData = ZetacubeStaticData.getInfraDataForImage(imageType)
+                        if (infraData != null) {
+                            ZetacubeInfraInfoCard(infraData = infraData)
+                        }
+                    }
+
+                    // ZETACUBE: 정적 데이터를 사용하여 그래프 표시
+                    isZetacube && isZetacubeClickableImage(imageType) -> {
+                        val staticData = ZetacubeStaticData.getStaticDataForImage(imageType, imageIndex)
+                        if (staticData != null) {
+                            ZetacubeNodeInfoCard(
+                                nodeData = staticData,
+                                imageType = imageType,
+                                imageIndex = imageIndex
+                            )
+                        } else {
+                            ExpandedInfoCard(imageType = imageType)
+                        }
+                    }
+
                     // 이미지 타입별 처리를 먼저 확인 (우선순위)
                     imageType == ImageType.NDP_INFO -> {
                         // NDP 트랜잭션 정보 로드 및 표시 (현재 선택된 데이터센터 사용)
@@ -1135,6 +1165,439 @@ fun DiskUsageChart(
 }
 
 /**
+ * ZETACUBE에서 클릭 가능한 이미지 타입인지 확인
+ * 활성화 이미지들과 기본 정보 이미지들은 클릭 가능
+ */
+private fun isZetacubeClickableImage(imageType: ImageType): Boolean {
+    return when (imageType) {
+        // 정보 표시 이미지
+        ImageType.NDP_INFO,
+        ImageType.NODE_INFO,
+        ImageType.NODE_INFO_AETHIR,
+        ImageType.WEBUI_SERVER,
+        // 활성화 이미지들
+        ImageType.SYSTEMTOAI_ACTIVE,
+        ImageType.SUPRA,
+        ImageType.FILECOIN_ACTIVE,
+        // 인프라 이미지들 (ZETACUBE 전용)
+        ImageType.SWITCH_100G,
+        ImageType.UPS_CONTROLLER -> true
+        // 나머지는 클릭 불가
+        else -> false
+    }
+}
+
+/**
+ * ZETACUBE 인프라 장비 정보 카드 (Switch, UPS 등)
+ * 각 장비에 맞는 정보만 표시 + 그래프
+ */
+@Composable
+fun ZetacubeInfraInfoCard(
+    infraData: com.nanodatacenter.nanodcmonitoring_compose.data.ZetacubeInfraData,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 장비 이름
+            Text(
+                text = infraData.name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // 상태 뱃지
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF10B981))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = infraData.status,
+                    fontSize = 14.sp,
+                    color = Color(0xFF10B981),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // 그래프 섹션 (2x2 그리드)
+            if (infraData.graphMetrics.isNotEmpty()) {
+                Text(
+                    text = "Metrics",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF9CA3AF),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                // 2x2 그리드로 원형 그래프 배치
+                infraData.graphMetrics.chunked(2).forEach { rowMetrics ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        rowMetrics.forEach { metric ->
+                            InfraCircularGraph(
+                                metric = metric,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        // 홀수 개일 경우 빈 공간 채우기
+                        if (rowMetrics.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // 스펙 섹션
+            Text(
+                text = "Specifications",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF9CA3AF),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            infraData.specs.forEach { (key, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = key,
+                        fontSize = 13.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                    Text(
+                        text = value,
+                        fontSize = 13.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 사용량/상태 섹션
+            Text(
+                text = "Current Status",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF9CA3AF),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            infraData.usage.forEach { (key, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = key,
+                        fontSize = 13.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                    Text(
+                        text = value,
+                        fontSize = 13.sp,
+                        color = Color(0xFF60A5FA),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 인프라 장비용 원형 그래프
+ */
+@Composable
+private fun InfraCircularGraph(
+    metric: com.nanodatacenter.nanodcmonitoring_compose.data.InfraGraphMetric,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = metric.percentage / 100f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 1000),
+        label = "progress"
+    )
+
+    val metricColor = Color(metric.color)
+    val backgroundColor = Color(0xFF374151)
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier.size(80.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // 배경 원
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 8.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2
+
+                drawCircle(
+                    color = backgroundColor,
+                    radius = radius,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = strokeWidth,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                )
+            }
+
+            // 진행 원
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 8.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2
+
+                drawArc(
+                    color = metricColor,
+                    startAngle = -90f,
+                    sweepAngle = 360f * animatedProgress,
+                    useCenter = false,
+                    topLeft = androidx.compose.ui.geometry.Offset(
+                        (size.width - radius * 2) / 2,
+                        (size.height - radius * 2) / 2
+                    ),
+                    size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = strokeWidth,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                )
+            }
+
+            // 중앙 텍스트 (퍼센트)
+            Text(
+                text = "${metric.percentage.toInt()}%",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 라벨
+        Text(
+            text = metric.label,
+            fontSize = 12.sp,
+            color = Color(0xFF9CA3AF),
+            fontWeight = FontWeight.Medium
+        )
+
+        // 값
+        Text(
+            text = metric.value,
+            fontSize = 11.sp,
+            color = metricColor,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+/**
+ * ZETACUBE 전용 노드 정보 카드
+ * 정적 데이터를 사용하여 그래프와 함께 노드 정보를 표시
+ */
+@Composable
+fun ZetacubeNodeInfoCard(
+    nodeData: com.nanodatacenter.nanodcmonitoring_compose.data.ZetacubeNodeData,
+    imageType: ImageType,
+    imageIndex: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F2937)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // 노드 이름
+            Text(
+                text = getZetacubeDisplayName(imageType, imageIndex),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // 상태 뱃지
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF10B981))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Active",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF10B981)
+                    )
+                }
+
+                // 스코어 표시
+                nodeData.score?.let { score ->
+                    Text(
+                        text = "Score: ${score.averageScore}",
+                        fontSize = 14.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                }
+            }
+
+            // 그래프 섹션 - SAI는 반원 그래프, 나머지는 기존 그래프
+            nodeData.nodeUsage?.let { usage ->
+                if (imageType == ImageType.SYSTEMTOAI_ACTIVE) {
+                    // SAI 전용 반원 그래프
+                    ZetacubeSaiSemiCircleGraphSection(
+                        nodeUsage = usage,
+                        hardwareSpec = nodeData.hardwareSpec
+                    )
+                } else {
+                    EnhancedUsageGraphSection(
+                        nodeUsage = usage,
+                        nodeIndex = imageIndex,
+                        nodeName = nodeData.node.nodeName,
+                        showTitle = true
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Hardware Specifications 섹션
+            nodeData.hardwareSpec?.let { spec ->
+                Text(
+                    text = "Hardware Specifications",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF60A5FA),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF374151))
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ZetacubeSpecRow("CPU", spec.cpuModel)
+                    ZetacubeSpecRow("Cores", spec.cpuCores)
+                    ZetacubeSpecRow("Memory", "${spec.totalRamGb} GB")
+                    ZetacubeSpecRow("Storage", formatCapacity(spec.totalHarddiskGb?.toLongOrNull() ?: 0))
+                    if (spec.gpuModel != "N/A") {
+                        ZetacubeSpecRow("GPU", spec.gpuModel)
+                    }
+                    if (spec.gpuVramGb != "0") {
+                        ZetacubeSpecRow("GPU VRAM", "${spec.gpuVramGb} GB")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * ZETACUBE 노드의 표시 이름 결정
+ */
+private fun getZetacubeDisplayName(imageType: ImageType, imageIndex: Int): String {
+    return when (imageType) {
+        ImageType.NDP_INFO -> "ZETACUBE NDP Server"
+        ImageType.NODE_INFO -> "ZETACUBE Filecoin Info"
+        ImageType.NODE_INFO_AETHIR -> "ZETACUBE Status Monitor"
+        ImageType.WEBUI_SERVER -> "ZETACUBE Web UI Server"
+        ImageType.SYSTEMTOAI_ACTIVE -> when (imageIndex) {
+            5 -> "ZETACUBE SAI Server 1"
+            7 -> "ZETACUBE SAI Server 2"
+            8 -> "ZETACUBE SAI Server 3"
+            else -> "ZETACUBE SAI Server"
+        }
+        ImageType.SUPRA -> "ZETACUBE Supra Worker"
+        ImageType.FILECOIN_ACTIVE -> "ZETACUBE Filecoin Storage"
+        ImageType.SWITCH_100G -> "100G Network Switch"
+        ImageType.UPS_CONTROLLER -> "UPS Power Controller"
+        else -> "ZETACUBE Node"
+    }
+}
+
+/**
+ * ZETACUBE 스펙 행 컴포넌트
+ */
+@Composable
+private fun ZetacubeSpecRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Color(0xFF9CA3AF)
+        )
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
+    }
+}
+
+/**
  * 용량을 읽기 쉬운 형태로 포맷
  */
 private fun formatCapacity(capacityGb: Long): String {
@@ -1303,10 +1766,10 @@ fun DataCenterMonitoringScreen(
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
 
-    // 현재 선택된 데이터센터 가져오기
+    // 현재 선택된 데이터센터 가져오기 (StateFlow 구독으로 변경 시 자동 업데이트)
     val context = LocalContext.current
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
-    val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
+    val currentDataCenter by deviceConfigManager.selectedDataCenterFlow.collectAsState()
 
     // 데이터센터별 이미지 순서 가져오기
     val imageOrder = imageOrderManager.getImageOrderForDataCenter(currentDataCenter)
@@ -1320,7 +1783,7 @@ fun DataCenterMonitoringScreen(
     val currentNanoDcId = currentDataCenter.nanoDcId
 
     // Repository가 아직 자동 갱신을 시작하지 않았다면 시작 (ZETACUBE 제외)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentDataCenter) {
         // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
         if (currentDataCenter == DataCenterType.ZETACUBE) {
             android.util.Log.d(
@@ -1446,10 +1909,10 @@ fun OriginalSizeDataCenterScreen(
 ) {
     val imageOrderManager = ImageOrderManager.getInstance()
 
-    // 현재 선택된 데이터센터 가져오기
+    // 현재 선택된 데이터센터 가져오기 (StateFlow 구독으로 변경 시 자동 업데이트)
     val context = LocalContext.current
     val deviceConfigManager = remember { DeviceConfigurationManager.getInstance(context) }
-    val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
+    val currentDataCenter by deviceConfigManager.selectedDataCenterFlow.collectAsState()
 
     // 데이터센터별 이미지 순서 가져오기
     val imageOrder = imageOrderManager.getImageOrderForDataCenter(currentDataCenter)
@@ -2646,6 +3109,231 @@ fun NdpTransactionContainer(
     }
 }
 
+/**
+ * ZETACUBE SAI 전용 반원 그래프 섹션
+ * CPU, Memory, GPU, Storage 사용량을 반원 게이지로 표시
+ */
+@Composable
+fun ZetacubeSaiSemiCircleGraphSection(
+    nodeUsage: NodeUsage,
+    hardwareSpec: HardwareSpec?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        // 섹션 제목
+        Text(
+            text = "System Usage",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF60A5FA),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
+        // 첫 번째 행: CPU, Memory
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // CPU 사용량
+            SaiSemiCircleGauge(
+                label = "CPU",
+                value = nodeUsage.cpuUsagePercent?.toFloatOrNull() ?: 0f,
+                color = Color(0xFF3B82F6),
+                modifier = Modifier.weight(1f)
+            )
 
+            // Memory 사용량
+            SaiSemiCircleGauge(
+                label = "Memory",
+                value = nodeUsage.memUsagePercent?.toFloatOrNull() ?: 0f,
+                color = Color(0xFF10B981),
+                modifier = Modifier.weight(1f)
+            )
+        }
 
+        // 두 번째 행: GPU, Storage
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // GPU 사용량
+            SaiSemiCircleGauge(
+                label = "GPU",
+                value = nodeUsage.gpuUsagePercent?.toFloatOrNull() ?: 0f,
+                color = Color(0xFF8B5CF6),
+                modifier = Modifier.weight(1f)
+            )
+
+            // Storage 사용량
+            SaiSemiCircleGauge(
+                label = "Storage",
+                value = nodeUsage.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
+                color = Color(0xFFF59E0B),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 온도 정보 행
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF374151))
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // CPU 온도
+            nodeUsage.cpuTemp?.let { temp ->
+                SaiTempIndicator(
+                    label = "CPU Temp",
+                    value = "${temp}°C",
+                    color = getTempColor(temp.toFloatOrNull() ?: 0f)
+                )
+            }
+
+            // GPU 온도
+            nodeUsage.gpuTemp?.let { temp ->
+                SaiTempIndicator(
+                    label = "GPU Temp",
+                    value = "${temp}°C",
+                    color = getTempColor(temp.toFloatOrNull() ?: 0f)
+                )
+            }
+
+            // GPU VRAM
+            nodeUsage.gpuVramPercent?.let { vram ->
+                SaiTempIndicator(
+                    label = "GPU VRAM",
+                    value = "${vram}%",
+                    color = Color(0xFF8B5CF6)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * SAI 반원 게이지 컴포넌트
+ */
+@Composable
+private fun SaiSemiCircleGauge(
+    label: String,
+    value: Float,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress = remember { androidx.compose.animation.core.Animatable(0f) }
+
+    LaunchedEffect(value) {
+        animatedProgress.animateTo(
+            targetValue = value / 100f,
+            animationSpec = androidx.compose.animation.core.tween(durationMillis = 1000)
+        )
+    }
+
+    Column(
+        modifier = modifier.padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 라벨
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF9CA3AF),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // 반원 게이지
+        Box(
+            modifier = Modifier.size(100.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 10.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2f
+                val center = Offset(size.width / 2f, size.height / 2f + radius * 0.1f)
+
+                // 배경 호 (반원)
+                drawArc(
+                    color = Color(0xFF374151),
+                    startAngle = 180f,
+                    sweepAngle = 180f,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    topLeft = Offset(center.x - radius, center.y - radius),
+                    size = Size(radius * 2f, radius * 2f)
+                )
+
+                // 진행률 호 (반원)
+                val sweepAngle = animatedProgress.value * 180f
+                drawArc(
+                    color = color,
+                    startAngle = 180f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    topLeft = Offset(center.x - radius, center.y - radius),
+                    size = Size(radius * 2f, radius * 2f)
+                )
+            }
+
+            // 중앙 값 표시
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.offset(y = 10.dp)
+            ) {
+                Text(
+                    text = "${value.toInt()}%",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+/**
+ * SAI 온도 표시 컴포넌트
+ */
+@Composable
+private fun SaiTempIndicator(
+    label: String,
+    value: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            color = Color(0xFF9CA3AF)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+    }
+}
+
+/**
+ * 온도에 따른 색상 결정
+ */
+private fun getTempColor(temp: Float): Color {
+    return when {
+        temp < 50f -> Color(0xFF10B981)  // 녹색 (정상)
+        temp < 70f -> Color(0xFFF59E0B)  // 노란색 (주의)
+        else -> Color(0xFFEF4444)        // 빨간색 (위험)
+    }
+}

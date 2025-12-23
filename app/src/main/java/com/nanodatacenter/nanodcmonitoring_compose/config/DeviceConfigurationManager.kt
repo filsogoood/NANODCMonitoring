@@ -6,20 +6,39 @@ import android.provider.Settings
 import android.util.Log
 import java.util.Locale
 import com.nanodatacenter.nanodcmonitoring_compose.data.DataCenterType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * 기기별 설정 관리 클래스
  * 여러 기기에서 사용되는 앱의 설정을 관리하고 기기별 특성을 고려한 설정 제공
  */
 class DeviceConfigurationManager private constructor(context: Context) {
-    
-    private val sharedPreferences: SharedPreferences = 
+
+    private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    
+
     private val deviceId: String = Settings.Secure.getString(
-        context.contentResolver, 
+        context.contentResolver,
         Settings.Secure.ANDROID_ID
     ) ?: "unknown_device"
+
+    // 선택된 데이터센터 StateFlow (UI가 자동으로 업데이트되도록)
+    private val _selectedDataCenterFlow = MutableStateFlow(loadSelectedDataCenter())
+    val selectedDataCenterFlow: StateFlow<DataCenterType> = _selectedDataCenterFlow.asStateFlow()
+
+    /**
+     * SharedPreferences에서 선택된 데이터센터 로드
+     */
+    private fun loadSelectedDataCenter(): DataCenterType {
+        val dataCenterString = sharedPreferences.getString(KEY_SELECTED_DATACENTER, DataCenterType.GY01.name)
+        return try {
+            DataCenterType.valueOf(dataCenterString ?: DataCenterType.GY01.name)
+        } catch (e: IllegalArgumentException) {
+            DataCenterType.GY01
+        }
+    }
     
     companion object {
         private const val TAG = "DeviceConfigManager"
@@ -190,16 +209,13 @@ class DeviceConfigurationManager private constructor(context: Context) {
         sharedPreferences.edit().putString(KEY_SELECTED_DATACENTER, dataCenter.name).apply()
         // 선택된 데이터센터의 nanoDcId도 함께 업데이트
         setNanoDcId(dataCenter.nanoDcId)
+        // StateFlow 업데이트 (UI가 자동으로 recomposition되도록)
+        _selectedDataCenterFlow.value = dataCenter
         Log.d(TAG, "Selected data center set to: ${dataCenter.name} (${dataCenter.nanoDcId})")
     }
 
     fun getSelectedDataCenter(): DataCenterType {
-        val dataCenterString = sharedPreferences.getString(KEY_SELECTED_DATACENTER, DataCenterType.GY01.name)
-        return try {
-            DataCenterType.valueOf(dataCenterString ?: DataCenterType.GY01.name)
-        } catch (e: IllegalArgumentException) {
-            DataCenterType.GY01
-        }
+        return _selectedDataCenterFlow.value
     }
     
     /**

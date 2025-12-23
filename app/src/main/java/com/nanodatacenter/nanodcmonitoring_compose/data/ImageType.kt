@@ -38,6 +38,7 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     STORAGE_6(R.drawable.storage2, "Storage 6"),
     STORAGE2_NONE(R.drawable.storage2_none, "Storage 2 None"),
     UPS_CONTROLLER(R.drawable.upscontroller, "UPS Controller"),
+    WEBUI_SERVER(R.drawable.webuiserver, "Web UI Server"),
     LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo");
 
     companion object {
