@@ -36,10 +36,15 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     STORAGE_4(R.drawable.storage2, "Storage 4"),
     STORAGE_5(R.drawable.storage2, "Storage 5"),
     STORAGE_6(R.drawable.storage2, "Storage 6"),
+    STORAGE_NAS(R.drawable.storage, "NAS Storage"),
+    STORAGE_NAS_NONE(R.drawable.storage_none, "NAS Storage Inactive"),
     STORAGE2_NONE(R.drawable.storage2_none, "Storage 2 None"),
     UPS_CONTROLLER(R.drawable.upscontroller, "UPS Controller"),
     WEBUI_SERVER(R.drawable.webuiserver, "Web UI Server"),
-    LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo");
+    WEBUI_SERVER_NONE(R.drawable.webuiserver_none, "Web UI Server Inactive"),
+    LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo"),
+    LOGO_MOALIFEPLUS(R.drawable.moalifeplus, "MoAlife Plus Logo"),
+    LOGO_DANGSAN(R.drawable.dangsan, "Dangsan Logo");
 
     companion object {
         /**
@@ -72,7 +77,9 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
          * 8번 클릭 시 관리자 팝업을 표시합니다.
          */
         private val ADMIN_ACCESS_TYPES = setOf(
-            LOGO_ZETACUBE
+            LOGO_ZETACUBE,
+            LOGO_MOALIFEPLUS,
+            LOGO_DANGSAN
         )
     }
     
@@ -110,7 +117,9 @@ enum class DataCenterType(
     BC01("BC01", "dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20"),
     BC02("BC02", "5e807a27-7c3a-4a22-8df2-20c392186ed3"),
     GY01("GY01", "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"),
-    ZETACUBE("ZETACUBE", "zetacube-0000-0000-0000-000000000000");
+    ZETACUBE("ZETACUBE", "zetacube-0000-0000-0000-000000000000"),
+    MOALIFEPLUS("MOALIFEPLUS", "moalifeplus-0000-0000-0000-000000000000"),
+    DANGSAN("DANGSAN", "dangsan-0000-0000-0000-000000000000");
     
     companion object {
         /**

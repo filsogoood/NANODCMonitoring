@@ -32,11 +32,11 @@ class DeviceConfigurationManager private constructor(context: Context) {
      * SharedPreferences에서 선택된 데이터센터 로드
      */
     private fun loadSelectedDataCenter(): DataCenterType {
-        val dataCenterString = sharedPreferences.getString(KEY_SELECTED_DATACENTER, DataCenterType.GY01.name)
+        val dataCenterString = sharedPreferences.getString(KEY_SELECTED_DATACENTER, DataCenterType.DANGSAN.name)
         return try {
-            DataCenterType.valueOf(dataCenterString ?: DataCenterType.GY01.name)
+            DataCenterType.valueOf(dataCenterString ?: DataCenterType.DANGSAN.name)
         } catch (e: IllegalArgumentException) {
-            DataCenterType.GY01
+            DataCenterType.DANGSAN
         }
     }
     

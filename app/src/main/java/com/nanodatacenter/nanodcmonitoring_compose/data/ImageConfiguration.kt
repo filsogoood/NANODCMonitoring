@@ -145,6 +145,46 @@ data class ImageConfiguration(
         )
 
         /**
+         * MOALIFEPLUS 데이터센터 전용 이미지 순서
+         */
+        val MOALIFEPLUS_ORDER = listOf(
+            ImageType.LOGO_MOALIFEPLUS,   // 1. MoAlife Plus 로고
+            ImageType.SWITCH_100G,        // 2. 100G 스위치
+            ImageType.SUPRA,              // 3. Supra (활성화)
+            ImageType.SUPRA_NONE_1,       // 4. Supra (비활성)
+            ImageType.SYSTEMTOAI_ACTIVE,  // 5. SAI (활성화)
+            ImageType.SYSTEMTOAI_NONE,    // 6. SAI (비활성)
+            ImageType.SYSTEMTOAI_ACTIVE,  // 7. SAI (활성화)
+            ImageType.SYSTEMTOAI_NONE,    // 8. SAI (비활성)
+            ImageType.UPS_CONTROLLER,     // 9. UPS 컨트롤러
+            ImageType.SYSTEMTOAI_NONE,    // 10. SAI (비활성)
+            ImageType.SYSTEMTOAI_NONE,    // 11. SAI (비활성)
+            ImageType.SYSTEMTOAI_NONE,    // 12. SAI (비활성)
+            ImageType.SYSTEMTOAI_NONE,    // 13. SAI (비활성)
+            ImageType.LOGO_ZETACUBE       // 14. 제타큐브 로고 [관리자 접근]
+        )
+
+        /**
+         * DANGSAN 데이터센터 전용 이미지 순서
+         */
+        val DANGSAN_ORDER = listOf(
+            ImageType.WEBUI_SERVER_NONE,  // 1. 테스트용 (나중에 이미지 교체 예정)
+            ImageType.LOGO_DANGSAN,       // 2. Dangsan 로고
+            ImageType.SWITCH_100G,        // 2. 100G 스위치
+            ImageType.SUPRA,              // 3. Supra (활성화)
+            ImageType.SUPRA_NONE_1,       // 4. Supra (비활성)
+            ImageType.SYSTEMTOAI_ACTIVE,  // 5. SAI (활성화)
+            ImageType.SYSTEMTOAI_ACTIVE,  // 6. SAI (활성화)
+            ImageType.SYSTEMTOAI_NONE,    // 7. SAI (비활성)
+            ImageType.UPS_CONTROLLER,     // 8. UPS 컨트롤러
+            ImageType.SYSTEMTOAI_NONE,    // 9. SAI (비활성)
+            ImageType.SYSTEMTOAI_NONE,    // 10. SAI (비활성)
+            ImageType.STORAGE_NAS,        // 11. NAS 스토리지
+            ImageType.STORAGE_NAS_NONE,   // 12. NAS 스토리지 (비활성)
+            ImageType.LOGO_ZETACUBE       // 13. 제타큐브 로고 [관리자 접근]
+        )
+
+        /**
          * 기본 설정을 생성합니다.
          */
         fun createDefault(deviceType: DeviceType = DeviceType.DEFAULT): ImageConfiguration {
@@ -173,6 +213,20 @@ data class ImageConfiguration(
         }
 
         /**
+         * MOALIFEPLUS 데이터센터 전용 설정을 생성합니다.
+         */
+        fun createMOALIFEPLUS(): ImageConfiguration {
+            return ImageConfiguration(DeviceType.MOALIFEPLUS, MOALIFEPLUS_ORDER)
+        }
+
+        /**
+         * DANGSAN 데이터센터 전용 설정을 생성합니다.
+         */
+        fun createDANGSAN(): ImageConfiguration {
+            return ImageConfiguration(DeviceType.DANGSAN, DANGSAN_ORDER)
+        }
+
+        /**
          * 데이터센터 타입에 따라 적절한 이미지 순서를 반환합니다.
          */
         fun getOrderForDataCenter(dataCenterName: String): List<ImageType> {
@@ -181,6 +235,8 @@ data class ImageConfiguration(
                 "BC02" -> BC02_ORDER
                 "GY01" -> DEFAULT_ORDER
                 "ZETACUBE" -> ZETACUBE_ORDER
+                "MOALIFEPLUS" -> MOALIFEPLUS_ORDER
+                "DANGSAN" -> DANGSAN_ORDER
                 else -> DEFAULT_ORDER
             }
         }
@@ -197,6 +253,8 @@ enum class DeviceType(val displayName: String) {
     BC02("BC02"),
     GY01("GY01"),
     ZETACUBE("ZETACUBE"),
+    MOALIFEPLUS("MOALIFEPLUS"),
+    DANGSAN("DANGSAN"),
     DEVICE_A("기기 A"),
     DEVICE_B("기기 B"),
     DEVICE_C("기기 C");
@@ -215,6 +273,8 @@ enum class DeviceType(val displayName: String) {
                 "BC02" -> BC02
                 "GY01" -> GY01
                 "ZETACUBE" -> ZETACUBE
+                "MOALIFEPLUS" -> MOALIFEPLUS
+                "DANGSAN" -> DANGSAN
                 else -> DEFAULT
             }
         }

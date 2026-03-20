@@ -114,13 +114,13 @@ fun ClickableImageItem(
     val isBC01 = currentNanoDcId.equals("dcf1bb07-f621-4b4d-9d61-45fc3cf5ac20", ignoreCase = true)
     val isAethirInBC01 = imageType == ImageType.AETHIR && isBC01
 
-    // ZETACUBE 데이터센터인지 확인
-    val isZetacube = ZetacubeStaticData.isZetacubeSelected(currentNanoDcId)
+    // ZETACUBE 또는 MOALIFEPLUS 데이터센터인지 확인 (정적 데이터 사용)
+    val isStaticDataCenter = ZetacubeStaticData.isStaticDataCenter(currentNanoDcId)
 
-    // BC01의 AETHIR은 클릭 가능, ZETACUBE 활성화 이미지도 클릭 가능, 다른 경우는 원래 설정 따름
+    // BC01의 AETHIR은 클릭 가능, 정적 데이터 데이터센터 활성화 이미지도 클릭 가능, 다른 경우는 원래 설정 따름
     val isClickableImage = when {
         isAethirInBC01 -> true
-        isZetacube -> isZetacubeClickableImage(imageType)
+        isStaticDataCenter -> isStaticDataCenterClickableImage(imageType)
         else -> imageType.showsInfoCard
     }
 
@@ -193,16 +193,16 @@ fun ClickableImageItem(
                 exit = shrinkVertically()
             ) {
                 when {
-                    // ZETACUBE 인프라 장비 (Switch, UPS)
-                    isZetacube && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER) -> {
+                    // 정적 데이터 데이터센터 인프라 장비 (Switch, UPS)
+                    isStaticDataCenter && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER) -> {
                         val infraData = ZetacubeStaticData.getInfraDataForImage(imageType)
                         if (infraData != null) {
                             ZetacubeInfraInfoCard(infraData = infraData)
                         }
                     }
 
-                    // ZETACUBE: 정적 데이터를 사용하여 그래프 표시
-                    isZetacube && isZetacubeClickableImage(imageType) -> {
+                    // 정적 데이터 데이터센터: 정적 데이터를 사용하여 그래프 표시
+                    isStaticDataCenter && isStaticDataCenterClickableImage(imageType) -> {
                         val staticData = ZetacubeStaticData.getStaticDataForImage(imageType, imageIndex)
                         if (staticData != null) {
                             ZetacubeNodeInfoCard(
@@ -1165,21 +1165,24 @@ fun DiskUsageChart(
 }
 
 /**
- * ZETACUBE에서 클릭 가능한 이미지 타입인지 확인
+ * 정적 데이터 데이터센터(ZETACUBE, MOALIFEPLUS)에서 클릭 가능한 이미지 타입인지 확인
  * 활성화 이미지들과 기본 정보 이미지들은 클릭 가능
  */
-private fun isZetacubeClickableImage(imageType: ImageType): Boolean {
+private fun isStaticDataCenterClickableImage(imageType: ImageType): Boolean {
     return when (imageType) {
         // 정보 표시 이미지
         ImageType.NDP_INFO,
         ImageType.NODE_INFO,
         ImageType.NODE_INFO_AETHIR,
         ImageType.WEBUI_SERVER,
+        ImageType.WEBUI_SERVER_NONE,
         // 활성화 이미지들
         ImageType.SYSTEMTOAI_ACTIVE,
         ImageType.SUPRA,
         ImageType.FILECOIN_ACTIVE,
-        // 인프라 이미지들 (ZETACUBE 전용)
+        // 스토리지 이미지
+        ImageType.STORAGE_NAS,
+        // 인프라 이미지들
         ImageType.SWITCH_100G,
         ImageType.UPS_CONTROLLER -> true
         // 나머지는 클릭 불가
@@ -1561,13 +1564,15 @@ private fun getZetacubeDisplayName(imageType: ImageType, imageIndex: Int): Strin
         ImageType.NODE_INFO_AETHIR -> "ZETACUBE Status Monitor"
         ImageType.WEBUI_SERVER -> "ZETACUBE Web UI Server"
         ImageType.SYSTEMTOAI_ACTIVE -> when (imageIndex) {
-            5 -> "ZETACUBE SAI Server 1"
+            4 -> "ZETACUBE SAI Server 1"
+            5 -> "ZETACUBE SAI Server 2"
             7 -> "ZETACUBE SAI Server 2"
             8 -> "ZETACUBE SAI Server 3"
             else -> "ZETACUBE SAI Server"
         }
         ImageType.SUPRA -> "ZETACUBE Supra Worker"
         ImageType.FILECOIN_ACTIVE -> "ZETACUBE Filecoin Storage"
+        ImageType.STORAGE_NAS -> "ZETACUBE NAS Storage"
         ImageType.SWITCH_100G -> "100G Network Switch"
         ImageType.UPS_CONTROLLER -> "UPS Power Controller"
         else -> "ZETACUBE Node"
@@ -1782,13 +1787,13 @@ fun DataCenterMonitoringScreen(
 
     val currentNanoDcId = currentDataCenter.nanoDcId
 
-    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작 (ZETACUBE 제외)
+    // Repository가 아직 자동 갱신을 시작하지 않았다면 시작 (정적 데이터 데이터센터 제외)
     LaunchedEffect(currentDataCenter) {
-        // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
-        if (currentDataCenter == DataCenterType.ZETACUBE) {
+        // ZETACUBE, MOALIFEPLUS는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+        if (currentDataCenter == DataCenterType.ZETACUBE || currentDataCenter == DataCenterType.MOALIFEPLUS || currentDataCenter == DataCenterType.DANGSAN) {
             android.util.Log.d(
                 "DataCenterMonitoringScreen",
-                "🏢 ZETACUBE uses local data only - skipping auto refresh"
+                "🏢 ${currentDataCenter.displayName} uses local data only - skipping auto refresh"
             )
             return@LaunchedEffect
         }

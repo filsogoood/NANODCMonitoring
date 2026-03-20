@@ -66,7 +66,7 @@ object UsageMetrics {
     val MEMORY_COLOR = Color(0xFF10B981)      // 초록색  
     val GPU_COLOR = Color(0xFF8B5CF6)         // 보라색
     val STORAGE_COLOR = Color(0xFFF59E0B)     // 주황색
-    val HEALTH_COLOR = Color(0xFFEF4444)      // 빨간색
+    val HEALTH_COLOR = Color(0xFF10B981)      // 초록색 (낮을수록 양호)
     val TEMPERATURE_COLOR = Color(0xFFEC4899) // 핑크색
     val VRAM_COLOR = Color(0xFF06B6D4)        // 시아색
     
@@ -104,6 +104,7 @@ fun getLayoutPatternForNode(nodeIndex: Int, nodeName: String): GraphLayoutPatter
         nodeName.contains("PostWorker", ignoreCase = true) -> GraphLayoutPattern.HORIZONTAL_BARS
         nodeName.contains("Filecoin", ignoreCase = true) -> GraphLayoutPattern.MIXED_LAYOUT
         nodeName.contains("Aethir", ignoreCase = true) -> GraphLayoutPattern.DASHBOARD
+        nodeName.contains("NAS", ignoreCase = true) || nodeName.contains("Storage", ignoreCase = true) -> GraphLayoutPattern.STORAGE_FOCUSED
         else -> when (nodeIndex % 4) {
             0 -> GraphLayoutPattern.GRID_2X2
             1 -> GraphLayoutPattern.VERTICAL_BARS

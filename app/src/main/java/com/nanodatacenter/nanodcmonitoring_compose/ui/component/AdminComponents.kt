@@ -236,9 +236,9 @@ fun DataCenterSelectionDialog(
                                      isLoading = true
                                      loadingCenter = dataCenter
 
-                                     // ZETACUBE는 로컬 데이터만 사용하므로 API 테스트 건너뛰기
-                                     if (dataCenter == DataCenterType.ZETACUBE) {
-                                         // ZETACUBE: API 테스트 없이 바로 설정 저장
+                                     // ZETACUBE, MOALIFEPLUS는 로컬 데이터만 사용하므로 API 테스트 건너뛰기
+                                     if (dataCenter == DataCenterType.ZETACUBE || dataCenter == DataCenterType.MOALIFEPLUS || dataCenter == DataCenterType.DANGSAN) {
+                                         // 정적 데이터 사용 데이터센터: API 테스트 없이 바로 설정 저장
                                          deviceConfigManager.setSelectedDataCenter(dataCenter)
                                          isLoading = false
                                          loadingCenter = null

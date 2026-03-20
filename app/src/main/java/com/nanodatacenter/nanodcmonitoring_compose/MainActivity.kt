@@ -70,9 +70,9 @@ class MainActivity : ComponentActivity() {
         val selectedDataCenter = deviceConfigManager.getSelectedDataCenter()
         Log.d(TAG, "🏢 Initializing with data center: ${selectedDataCenter.displayName} (${selectedDataCenter.nanoDcId})")
 
-        // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
-        if (selectedDataCenter == DataCenterType.ZETACUBE) {
-            Log.d(TAG, "🏢 ZETACUBE uses local data only - skipping API connection")
+        // ZETACUBE, MOALIFEPLUS는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+        if (selectedDataCenter == DataCenterType.ZETACUBE || selectedDataCenter == DataCenterType.MOALIFEPLUS || selectedDataCenter == DataCenterType.DANGSAN) {
+            Log.d(TAG, "🏢 ${selectedDataCenter.displayName} uses local data only - skipping API connection")
             return
         }
 
@@ -104,9 +104,9 @@ class MainActivity : ComponentActivity() {
                 val savedDataCenter = deviceConfigManager.getSelectedDataCenter()
                 Log.d(TAG, "✅ Saved data center: ${savedDataCenter.displayName} (${savedDataCenter.nanoDcId})")
 
-                // ZETACUBE는 로컬 데이터만 사용하므로 API 호출 건너뛰기
-                if (dataCenter == DataCenterType.ZETACUBE) {
-                    Log.d(TAG, "🏢 ZETACUBE uses local data only - skipping API operations")
+                // ZETACUBE, MOALIFEPLUS는 로컬 데이터만 사용하므로 API 호출 건너뛰기
+                if (dataCenter == DataCenterType.ZETACUBE || dataCenter == DataCenterType.MOALIFEPLUS || dataCenter == DataCenterType.DANGSAN) {
+                    Log.d(TAG, "🏢 ${dataCenter.displayName} uses local data only - skipping API operations")
                     Log.d(TAG, "✅ Data center changed successfully to: ${dataCenter.displayName}")
                     return@launch
                 }
@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                 try {
                     val currentDataCenter = deviceConfigManager.getSelectedDataCenter()
                     Log.d(TAG, "🔄 Attempting to restore with current data center: ${currentDataCenter.displayName}")
-                    if (currentDataCenter != DataCenterType.ZETACUBE) {
+                    if (currentDataCenter != DataCenterType.ZETACUBE && currentDataCenter != DataCenterType.MOALIFEPLUS && currentDataCenter != DataCenterType.DANGSAN) {
                         startAutoDataRefresh(currentDataCenter.nanoDcId)
                     }
                 } catch (restoreException: Exception) {

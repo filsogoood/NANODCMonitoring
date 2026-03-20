@@ -42,6 +42,8 @@ class ImageOrderManager private constructor() {
         configurations[DeviceType.BC02] = ImageConfiguration.createBC02()
         configurations[DeviceType.GY01] = ImageConfiguration.createDefault(DeviceType.GY01)
         configurations[DeviceType.ZETACUBE] = ImageConfiguration.createZETACUBE()
+        configurations[DeviceType.MOALIFEPLUS] = ImageConfiguration.createMOALIFEPLUS()
+        configurations[DeviceType.DANGSAN] = ImageConfiguration.createDANGSAN()
         
         // 추후 다른 기기별 설정 예시 (필요시 수정)
         // configurations[DeviceType.DEVICE_A] = createDeviceAConfiguration()
@@ -134,6 +136,8 @@ class ImageOrderManager private constructor() {
             DataCenterType.BC02 -> DeviceType.BC02
             DataCenterType.GY01 -> DeviceType.GY01
             DataCenterType.ZETACUBE -> DeviceType.ZETACUBE
+            DataCenterType.MOALIFEPLUS -> DeviceType.MOALIFEPLUS
+            DataCenterType.DANGSAN -> DeviceType.DANGSAN
         }
         return getImageOrder(deviceType)
     }
