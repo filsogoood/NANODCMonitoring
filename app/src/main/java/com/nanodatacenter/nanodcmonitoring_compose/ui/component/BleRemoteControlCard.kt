@@ -2,6 +2,7 @@ package com.nanodatacenter.nanodcmonitoring_compose.ui.component
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.widget.Toast
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -142,8 +143,14 @@ fun BleRemoteControlCard(modifier: Modifier = Modifier) {
                         onFanSpeed = { speed -> bleManager.sendCommand(JtProtocol.buildFanSpeedCommand(speed)) },
                         onColdTemp = { temp -> bleManager.sendCommand(JtProtocol.buildColdTempCommand(temp)) },
                         onHeatTemp = { temp -> bleManager.sendCommand(JtProtocol.buildHeatTempCommand(temp)) },
-                        onTimeSet = { bleManager.sendCommand(JtProtocol.buildTimeSetCommand()) },
-                        onFilterReset = { bleManager.sendCommand(JtProtocol.buildFilterResetCommand()) },
+                        onTimeSet = {
+                            bleManager.sendCommand(JtProtocol.buildTimeSetCommand())
+                            Toast.makeText(context, "시간 동기화 전송 완료", Toast.LENGTH_SHORT).show()
+                        },
+                        onFilterReset = {
+                            bleManager.sendCommand(JtProtocol.buildFilterResetCommand())
+                            Toast.makeText(context, "필터 리셋 전송 완료", Toast.LENGTH_SHORT).show()
+                        },
                         onDisconnect = { bleManager.disconnect() },
                         onSendWeekdayReservation = { settings -> bleManager.sendCommand(JtProtocol.buildWeekdayReservationCommand(settings)) },
                         onSendWeekendReservation = { settings -> bleManager.sendCommand(JtProtocol.buildWeekendReservationCommand(settings)) },
@@ -315,6 +322,11 @@ private fun RemoteControlSection(
     if (status != null) {
         StatusRow(status)
         Spacer(modifier = Modifier.height(12.dp))
+    }
+
+    // 과열/과냉 경보
+    if (status != null) {
+        TemperatureAlarmBanner(status)
     }
 
     // Power button
@@ -1054,6 +1066,79 @@ private fun TimeAdjustButton(text: String, onClick: () -> Unit) {
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
+        )
+    }
+}
+
+// =============================================
+// 과열/과냉 경보 배너
+// =============================================
+
+@Composable
+private fun TemperatureAlarmBanner(status: DeviceStatus) {
+    val hasAlarm = status.overheatAlarm || status.overcoldAlarm || status.filterAlarm
+    if (!hasAlarm) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+    ) {
+        if (status.overheatAlarm) {
+            AlarmRow(
+                label = "과열 경보",
+                detail = "콤프레셔 온도: ${status.compTemp}°C",
+                bgColor = Color(0x33FF0000),
+                textColor = ErrorRed
+            )
+        }
+        if (status.overcoldAlarm) {
+            if (status.overheatAlarm) Spacer(modifier = Modifier.height(4.dp))
+            AlarmRow(
+                label = "과냉 경보",
+                detail = "현재 온도: ${status.currentTemp ?: "--"}°C",
+                bgColor = Color(0x330066FF),
+                textColor = CoolingBlue
+            )
+        }
+        if (status.filterAlarm) {
+            if (status.overheatAlarm || status.overcoldAlarm) Spacer(modifier = Modifier.height(4.dp))
+            AlarmRow(
+                label = "필터 교체 필요",
+                detail = "${status.filterTime}h / ${status.filterTimeSetting}h",
+                bgColor = Color(0x3300B0FF),
+                textColor = FilterCyan
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlarmRow(
+    label: String,
+    detail: String,
+    bgColor: Color,
+    textColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(bgColor)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "⚠ $label",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+        Text(
+            text = detail,
+            fontSize = 12.sp,
+            color = textColor.copy(alpha = 0.8f)
         )
     }
 }

@@ -180,7 +180,9 @@ object JtProtocol {
         val nowTimeSec = readByte()
         val nowTimeDays = readByte()
         val nowTemp = readByte()
-        readByte(); readByte(); readByte()
+        val nowHeaterTemp = readByte()
+        val compTemp = readByte()
+        readByte() // tempOption
         val boardID = readByte()
         val optionState = readByte()
         readByte()
@@ -228,10 +230,16 @@ object JtProtocol {
         val filterAlarm = filterTime >= filterTimeSetting && filterTimeSetting > 0
         val reservationActive = (dayReservation and 0x7F) != 0
 
+        // 과열/과냉 경보 판정
+        val overheatAlarm = (error1 and 0x01) != 0  // Error1 bit0: 과열
+        val overcoldAlarm = (error1 and 0x02) != 0  // Error1 bit1: 과냉
+
         return DeviceStatus(
             isPowerOn = isPowerOn, mode = mode, fanSpeed = fanSpeed,
             currentTemp = currentTemp, settingTemp = settingTemp,
             coldSettingTemp = coldSettingTemp, heatSettingTemp = heatSettingTemp,
+            heaterTemp = nowHeaterTemp, compTemp = compTemp,
+            overheatAlarm = overheatAlarm, overcoldAlarm = overcoldAlarm,
             deviceTime = deviceTime, boardId = boardID, version = version,
             errors = errors, filterAlarm = filterAlarm, filterTime = filterTime,
             filterTimeSetting = filterTimeSetting, reservationActive = reservationActive,
@@ -323,6 +331,8 @@ data class DeviceStatus(
     val isPowerOn: Boolean, val mode: OperationMode, val fanSpeed: FanSpeed?,
     val currentTemp: Int?, val settingTemp: Int?,
     val coldSettingTemp: Int, val heatSettingTemp: Int,
+    val heaterTemp: Int = 0, val compTemp: Int = 0,
+    val overheatAlarm: Boolean = false, val overcoldAlarm: Boolean = false,
     val deviceTime: String, val boardId: Int, val version: Int,
     val errors: List<String>, val filterAlarm: Boolean,
     val filterTime: Int, val filterTimeSetting: Int,
