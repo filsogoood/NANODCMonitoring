@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(adb devices:*)",
+      "Bash(adb install:*)",
+      "mcp__deep-directory-tree__get_deep_directory_tree"
+    ]
+  }
+}
