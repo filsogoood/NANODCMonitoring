@@ -193,6 +193,11 @@ fun ClickableImageItem(
                 exit = shrinkVertically()
             ) {
                 when {
+                    // BLE 리모컨 카드 (DANGSAN 데이터센터 WEBUI_SERVER_NONE)
+                    isStaticDataCenter && imageType == ImageType.WEBUI_SERVER_NONE -> {
+                        BleRemoteControlCard()
+                    }
+
                     // 정적 데이터 데이터센터 인프라 장비 (Switch, UPS)
                     isStaticDataCenter && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER) -> {
                         val infraData = ZetacubeStaticData.getInfraDataForImage(imageType)

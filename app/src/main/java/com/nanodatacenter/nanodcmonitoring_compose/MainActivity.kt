@@ -27,6 +27,7 @@ import com.nanodatacenter.nanodcmonitoring_compose.ui.component.DataCenterMonito
 import com.nanodatacenter.nanodcmonitoring_compose.ui.theme.DataCenterTheme
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageConfigurationHelper
 import com.nanodatacenter.nanodcmonitoring_compose.util.ImageScaleUtil
+import com.nanodatacenter.nanodcmonitoring_compose.ble.BleManager
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -218,6 +219,8 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         // Repository 정리 (자동 갱신 중지 및 리소스 해제)
         repository.cleanup()
+        // BLE 리소스 정리
+        BleManager.getInstance(this).cleanup()
         Log.d(TAG, "MainActivity destroyed, resources cleaned up")
     }
 }
