@@ -154,7 +154,11 @@ fun BleRemoteControlCard(modifier: Modifier = Modifier) {
                         onDisconnect = { bleManager.disconnect() },
                         onSendWeekdayReservation = { settings -> bleManager.sendCommand(JtProtocol.buildWeekdayReservationCommand(settings)) },
                         onSendWeekendReservation = { settings -> bleManager.sendCommand(JtProtocol.buildWeekendReservationCommand(settings)) },
-                        onSendDayReservation = { dayBits -> bleManager.sendCommand(JtProtocol.buildDayReservationCommand(dayBits)) }
+                        onSendDayReservation = { dayBits -> bleManager.sendCommand(JtProtocol.buildDayReservationCommand(dayBits)) },
+                        onSendFilterSetting = { settings ->
+                            bleManager.sendCommand(JtProtocol.buildDeviceSettingCommand(settings))
+                            Toast.makeText(context, "필터 설정 전송 완료", Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             }
@@ -314,7 +318,8 @@ private fun RemoteControlSection(
     onDisconnect: () -> Unit,
     onSendWeekdayReservation: (ReservationSettings) -> Unit,
     onSendWeekendReservation: (ReservationSettings) -> Unit,
-    onSendDayReservation: (Int) -> Unit
+    onSendDayReservation: (Int) -> Unit,
+    onSendFilterSetting: (DeviceSettings) -> Unit
 ) {
     val status = deviceStatus
 
@@ -362,6 +367,14 @@ private fun RemoteControlSection(
     )
     Spacer(modifier = Modifier.height(12.dp))
 
+    // Filter settings section
+    FilterSettingSection(
+        deviceStatus = status,
+        onSendFilterSetting = onSendFilterSetting,
+        onFilterReset = onFilterReset
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+
     // Utility row
     UtilityRow(
         status = status,
@@ -384,6 +397,7 @@ private fun StatusRow(status: DeviceStatus) {
         Column {
             Text(text = "Board #${status.boardId}", fontSize = 11.sp, color = TextSecondary)
             Text(text = "v${status.version}", fontSize = 11.sp, color = TextSecondary)
+            Text(text = "필터 ${status.filterTime}h / ${status.filterTimeSetting}h", fontSize = 11.sp, color = TextSecondary)
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(text = status.deviceTime, fontSize = 11.sp, color = TextSecondary)
@@ -509,29 +523,6 @@ private fun TemperatureControl(
             }
         }
 
-        // Cold / Heat setting temp display
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "냉방", fontSize = 11.sp, color = CoolingBlue)
-                Text(
-                    text = "${status.coldSettingTemp}°C",
-                    fontSize = 14.sp,
-                    color = if (isCooling) CoolingBlue else TextSecondary
-                )
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "난방", fontSize = 11.sp, color = HeatingOrange)
-                Text(
-                    text = "${status.heatSettingTemp}°C",
-                    fontSize = 14.sp,
-                    color = if (isHeating) HeatingOrange else TextSecondary
-                )
-            }
-        }
     }
 }
 
@@ -560,7 +551,7 @@ private fun ModeButtons(currentMode: OperationMode?, onMode: (OperationMode) -> 
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        OperationMode.entries.forEach { mode ->
+        OperationMode.entries.filter { it != OperationMode.HEATING }.forEach { mode ->
             val isActive = currentMode == mode
             val color = when (mode) {
                 OperationMode.COOLING -> CoolingBlue
@@ -1140,5 +1131,169 @@ private fun AlarmRow(
             fontSize = 12.sp,
             color = textColor.copy(alpha = 0.8f)
         )
+    }
+}
+
+// =============================================
+// 필터 설정 섹션
+// =============================================
+
+@Composable
+private fun FilterSettingSection(
+    deviceStatus: DeviceStatus?,
+    onSendFilterSetting: (DeviceSettings) -> Unit,
+    onFilterReset: () -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    // 필터 알람 시간 설정값 (장비에서 읽은 값으로 초기화)
+    var filterTimeSetting by remember(deviceStatus?.filterTimeSetting) {
+        mutableIntStateOf(deviceStatus?.filterTimeSetting ?: 6000)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(CardBgLight)
+    ) {
+        // 헤더
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "필터 설정",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${deviceStatus?.filterTime ?: 0}h 사용",
+                    fontSize = 12.sp,
+                    color = if (deviceStatus?.filterAlarm == true) FilterCyan else TextSecondary
+                )
+            }
+            Text(
+                text = if (isExpanded) "▲" else "▼",
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+        }
+
+        if (isExpanded) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+
+                // 현재 필터 사용 시간
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "사용 시간", fontSize = 13.sp, color = TextSecondary)
+                    Text(
+                        text = "${deviceStatus?.filterTime ?: 0}h",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (deviceStatus?.filterAlarm == true) FilterCyan else TextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 알람 설정 시간 조절
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "알람 시간", fontSize = 13.sp, color = TextSecondary)
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilterAdjustButton("−100") { filterTimeSetting = (filterTimeSetting - 100).coerceAtLeast(100) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("−10") { filterTimeSetting = (filterTimeSetting - 10).coerceAtLeast(100) }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${filterTimeSetting}h",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        FilterAdjustButton("+10") { filterTimeSetting = (filterTimeSetting + 10).coerceAtMost(60000) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("+100") { filterTimeSetting = (filterTimeSetting + 100).coerceAtMost(60000) }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 버튼 행
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // 설정 전송
+                    Button(
+                        onClick = {
+                            val settings = deviceStatus?.deviceSettings?.copy(
+                                filterTimeSetting = filterTimeSetting
+                            ) ?: DeviceSettings(filterTimeSetting = filterTimeSetting)
+                            onSendFilterSetting(settings)
+                        },
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = CoolingBlue),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(text = "알람 시간 전송", fontSize = 12.sp, color = Color.White)
+                    }
+
+                    // 필터 리셋
+                    Button(
+                        onClick = onFilterReset,
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = FilterCyan),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(text = "필터 시간 리셋", fontSize = 12.sp, color = Color.White)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterAdjustButton(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .height(28.dp)
+            .widthIn(min = 36.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color(0xFF4B5563))
+            .clickable { onClick() }
+            .padding(horizontal = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondary)
     }
 }
