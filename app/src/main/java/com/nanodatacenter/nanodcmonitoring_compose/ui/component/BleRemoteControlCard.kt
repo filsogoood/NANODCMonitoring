@@ -158,6 +158,10 @@ fun BleRemoteControlCard(modifier: Modifier = Modifier) {
                         onSendFilterSetting = { settings ->
                             bleManager.sendCommand(JtProtocol.buildDeviceSettingCommand(settings))
                             Toast.makeText(context, "필터 설정 전송 완료", Toast.LENGTH_SHORT).show()
+                        },
+                        onSendCycleOperateSetting = { settings ->
+                            bleManager.sendCommand(JtProtocol.buildDeviceSettingCommand(settings))
+                            Toast.makeText(context, "주기운전 설정 전송 완료", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -319,7 +323,8 @@ private fun RemoteControlSection(
     onSendWeekdayReservation: (ReservationSettings) -> Unit,
     onSendWeekendReservation: (ReservationSettings) -> Unit,
     onSendDayReservation: (Int) -> Unit,
-    onSendFilterSetting: (DeviceSettings) -> Unit
+    onSendFilterSetting: (DeviceSettings) -> Unit,
+    onSendCycleOperateSetting: (DeviceSettings) -> Unit
 ) {
     val status = deviceStatus
 
@@ -372,6 +377,13 @@ private fun RemoteControlSection(
         deviceStatus = status,
         onSendFilterSetting = onSendFilterSetting,
         onFilterReset = onFilterReset
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // Cycle operate settings section
+    CycleOperateSection(
+        deviceStatus = status,
+        onSendCycleOperateSetting = onSendCycleOperateSetting
     )
     Spacer(modifier = Modifier.height(12.dp))
 
@@ -1295,5 +1307,191 @@ private fun FilterAdjustButton(text: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondary)
+    }
+}
+
+private val CycleYellow = Color(0xFFFFC107)
+
+@Composable
+private fun CycleOperateSection(
+    deviceStatus: DeviceStatus?,
+    onSendCycleOperateSetting: (DeviceSettings) -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val currentSettings = deviceStatus?.deviceSettings
+
+    var cycleEnabled by remember(currentSettings?.cycleOperateSetting) {
+        mutableStateOf((currentSettings?.cycleOperateSetting ?: 0) != 0)
+    }
+    var onTime by remember(currentSettings?.cycleOperateSettingOnTime) {
+        mutableIntStateOf(currentSettings?.cycleOperateSettingOnTime ?: 40)
+    }
+    var offTime by remember(currentSettings?.cycleOperateSettingOffTime) {
+        mutableIntStateOf(currentSettings?.cycleOperateSettingOffTime ?: 10)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(CardBgLight)
+    ) {
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "주기운전 설정",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if ((currentSettings?.cycleOperateSetting ?: 0) != 0) "ON" else "OFF",
+                    fontSize = 12.sp,
+                    color = if ((currentSettings?.cycleOperateSetting ?: 0) != 0) CycleYellow else TextSecondary
+                )
+            }
+            Text(
+                text = if (isExpanded) "▲" else "▼",
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+        }
+
+        if (isExpanded) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+
+                // ON/OFF toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "주기운전", fontSize = 13.sp, color = TextSecondary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (cycleEnabled) "ON" else "OFF",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (cycleEnabled) CycleYellow else TextSecondary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Switch(
+                            checked = cycleEnabled,
+                            onCheckedChange = { cycleEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = CycleYellow,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFF4B5563)
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // ON time setting
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "가동 시간", fontSize = 13.sp, color = TextSecondary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilterAdjustButton("−10") { onTime = (onTime - 10).coerceAtLeast(1) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("−1") { onTime = (onTime - 1).coerceAtLeast(1) }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${onTime}분",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        FilterAdjustButton("+1") { onTime = (onTime + 1).coerceAtMost(255) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("+10") { onTime = (onTime + 10).coerceAtMost(255) }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // OFF time setting
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "정지 시간", fontSize = 13.sp, color = TextSecondary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilterAdjustButton("−10") { offTime = (offTime - 10).coerceAtLeast(1) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("−1") { offTime = (offTime - 1).coerceAtLeast(1) }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${offTime}분",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        FilterAdjustButton("+1") { offTime = (offTime + 1).coerceAtMost(255) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("+10") { offTime = (offTime + 10).coerceAtMost(255) }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Send button
+                Button(
+                    onClick = {
+                        val settings = currentSettings?.copy(
+                            cycleOperateSetting = if (cycleEnabled) 1 else 0,
+                            cycleOperateSettingOnTime = onTime,
+                            cycleOperateSettingOffTime = offTime
+                        ) ?: DeviceSettings(
+                            cycleOperateSetting = if (cycleEnabled) 1 else 0,
+                            cycleOperateSettingOnTime = onTime,
+                            cycleOperateSettingOffTime = offTime
+                        )
+                        onSendCycleOperateSetting(settings)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CycleYellow),
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(text = "주기운전 설정 전송", fontSize = 12.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }
