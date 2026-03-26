@@ -44,7 +44,19 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
     WEBUI_SERVER_NONE(R.drawable.webuiserver_none, "Web UI Server Inactive"),
     LOGO_ZETACUBE(R.drawable.logo_zetacube, "ZetaCube Logo"),
     LOGO_MOALIFEPLUS(R.drawable.moalifeplus, "MoAlife Plus Logo"),
-    LOGO_DANGSAN(R.drawable.dangsan, "Dangsan Logo");
+    LOGO_DANGSAN(R.drawable.dangsan, "Dangsan Logo"),
+    LOGO_WORLD_IT_SHOW(R.drawable.worlditsohw_logo, "World IT Show Logo"),
+    NANODC_STATUS(R.drawable.nanodc_status, "NanoDC Status"),
+    COOLING_SYSTEM(R.drawable.cooling_system, "Cooling System"),
+    WLS_100G(R.drawable.wls_100g, "WLS 100G"),
+    AI_AGENT(R.drawable.ai_agent, "AI Agent"),
+    ZAH200(R.drawable.zah200, "ZAH200"),
+    ZAH100(R.drawable.zah100, "ZAH100"),
+    ZAA100(R.drawable.zaa100, "ZAA100"),
+    ZAP6000(R.drawable.zap6000, "ZAP6000"),
+    ZA5090(R.drawable.za5090, "ZA5090"),
+    ZA4090(R.drawable.za4090, "ZA4090"),
+    WLS_SMARTUPS(R.drawable.wls_smartups, "WLS SmartUPS");
 
     companion object {
         /**
@@ -79,7 +91,8 @@ enum class ImageType(@DrawableRes val drawableRes: Int, val description: String)
         private val ADMIN_ACCESS_TYPES = setOf(
             LOGO_ZETACUBE,
             LOGO_MOALIFEPLUS,
-            LOGO_DANGSAN
+            LOGO_DANGSAN,
+            LOGO_WORLD_IT_SHOW
         )
     }
     
@@ -119,7 +132,8 @@ enum class DataCenterType(
     GY01("GY01", "c236ea9c-3d7e-430b-98b8-1e22d0d6cf01"),
     ZETACUBE("ZETACUBE", "zetacube-0000-0000-0000-000000000000"),
     MOALIFEPLUS("MOALIFEPLUS", "moalifeplus-0000-0000-0000-000000000000"),
-    DANGSAN("DANGSAN", "dangsan-0000-0000-0000-000000000000");
+    DANGSAN("DANGSAN", "dangsan-0000-0000-0000-000000000000"),
+    WORLD_IT_SHOW("WORLD IT SHOW", "world-it-show-0000-0000-000000000000");
     
     companion object {
         /**

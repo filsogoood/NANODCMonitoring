@@ -1236,9 +1236,11 @@ private fun FilterSettingSection(
                     Text(text = "알람 시간", fontSize = 13.sp, color = TextSecondary)
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        FilterAdjustButton("−100") { filterTimeSetting = (filterTimeSetting - 100).coerceAtLeast(100) }
+                        FilterAdjustButton("−100") { filterTimeSetting = (filterTimeSetting - 100).coerceAtLeast(1) }
                         Spacer(modifier = Modifier.width(4.dp))
-                        FilterAdjustButton("−10") { filterTimeSetting = (filterTimeSetting - 10).coerceAtLeast(100) }
+                        FilterAdjustButton("−10") { filterTimeSetting = (filterTimeSetting - 10).coerceAtLeast(1) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("−1") { filterTimeSetting = (filterTimeSetting - 1).coerceAtLeast(1) }
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "${filterTimeSetting}h",
@@ -1247,6 +1249,8 @@ private fun FilterSettingSection(
                             color = TextPrimary
                         )
                         Spacer(modifier = Modifier.width(6.dp))
+                        FilterAdjustButton("+1") { filterTimeSetting = (filterTimeSetting + 1).coerceAtMost(60000) }
+                        Spacer(modifier = Modifier.width(4.dp))
                         FilterAdjustButton("+10") { filterTimeSetting = (filterTimeSetting + 10).coerceAtMost(60000) }
                         Spacer(modifier = Modifier.width(4.dp))
                         FilterAdjustButton("+100") { filterTimeSetting = (filterTimeSetting + 100).coerceAtMost(60000) }

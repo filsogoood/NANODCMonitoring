@@ -681,10 +681,17 @@ object ZetacubeStaticData {
     }
 
     /**
-     * 정적 데이터 사용 데이터센터인지 확인 (ZETACUBE, MOALIFEPLUS, DANGSAN)
+     * WORLD IT SHOW가 선택되었는지 확인
+     */
+    fun isWorldItShowSelected(nanoDcId: String): Boolean {
+        return nanoDcId == DataCenterType.WORLD_IT_SHOW.nanoDcId
+    }
+
+    /**
+     * 정적 데이터 사용 데이터센터인지 확인 (ZETACUBE, MOALIFEPLUS, DANGSAN, WORLD_IT_SHOW)
      */
     fun isStaticDataCenter(nanoDcId: String): Boolean {
-        return isZetacubeSelected(nanoDcId) || isMoalifeplusSelected(nanoDcId) || isDangsanSelected(nanoDcId)
+        return isZetacubeSelected(nanoDcId) || isMoalifeplusSelected(nanoDcId) || isDangsanSelected(nanoDcId) || isWorldItShowSelected(nanoDcId)
     }
 }
 

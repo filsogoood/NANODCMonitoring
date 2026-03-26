@@ -185,6 +185,24 @@ data class ImageConfiguration(
         )
 
         /**
+         * WORLD IT SHOW 데이터센터 전용 이미지 순서
+         */
+        val WORLD_IT_SHOW_ORDER = listOf(
+            ImageType.NANODC_STATUS,          // 1. NanoDC Status
+            ImageType.COOLING_SYSTEM,         // 2. Cooling System
+            ImageType.WLS_100G,               // 3. WLS 100G
+            ImageType.AI_AGENT,               // 4. AI Agent
+            ImageType.ZAH200,                 // 5. ZAH200
+            ImageType.ZAH100,                 // 6. ZAH100
+            ImageType.ZAA100,                 // 7. ZAA100
+            ImageType.ZAP6000,                // 8. ZAP6000
+            ImageType.ZA5090,                 // 9. ZA5090
+            ImageType.ZA4090,                 // 10. ZA4090
+            ImageType.WLS_SMARTUPS,           // 11. WLS SmartUPS
+            ImageType.LOGO_WORLD_IT_SHOW      // 12. World IT Show 로고 [관리자 접근]
+        )
+
+        /**
          * 기본 설정을 생성합니다.
          */
         fun createDefault(deviceType: DeviceType = DeviceType.DEFAULT): ImageConfiguration {
@@ -227,6 +245,13 @@ data class ImageConfiguration(
         }
 
         /**
+         * WORLD IT SHOW 데이터센터 전용 설정을 생성합니다.
+         */
+        fun createWORLD_IT_SHOW(): ImageConfiguration {
+            return ImageConfiguration(DeviceType.WORLD_IT_SHOW, WORLD_IT_SHOW_ORDER)
+        }
+
+        /**
          * 데이터센터 타입에 따라 적절한 이미지 순서를 반환합니다.
          */
         fun getOrderForDataCenter(dataCenterName: String): List<ImageType> {
@@ -237,6 +262,7 @@ data class ImageConfiguration(
                 "ZETACUBE" -> ZETACUBE_ORDER
                 "MOALIFEPLUS" -> MOALIFEPLUS_ORDER
                 "DANGSAN" -> DANGSAN_ORDER
+                "WORLD IT SHOW", "WORLD_IT_SHOW" -> WORLD_IT_SHOW_ORDER
                 else -> DEFAULT_ORDER
             }
         }
@@ -255,6 +281,7 @@ enum class DeviceType(val displayName: String) {
     ZETACUBE("ZETACUBE"),
     MOALIFEPLUS("MOALIFEPLUS"),
     DANGSAN("DANGSAN"),
+    WORLD_IT_SHOW("WORLD IT SHOW"),
     DEVICE_A("기기 A"),
     DEVICE_B("기기 B"),
     DEVICE_C("기기 C");
@@ -275,6 +302,7 @@ enum class DeviceType(val displayName: String) {
                 "ZETACUBE" -> ZETACUBE
                 "MOALIFEPLUS" -> MOALIFEPLUS
                 "DANGSAN" -> DANGSAN
+                "WORLD IT SHOW", "WORLD_IT_SHOW" -> WORLD_IT_SHOW
                 else -> DEFAULT
             }
         }
