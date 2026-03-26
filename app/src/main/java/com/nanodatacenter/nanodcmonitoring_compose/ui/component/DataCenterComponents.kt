@@ -193,8 +193,8 @@ fun ClickableImageItem(
                 exit = shrinkVertically()
             ) {
                 when {
-                    // BLE 리모컨 카드 (DANGSAN 데이터센터 WEBUI_SERVER_NONE)
-                    isStaticDataCenter && imageType == ImageType.WEBUI_SERVER_NONE -> {
+                    // BLE 리모컨 카드 (DANGSAN: WEBUI_SERVER_NONE, WORLD IT SHOW: COOLING_SYSTEM)
+                    isStaticDataCenter && (imageType == ImageType.WEBUI_SERVER_NONE || imageType == ImageType.COOLING_SYSTEM) -> {
                         BleRemoteControlCard()
                     }
 
