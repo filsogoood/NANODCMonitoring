@@ -1189,7 +1189,19 @@ private fun isStaticDataCenterClickableImage(imageType: ImageType): Boolean {
         ImageType.STORAGE_NAS,
         // 인프라 이미지들
         ImageType.SWITCH_100G,
-        ImageType.UPS_CONTROLLER -> true
+        ImageType.UPS_CONTROLLER,
+        // WORLD IT SHOW 이미지들
+        ImageType.NANODC_STATUS,
+        ImageType.COOLING_SYSTEM,
+        ImageType.WLS_100G,
+        ImageType.AI_AGENT,
+        ImageType.ZAH200,
+        ImageType.ZAH100,
+        ImageType.ZAA100,
+        ImageType.ZAP6000,
+        ImageType.ZA5090,
+        ImageType.ZA4090,
+        ImageType.WLS_SMARTUPS -> true
         // 나머지는 클릭 불가
         else -> false
     }

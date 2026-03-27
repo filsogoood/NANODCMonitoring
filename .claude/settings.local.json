@@ -6,7 +6,9 @@
       "Bash(adb devices:*)",
       "Bash(adb install:*)",
       "mcp__deep-directory-tree__get_deep_directory_tree",
-      "Bash(./gradlew compileDebugKotlin)"
+      "Bash(./gradlew compileDebugKotlin)",
+      "Bash(git log:*)",
+      "Bash(find /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose -type f \\\\\\(-name *.xml -o -name *.json -o -name *.properties \\\\\\))"
     ]
   }
 }
