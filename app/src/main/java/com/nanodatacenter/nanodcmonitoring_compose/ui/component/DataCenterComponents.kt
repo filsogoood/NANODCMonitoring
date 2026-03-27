@@ -1519,11 +1519,18 @@ fun ZetacubeNodeInfoCard(
 
             // 그래프 섹션 - SAI는 반원 그래프, 나머지는 기존 그래프
             nodeData.nodeUsage?.let { usage ->
-                if (imageType == ImageType.SYSTEMTOAI_ACTIVE) {
+                if (imageType == ImageType.SYSTEMTOAI_ACTIVE ||
+                    imageType == ImageType.ZAH200 ||
+                    imageType == ImageType.ZAH100 ||
+                    imageType == ImageType.ZAA100 ||
+                    imageType == ImageType.ZAP6000 ||
+                    imageType == ImageType.ZA5090 ||
+                    imageType == ImageType.ZA4090) {
                     // SAI 전용 반원 그래프
                     ZetacubeSaiSemiCircleGraphSection(
                         nodeUsage = usage,
-                        hardwareSpec = nodeData.hardwareSpec
+                        hardwareSpec = nodeData.hardwareSpec,
+                        imageType = imageType
                     )
                 } else {
                     EnhancedUsageGraphSection(
@@ -1592,6 +1599,13 @@ private fun getZetacubeDisplayName(imageType: ImageType, imageIndex: Int): Strin
         ImageType.STORAGE_NAS -> "ZETACUBE NAS Storage"
         ImageType.SWITCH_100G -> "100G Network Switch"
         ImageType.UPS_CONTROLLER -> "UPS Power Controller"
+        // WORLD IT SHOW SAI 서버들
+        ImageType.ZAH200 -> "ZAH200 SAI Server"
+        ImageType.ZAH100 -> "ZAH100 SAI Server"
+        ImageType.ZAA100 -> "ZAA100 SAI Server"
+        ImageType.ZAP6000 -> "ZAP6000 SAI Server"
+        ImageType.ZA5090 -> "ZA5090 SAI Server"
+        ImageType.ZA4090 -> "ZA4090 SAI Server"
         else -> "ZETACUBE Node"
     }
 }
@@ -3139,6 +3153,7 @@ fun NdpTransactionContainer(
 fun ZetacubeSaiSemiCircleGraphSection(
     nodeUsage: NodeUsage,
     hardwareSpec: HardwareSpec?,
+    imageType: ImageType = ImageType.SYSTEMTOAI_ACTIVE,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -3177,7 +3192,14 @@ fun ZetacubeSaiSemiCircleGraphSection(
             )
         }
 
-        // 두 번째 행: GPU, Storage
+        // 두 번째 행: GPU, Storage 또는 VRAM
+        val isWorldItShowSai = imageType == ImageType.ZAH200 ||
+            imageType == ImageType.ZAH100 ||
+            imageType == ImageType.ZAA100 ||
+            imageType == ImageType.ZAP6000 ||
+            imageType == ImageType.ZA5090 ||
+            imageType == ImageType.ZA4090
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -3190,13 +3212,23 @@ fun ZetacubeSaiSemiCircleGraphSection(
                 modifier = Modifier.weight(1f)
             )
 
-            // Storage 사용량
-            SaiSemiCircleGauge(
-                label = "Storage",
-                value = nodeUsage.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
-                color = Color(0xFFF59E0B),
-                modifier = Modifier.weight(1f)
-            )
+            if (isWorldItShowSai) {
+                // WORLD IT SHOW: VRAM 사용량
+                SaiSemiCircleGauge(
+                    label = "VRAM",
+                    value = nodeUsage.gpuVramPercent?.toFloatOrNull() ?: 0f,
+                    color = Color(0xFFF59E0B),
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                // 기존: Storage 사용량
+                SaiSemiCircleGauge(
+                    label = "Storage",
+                    value = nodeUsage.harddiskUsedPercent?.toFloatOrNull() ?: 0f,
+                    color = Color(0xFFF59E0B),
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -3228,14 +3260,6 @@ fun ZetacubeSaiSemiCircleGraphSection(
                 )
             }
 
-            // GPU VRAM
-            nodeUsage.gpuVramPercent?.let { vram ->
-                SaiTempIndicator(
-                    label = "GPU VRAM",
-                    value = "${vram}%",
-                    color = Color(0xFF8B5CF6)
-                )
-            }
         }
     }
 }

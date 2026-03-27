@@ -49,6 +49,14 @@ object ZetacubeStaticData {
             // NAS Storage (DANGSAN 등에서 사용)
             ImageType.STORAGE_NAS -> createStorageData()
 
+            // WORLD IT SHOW SAI 서버들
+            ImageType.ZAH200 -> createWorldItShowSaiData(imageType, imageIndex)
+            ImageType.ZAH100 -> createWorldItShowSaiData(imageType, imageIndex)
+            ImageType.ZAA100 -> createWorldItShowSaiData(imageType, imageIndex)
+            ImageType.ZAP6000 -> createWorldItShowSaiData(imageType, imageIndex)
+            ImageType.ZA5090 -> createWorldItShowSaiData(imageType, imageIndex)
+            ImageType.ZA4090 -> createWorldItShowSaiData(imageType, imageIndex)
+
             // 인프라 장비는 getInfraDataForImage() 사용
             else -> null
         }
@@ -555,6 +563,109 @@ object ZetacubeStaticData {
                 hardwareHealthScore = "92",
                 totalScore = "460",
                 averageScore = "92.0"
+            )
+        )
+    }
+
+    /**
+     * WORLD IT SHOW SAI 서버용 정적 데이터
+     * 장비 타입별로 GPU/스펙 차별화
+     */
+    private fun createWorldItShowSaiData(imageType: ImageType, imageIndex: Int): ZetacubeNodeData {
+        data class SaiSpec(val gpuModel: String, val gpuVram: String, val gpuCount: String, val cpuModel: String, val cpuCores: String, val ram: String, val storage: String)
+        val spec = when (imageType) {
+            ImageType.ZAH200 -> SaiSpec("NVIDIA H200", "576", "4", "AMD EPYC 9654", "96", "1536", "100000")
+            ImageType.ZAH100 -> SaiSpec("NVIDIA H100", "384", "4", "AMD EPYC 9654", "96", "768", "100000")
+            ImageType.ZAA100 -> SaiSpec("NVIDIA A100", "320", "4", "AMD EPYC 7763", "128", "512", "80000")
+            ImageType.ZAP6000 -> SaiSpec("NVIDIA RTX 6000 Ada", "192", "4", "AMD EPYC 9354", "64", "512", "60000")
+            ImageType.ZA5090 -> SaiSpec("NVIDIA RTX 5090", "128", "4", "AMD EPYC 9554", "64", "256", "40000")
+            ImageType.ZA4090 -> SaiSpec("NVIDIA RTX 4090", "96", "4", "AMD EPYC 7543", "64", "192", "40000")
+            else -> SaiSpec("NVIDIA H100", "384", "4", "AMD EPYC 9654", "96", "768", "100000")
+        }
+
+        val (cpuUsage, memUsage, gpuUsage, gpuVramUsage) = when (imageType) {
+            ImageType.ZAH200 -> listOf(78, 72, 92, 85)
+            ImageType.ZAH100 -> listOf(72, 68, 85, 78)
+            ImageType.ZAA100 -> listOf(65, 60, 78, 70)
+            ImageType.ZAP6000 -> listOf(58, 55, 72, 65)
+            ImageType.ZA5090 -> listOf(52, 48, 68, 60)
+            ImageType.ZA4090 -> listOf(45, 42, 62, 55)
+            else -> listOf(50, 50, 50, 50)
+        }
+
+        val saiIndex = when (imageType) {
+            ImageType.ZAH200 -> 1
+            ImageType.ZAH100 -> 2
+            ImageType.ZAA100 -> 3
+            ImageType.ZAP6000 -> 4
+            ImageType.ZA5090 -> 5
+            ImageType.ZA4090 -> 6
+            else -> 1
+        }
+
+        val nodeName = when (imageType) {
+            ImageType.ZAH200 -> "ZAH200 SAI Server"
+            ImageType.ZAH100 -> "ZAH100 SAI Server"
+            ImageType.ZAA100 -> "ZAA100 SAI Server"
+            ImageType.ZAP6000 -> "ZAP6000 SAI Server"
+            ImageType.ZA5090 -> "ZA5090 SAI Server"
+            ImageType.ZA4090 -> "ZA4090 SAI Server"
+            else -> "SAI Server"
+        }
+
+        return ZetacubeNodeData(
+            node = Node(
+                id = 100 + saiIndex,
+                nodeId = "wis-sai-00$saiIndex",
+                userUuid = "wis-user-001",
+                status = "active",
+                createAt = "2026-03-26T00:00:00Z",
+                updateAt = "2026-03-26T00:00:00Z",
+                nodeName = nodeName,
+                nanodcId = DataCenterType.WORLD_IT_SHOW.nanoDcId
+            ),
+            hardwareSpec = HardwareSpec(
+                id = 100 + saiIndex,
+                nodeId = "wis-sai-00$saiIndex",
+                cpuModel = spec.cpuModel,
+                cpuCores = spec.cpuCores,
+                gpuModel = spec.gpuModel,
+                gpuVramGb = spec.gpuVram,
+                totalRamGb = spec.ram,
+                storageType = "NVMe SSD",
+                storageTotalGb = spec.storage,
+                cpuCount = "2",
+                gpuCount = spec.gpuCount,
+                nvmeCount = "8",
+                nanodcId = DataCenterType.WORLD_IT_SHOW.nanoDcId,
+                totalHarddiskGb = spec.storage
+            ),
+            nodeUsage = NodeUsage(
+                id = 100 + saiIndex,
+                nodeId = "wis-sai-00$saiIndex",
+                timestamp = "2026-03-26T00:00:00Z",
+                cpuUsagePercent = "$cpuUsage",
+                memUsagePercent = "$memUsage",
+                cpuTemp = "${42 + saiIndex * 3}",
+                gpuUsagePercent = "$gpuUsage",
+                gpuTemp = "${50 + saiIndex * 4}",
+                usedStorageGb = "${(spec.storage.toLong() * 0.6).toLong()}",
+                ssdHealthPercent = "${97 - saiIndex}",
+                gpuVramPercent = "$gpuVramUsage",
+                harddiskUsedPercent = "60",
+                stageUsed = null
+            ),
+            score = Score(
+                id = 100 + saiIndex,
+                nodeId = "wis-sai-00$saiIndex",
+                cpuScore = "${92 - saiIndex}",
+                gpuScore = "${95 - saiIndex}",
+                ssdScore = "${96 - saiIndex}",
+                ramScore = "${90 - saiIndex}",
+                networkScore = "${93 - saiIndex}",
+                hardwareHealthScore = "${94 - saiIndex}",
+                totalScore = "${560 - saiIndex * 6}",
+                averageScore = "${93.3 - saiIndex * 1.0}"
             )
         )
     }
