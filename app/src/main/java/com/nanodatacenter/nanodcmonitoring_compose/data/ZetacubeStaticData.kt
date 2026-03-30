@@ -766,8 +766,52 @@ object ZetacubeStaticData {
         return when (imageType) {
             ImageType.SWITCH_100G -> createSwitch100GData()
             ImageType.UPS_CONTROLLER -> createUpsControllerData()
+            ImageType.WLS_SMARTUPS -> createWlsSmartUpsData()
             else -> null
         }
+    }
+
+    /**
+     * WLS SmartUPS용 정적 데이터
+     */
+    private fun createWlsSmartUpsData(): ZetacubeInfraData {
+        return ZetacubeInfraData(
+            name = "UPS",
+            status = "Normal",
+            specs = mapOf(
+                "Capacity" to "10 kVA"
+            ),
+            usage = mapOf(
+                "Load" to "65%",
+                "Battery" to "100%"
+            ),
+            graphMetrics = listOf(
+                InfraGraphMetric(
+                    label = "Load",
+                    percentage = 65f,
+                    value = "6.5 kVA",
+                    color = 0xFF3B82F6
+                ),
+                InfraGraphMetric(
+                    label = "Battery",
+                    percentage = 100f,
+                    value = "100%",
+                    color = 0xFF10B981
+                ),
+                InfraGraphMetric(
+                    label = "Efficiency",
+                    percentage = 94f,
+                    value = "94%",
+                    color = 0xFFF59E0B
+                ),
+                InfraGraphMetric(
+                    label = "Temperature",
+                    percentage = 50f,
+                    value = "25°C",
+                    color = 0xFFEF4444
+                )
+            )
+        )
     }
 
     /**

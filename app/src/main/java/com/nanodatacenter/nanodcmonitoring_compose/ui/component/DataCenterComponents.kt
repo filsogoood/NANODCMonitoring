@@ -199,7 +199,7 @@ fun ClickableImageItem(
                     }
 
                     // 정적 데이터 데이터센터 인프라 장비 (Switch, UPS)
-                    isStaticDataCenter && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER) -> {
+                    isStaticDataCenter && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER || imageType == ImageType.WLS_SMARTUPS) -> {
                         val infraData = ZetacubeStaticData.getInfraDataForImage(imageType)
                         if (infraData != null) {
                             ZetacubeInfraInfoCard(infraData = infraData)
@@ -1562,10 +1562,19 @@ fun ZetacubeNodeInfoCard(
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val isWorldItShowSai = imageType == ImageType.ZAH200 ||
+                        imageType == ImageType.ZAH100 ||
+                        imageType == ImageType.ZAA100 ||
+                        imageType == ImageType.ZAP6000 ||
+                        imageType == ImageType.ZA5090 ||
+                        imageType == ImageType.ZA4090
+
                     ZetacubeSpecRow("CPU", spec.cpuModel)
                     ZetacubeSpecRow("Cores", spec.cpuCores)
                     ZetacubeSpecRow("Memory", "${spec.totalRamGb} GB")
-                    ZetacubeSpecRow("Storage", formatCapacity(spec.totalHarddiskGb?.toLongOrNull() ?: 0))
+                    if (!isWorldItShowSai) {
+                        ZetacubeSpecRow("Storage", formatCapacity(spec.totalHarddiskGb?.toLongOrNull() ?: 0))
+                    }
                     if (spec.gpuModel != "N/A") {
                         ZetacubeSpecRow("GPU", spec.gpuModel)
                     }
@@ -3233,6 +3242,15 @@ fun ZetacubeSaiSemiCircleGraphSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Temperature 섹션 제목
+        Text(
+            text = "Temperature",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF60A5FA),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
         // 온도 정보 행
         Row(
             modifier = Modifier
@@ -3245,7 +3263,7 @@ fun ZetacubeSaiSemiCircleGraphSection(
             // CPU 온도
             nodeUsage.cpuTemp?.let { temp ->
                 SaiTempIndicator(
-                    label = "CPU Temp",
+                    label = "CPU",
                     value = "${temp}°C",
                     color = getTempColor(temp.toFloatOrNull() ?: 0f)
                 )
@@ -3254,7 +3272,7 @@ fun ZetacubeSaiSemiCircleGraphSection(
             // GPU 온도
             nodeUsage.gpuTemp?.let { temp ->
                 SaiTempIndicator(
-                    label = "GPU Temp",
+                    label = "GPU",
                     value = "${temp}°C",
                     color = getTempColor(temp.toFloatOrNull() ?: 0f)
                 )

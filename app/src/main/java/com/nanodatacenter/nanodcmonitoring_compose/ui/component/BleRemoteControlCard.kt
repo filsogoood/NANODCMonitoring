@@ -123,7 +123,13 @@ fun BleRemoteControlCard(modifier: Modifier = Modifier) {
                     ScanSection(
                         scanResults = scanResults,
                         isScanning = isScanning,
-                        onStartScan = { bleManager.startScan() },
+                        onStartScan = {
+                            if (!bleManager.isBluetoothEnabled) {
+                                Toast.makeText(context, "블루투스를 켜주세요", Toast.LENGTH_SHORT).show()
+                            } else {
+                                bleManager.startScan()
+                            }
+                        },
                         onStopScan = { bleManager.stopScan() },
                         onConnect = { bleManager.connect(it.device) }
                     )
