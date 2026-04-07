@@ -8,7 +8,15 @@
       "mcp__deep-directory-tree__get_deep_directory_tree",
       "Bash(./gradlew compileDebugKotlin)",
       "Bash(git log:*)",
-      "Bash(find /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose -type f \\\\\\(-name *.xml -o -name *.json -o -name *.properties \\\\\\))"
+      "Bash(find /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose -type f \\\\\\(-name *.xml -o -name *.json -o -name *.properties \\\\\\))",
+      "Bash(grep -r \"BuildConfig\\\\|BuildVariant\\\\|BuildType\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -r \"hardcodedString\\\\|211\\\\.176\\\\|password\\\\|secret\\\\|apiKey\\\\|token\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -r \"launch\\\\|async\\\\|GlobalScope\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -r catch.*Exception /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -r \"LaunchedEffect\\\\|rememberCoroutineScope\\\\|ViewModel\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -n \"@SuppressLint\\\\|@Suppress\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java/com/nanodatacenter/nanodcmonitoring_compose/**/*.kt)",
+      "Bash(grep -r \"hardcodedString\\\\|UsageManager\\\\|ImageOrderManager\" /c/Users/gyung/AndroidStudioProjects/NANODCMonitoring_Compose/app/src/main/java --include=*.kt)",
+      "Bash(grep -v \"import\\\\|//\")"
     ]
   }
 }

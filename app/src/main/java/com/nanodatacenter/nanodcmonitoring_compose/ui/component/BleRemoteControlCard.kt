@@ -168,6 +168,10 @@ fun BleRemoteControlCard(modifier: Modifier = Modifier) {
                         onSendCycleOperateSetting = { settings ->
                             bleManager.sendCommand(JtProtocol.buildDeviceSettingCommand(settings))
                             Toast.makeText(context, "주기운전 설정 전송 완료", Toast.LENGTH_SHORT).show()
+                        },
+                        onSendTempCorrection = { settings ->
+                            bleManager.sendCommand(JtProtocol.buildDeviceSettingCommand(settings))
+                            Toast.makeText(context, "온도보정 설정 전송 완료", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -330,15 +334,13 @@ private fun RemoteControlSection(
     onSendWeekendReservation: (ReservationSettings) -> Unit,
     onSendDayReservation: (Int) -> Unit,
     onSendFilterSetting: (DeviceSettings) -> Unit,
-    onSendCycleOperateSetting: (DeviceSettings) -> Unit
+    onSendCycleOperateSetting: (DeviceSettings) -> Unit,
+    onSendTempCorrection: (DeviceSettings) -> Unit
 ) {
+    val context = LocalContext.current
     val status = deviceStatus
-
-    // Status info
-    if (status != null) {
-        StatusRow(status)
-        Spacer(modifier = Modifier.height(12.dp))
-    }
+    var isAdminMenuExpanded by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
 
     // 과열/과냉 경보
     if (status != null) {
@@ -369,37 +371,71 @@ private fun RemoteControlSection(
     FanSpeedButtons(currentFanSpeed = status?.fanSpeed, onFanSpeed = onFanSpeed)
     Spacer(modifier = Modifier.height(12.dp))
 
-    // Reservation section
-    ReservationSection(
-        deviceStatus = status,
-        onSendWeekdayReservation = onSendWeekdayReservation,
-        onSendWeekendReservation = onSendWeekendReservation,
-        onSendDayReservation = onSendDayReservation
-    )
-    Spacer(modifier = Modifier.height(12.dp))
+    // 연결 해제 + 관리자 버튼
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedButton(
+            onClick = onDisconnect,
+            modifier = Modifier.weight(1f).height(38.dp),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+            border = BorderStroke(1.dp, ErrorRed.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(text = "연결 해제", fontSize = 13.sp, color = ErrorRed)
+        }
 
-    // Filter settings section
-    FilterSettingSection(
-        deviceStatus = status,
-        onSendFilterSetting = onSendFilterSetting,
-        onFilterReset = onFilterReset
-    )
-    Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = {
+                if (isAdminMenuExpanded) {
+                    isAdminMenuExpanded = false
+                } else {
+                    showPasswordDialog = true
+                }
+            },
+            modifier = Modifier.weight(1f).height(38.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isAdminMenuExpanded) AdminOrange else CardBgLight
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "관리자",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isAdminMenuExpanded) Color.White else AdminOrange
+            )
+        }
+    }
 
-    // Cycle operate settings section
-    CycleOperateSection(
-        deviceStatus = status,
-        onSendCycleOperateSetting = onSendCycleOperateSetting
-    )
-    Spacer(modifier = Modifier.height(12.dp))
+    // ─── 관리자 메뉴 (버튼 클릭 시 표시) ───
+    if (isAdminMenuExpanded) {
+        Spacer(modifier = Modifier.height(12.dp))
+        AdminMenuContent(
+            deviceStatus = status,
+            onTimeSet = onTimeSet,
+            onFilterReset = onFilterReset,
+            onSendWeekdayReservation = onSendWeekdayReservation,
+            onSendWeekendReservation = onSendWeekendReservation,
+            onSendDayReservation = onSendDayReservation,
+            onSendFilterSetting = onSendFilterSetting,
+            onSendCycleOperateSetting = onSendCycleOperateSetting,
+            onSendTempCorrection = onSendTempCorrection
+        )
+    }
 
-    // Utility row
-    UtilityRow(
-        status = status,
-        onTimeSet = onTimeSet,
-        onFilterReset = onFilterReset,
-        onDisconnect = onDisconnect
-    )
+    // 비밀번호 입력 다이얼로그
+    if (showPasswordDialog) {
+        AdminPasswordDialog(
+            onSuccess = {
+                showPasswordDialog = false
+                isAdminMenuExpanded = true
+                Toast.makeText(context, "관리자 모드 진입", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showPasswordDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -634,64 +670,325 @@ private fun FanSpeedButtons(currentFanSpeed: FanSpeed?, onFanSpeed: (FanSpeed) -
     }
 }
 
+// =============================================
+// 관리자 비밀번호 다이얼로그
+// =============================================
+
+private const val ADMIN_PASSWORD = "1004"
+private val AdminOrange = Color(0xFFFF9800)
+
 @Composable
-private fun UtilityRow(
-    status: DeviceStatus?,
+private fun AdminPasswordDialog(
+    onSuccess: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(false) }
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = CardBg)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "관리자 인증",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AdminOrange
+                )
+
+                Text(
+                    text = "비밀번호를 입력해주세요",
+                    fontSize = 13.sp,
+                    color = TextSecondary
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        isError = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("비밀번호", color = TextSecondary) },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
+                    ),
+                    isError = isError,
+                    supportingText = if (isError) {
+                        { Text("비밀번호가 틀렸습니다", color = ErrorRed, fontSize = 12.sp) }
+                    } else null,
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = AdminOrange,
+                        focusedBorderColor = AdminOrange,
+                        unfocusedBorderColor = CardBgLight,
+                        errorBorderColor = ErrorRed
+                    )
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, TextSecondary.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(text = "취소", color = TextSecondary)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (password == ADMIN_PASSWORD) {
+                                onSuccess()
+                            } else {
+                                isError = true
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = AdminOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(text = "확인", color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =============================================
+// 관리자 메뉴 컨텐츠
+// =============================================
+
+@Composable
+private fun AdminMenuContent(
+    deviceStatus: DeviceStatus?,
     onTimeSet: () -> Unit,
     onFilterReset: () -> Unit,
-    onDisconnect: () -> Unit
+    onSendWeekdayReservation: (ReservationSettings) -> Unit,
+    onSendWeekendReservation: (ReservationSettings) -> Unit,
+    onSendDayReservation: (Int) -> Unit,
+    onSendFilterSetting: (DeviceSettings) -> Unit,
+    onSendCycleOperateSetting: (DeviceSettings) -> Unit,
+    onSendTempCorrection: (DeviceSettings) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1A1A2E))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Time sync
-        SmallActionButton(
-            text = "시간 동기화",
-            color = CoolingBlue,
-            modifier = Modifier.weight(1f),
-            onClick = onTimeSet
+        // 관리자 메뉴 제목
+        Text(
+            text = "관리자 메뉴",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = AdminOrange
         )
 
-        // Filter info
-        SmallActionButton(
-            text = if (status?.filterAlarm == true) "필터 리셋" else "필터 ${status?.filterTime ?: 0}h",
-            color = if (status?.filterAlarm == true) FilterCyan else TextSecondary,
-            modifier = Modifier.weight(1f),
-            onClick = onFilterReset
+        // 구분선
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(AdminOrange.copy(alpha = 0.3f))
         )
 
-        // Disconnect
-        SmallActionButton(
-            text = "연결 해제",
-            color = ErrorRed,
-            modifier = Modifier.weight(1f),
-            onClick = onDisconnect
+        // 장비 상태 정보
+        if (deviceStatus != null) {
+            StatusRow(deviceStatus)
+        }
+
+        // 시간 동기화
+        Button(
+            onClick = onTimeSet,
+            modifier = Modifier.fillMaxWidth().height(36.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = CoolingBlue),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Text(text = "시간 동기화", fontSize = 13.sp, color = Color.White)
+        }
+
+        // 온도보정 설정
+        TempCorrectionSection(
+            deviceStatus = deviceStatus,
+            onSendTempCorrection = onSendTempCorrection
+        )
+
+        // 예약 설정
+        ReservationSection(
+            deviceStatus = deviceStatus,
+            onSendWeekdayReservation = onSendWeekdayReservation,
+            onSendWeekendReservation = onSendWeekendReservation,
+            onSendDayReservation = onSendDayReservation
+        )
+
+        // 필터 설정
+        FilterSettingSection(
+            deviceStatus = deviceStatus,
+            onSendFilterSetting = onSendFilterSetting,
+            onFilterReset = onFilterReset
+        )
+
+        // 주기운전 설정
+        CycleOperateSection(
+            deviceStatus = deviceStatus,
+            onSendCycleOperateSetting = onSendCycleOperateSetting
         )
     }
 }
 
+// =============================================
+// 온도보정 설정 섹션
+// =============================================
+
+private val TempCorrectionColor = Color(0xFF26A69A)
+
 @Composable
-private fun SmallActionButton(
-    text: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+private fun TempCorrectionSection(
+    deviceStatus: DeviceStatus?,
+    onSendTempCorrection: (DeviceSettings) -> Unit
 ) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(36.dp),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val currentSettings = deviceStatus?.deviceSettings
+    var tempCorrection by remember(currentSettings?.tempCorrection) {
+        mutableIntStateOf(currentSettings?.tempCorrection ?: 0)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(CardBgLight)
     ) {
-        Text(
-            text = text,
-            fontSize = 11.sp,
-            color = color,
-            maxLines = 1
-        )
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "온도보정 설정",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${currentSettings?.tempCorrection ?: 0}",
+                    fontSize = 12.sp,
+                    color = TempCorrectionColor
+                )
+            }
+            Text(
+                text = if (isExpanded) "▲" else "▼",
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+        }
+
+        if (isExpanded) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+
+                // 현재 보정값 표시
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "현재 보정값", fontSize = 13.sp, color = TextSecondary)
+                    Text(
+                        text = "${currentSettings?.tempCorrection ?: 0}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TempCorrectionColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 보정값 조절
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CardBg)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "설정값", fontSize = 13.sp, color = TextSecondary)
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilterAdjustButton("−10") { tempCorrection = (tempCorrection - 10).coerceIn(0, 255) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("−1") { tempCorrection = (tempCorrection - 1).coerceIn(0, 255) }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$tempCorrection",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        FilterAdjustButton("+1") { tempCorrection = (tempCorrection + 1).coerceIn(0, 255) }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilterAdjustButton("+10") { tempCorrection = (tempCorrection + 10).coerceIn(0, 255) }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 전송 버튼
+                Button(
+                    onClick = {
+                        val settings = currentSettings?.copy(
+                            tempCorrection = tempCorrection
+                        ) ?: DeviceSettings(tempCorrection = tempCorrection)
+                        onSendTempCorrection(settings)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TempCorrectionColor),
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(text = "온도보정 전송", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }
 
