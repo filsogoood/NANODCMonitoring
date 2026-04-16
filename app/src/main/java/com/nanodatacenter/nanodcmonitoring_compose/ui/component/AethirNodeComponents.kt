@@ -1417,26 +1417,12 @@ private fun AIAgentServerRow(
 // ============================================================
 
 /**
- * 100G 스위치 포트 정보
- */
-private data class SwitchPort(
-    val id: Int,
-    val active: Boolean
-)
-
-/**
  * WLS 100G Switch 전용 모니터링 카드
  */
 @Composable
 fun Wls100GSwitchCard(
     modifier: Modifier = Modifier
 ) {
-    val ports = remember {
-        (1..48).map { SwitchPort(id = it, active = it <= 38) }
-    }
-    val activePorts = ports.count { it.active }
-    val totalPorts = ports.size
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -1477,7 +1463,7 @@ fun Wls100GSwitchCard(
             }
         }
 
-        // Port Status + Traffic Card
+        // Traffic + Specs Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
@@ -1485,70 +1471,6 @@ fun Wls100GSwitchCard(
             shape = RoundedCornerShape(12.dp)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                // Port Status Header
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(6.dp)
-                            .height(24.dp)
-                            .background(Color(0xFF3B82F6), RoundedCornerShape(3.dp))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Port Status",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color(0xFF3B82F6).copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = "$activePorts / $totalPorts Active",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF3B82F6),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Port Grid (8 columns)
-                SwitchPortGrid(ports = ports)
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Port legend
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .background(Color(0xFF10B981), RoundedCornerShape(2.dp))
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Active", fontSize = 11.sp, color = Color(0xFF9CA3AF))
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .background(Color(0xFF374151), RoundedCornerShape(2.dp))
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Inactive", fontSize = 11.sp, color = Color(0xFF9CA3AF))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
                 // Traffic Section
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -1606,51 +1528,6 @@ fun Wls100GSwitchCard(
                 SwitchSpecRow("Uptime", "99.99%")
                 SwitchSpecRow("Buffer Usage", "42%")
                 SwitchSpecRow("CPU Load", "28%")
-            }
-        }
-    }
-}
-
-/**
- * 스위치 포트 그리드 (8열)
- */
-@Composable
-private fun SwitchPortGrid(
-    ports: List<SwitchPort>,
-    modifier: Modifier = Modifier
-) {
-    val columns = 8
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        ports.chunked(columns).forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                row.forEach { port ->
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1.4f)
-                            .background(
-                                if (port.active) Color(0xFF10B981) else Color(0xFF374151),
-                                RoundedCornerShape(3.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${port.id}",
-                            fontSize = 7.sp,
-                            color = if (port.active) Color.White else Color(0xFF6B7280),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-                repeat(columns - row.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
             }
         }
     }
