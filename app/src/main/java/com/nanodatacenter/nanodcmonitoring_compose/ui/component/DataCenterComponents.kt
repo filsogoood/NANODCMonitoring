@@ -198,6 +198,11 @@ fun ClickableImageItem(
                         BleRemoteControlCard()
                     }
 
+                    // WLS 100G Switch 카드
+                    isStaticDataCenter && imageType == ImageType.WLS_100G -> {
+                        Wls100GSwitchCard()
+                    }
+
                     // AI Agent 서버 연결 카드
                     isStaticDataCenter && imageType == ImageType.AI_AGENT -> {
                         AIAgentConnectionCard()

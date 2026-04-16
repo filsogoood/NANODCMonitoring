@@ -1411,3 +1411,322 @@ private fun AIAgentServerRow(
         }
     }
 }
+
+// ============================================================
+// WLS 100G Switch Card
+// ============================================================
+
+/**
+ * 100G 스위치 포트 정보
+ */
+private data class SwitchPort(
+    val id: Int,
+    val active: Boolean
+)
+
+/**
+ * WLS 100G Switch 전용 모니터링 카드
+ */
+@Composable
+fun Wls100GSwitchCard(
+    modifier: Modifier = Modifier
+) {
+    val ports = remember {
+        (1..48).map { SwitchPort(id = it, active = it <= 38) }
+    }
+    val activePorts = ports.count { it.active }
+    val totalPorts = ports.size
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Header Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Router,
+                        contentDescription = "Switch",
+                        tint = Color(0xFF3B82F6),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "100G Network Switch",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+        // Port Status + Traffic Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                // Port Status Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(6.dp)
+                            .height(24.dp)
+                            .background(Color(0xFF3B82F6), RoundedCornerShape(3.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Port Status",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF3B82F6).copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "$activePorts / $totalPorts Active",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF3B82F6),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Port Grid (8 columns)
+                SwitchPortGrid(ports = ports)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Port legend
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF10B981), RoundedCornerShape(2.dp))
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Active", fontSize = 11.sp, color = Color(0xFF9CA3AF))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF374151), RoundedCornerShape(2.dp))
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Inactive", fontSize = 11.sp, color = Color(0xFF9CA3AF))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Traffic Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(6.dp)
+                            .height(24.dp)
+                            .background(Color(0xFF10B981), RoundedCornerShape(3.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Traffic",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SwitchTrafficBar(label = "Throughput", value = "8.7 Tbps", max = "12.8 Tbps", progress = 0.68f, color = Color(0xFF3B82F6))
+                Spacer(modifier = Modifier.height(10.dp))
+                SwitchTrafficBar(label = "TX", value = "4.2 Tbps", max = "6.4 Tbps", progress = 0.66f, color = Color(0xFF10B981))
+                Spacer(modifier = Modifier.height(10.dp))
+                SwitchTrafficBar(label = "RX", value = "4.5 Tbps", max = "6.4 Tbps", progress = 0.70f, color = Color(0xFFA78BFA))
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Specs Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(6.dp)
+                            .height(24.dp)
+                            .background(Color(0xFFFBBF24), RoundedCornerShape(3.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Specifications",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SwitchSpecRow("Ports", "48 x 100GbE")
+                SwitchSpecRow("Max Throughput", "12.8 Tbps")
+                SwitchSpecRow("Uptime", "99.99%")
+                SwitchSpecRow("Buffer Usage", "42%")
+                SwitchSpecRow("CPU Load", "28%")
+            }
+        }
+    }
+}
+
+/**
+ * 스위치 포트 그리드 (8열)
+ */
+@Composable
+private fun SwitchPortGrid(
+    ports: List<SwitchPort>,
+    modifier: Modifier = Modifier
+) {
+    val columns = 8
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        ports.chunked(columns).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                row.forEach { port ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1.4f)
+                            .background(
+                                if (port.active) Color(0xFF10B981) else Color(0xFF374151),
+                                RoundedCornerShape(3.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${port.id}",
+                            fontSize = 7.sp,
+                            color = if (port.active) Color.White else Color(0xFF6B7280),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                repeat(columns - row.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 트래픽 바 그래프
+ */
+@Composable
+private fun SwitchTrafficBar(
+    label: String,
+    value: String,
+    max: String,
+    progress: Float,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF9CA3AF)
+            )
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = value,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = " / $max",
+                    fontSize = 11.sp,
+                    color = Color(0xFF6B7280)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(Color(0xFF374151), RoundedCornerShape(4.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .fillMaxHeight()
+                    .background(color, RoundedCornerShape(4.dp))
+            )
+        }
+    }
+}
+
+/**
+ * 스펙 행
+ */
+@Composable
+private fun SwitchSpecRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, fontSize = 13.sp, color = Color(0xFF9CA3AF))
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
+    }
+}
