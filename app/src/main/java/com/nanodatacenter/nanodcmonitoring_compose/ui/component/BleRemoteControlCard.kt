@@ -636,7 +636,7 @@ private fun ModeButtons(currentMode: OperationMode?, onMode: (OperationMode) -> 
 }
 
 @Composable
-private fun FanSpeedButtons(currentFanSpeed: FanSpeed?, onFanSpeed: (FanSpeed) -> Unit) {
+private fun FanSpeedButtons(currentFanSpeed: FanSpeed?, onFanAI Speed: (FanSpeed) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)

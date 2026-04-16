@@ -198,6 +198,11 @@ fun ClickableImageItem(
                         BleRemoteControlCard()
                     }
 
+                    // AI Agent 서버 연결 카드
+                    isStaticDataCenter && imageType == ImageType.AI_AGENT -> {
+                        AIAgentConnectionCard()
+                    }
+
                     // 정적 데이터 데이터센터 인프라 장비 (Switch, UPS)
                     isStaticDataCenter && (imageType == ImageType.SWITCH_100G || imageType == ImageType.UPS_CONTROLLER || imageType == ImageType.WLS_SMARTUPS) -> {
                         val infraData = ZetacubeStaticData.getInfraDataForImage(imageType)
