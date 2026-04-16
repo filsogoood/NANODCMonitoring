@@ -1279,7 +1279,7 @@ fun AIAgentConnectionCard(
             }
         }
 
-        // Connection Overview Card
+        // Server List Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
@@ -1306,7 +1306,6 @@ fun AIAgentConnectionCard(
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    // Status Badge
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = Color(0xFF10B981).copy(alpha = 0.15f)
@@ -1321,149 +1320,14 @@ fun AIAgentConnectionCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Network Topology Visualization
-                AIAgentNetworkTopology(servers = connectedServers)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Server List
-                connectedServers.forEach { server ->
+                // Server rows
+                connectedServers.forEachIndexed { index, server ->
                     AIAgentServerRow(server = server)
-                    if (server != connectedServers.last()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    if (index < connectedServers.lastIndex) {
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
-                }
-            }
-        }
-    }
-}
-
-/**
- * AI Agent 중심의 네트워크 토폴로지 시각화
- */
-@Composable
-private fun AIAgentNetworkTopology(
-    servers: List<ConnectedServer>,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val centerX = size.width / 2
-                val centerY = size.height / 2
-                val radius = (size.minDimension / 2) * 0.65f
-                val nodeRadius = 18.dp.toPx()
-                val centerNodeRadius = 26.dp.toPx()
-
-                // Draw connection lines from center to each server
-                servers.forEachIndexed { index, server ->
-                    val angle = (2 * PI * index / servers.size) - PI / 2
-                    val nodeX = centerX + radius * cos(angle).toFloat()
-                    val nodeY = centerY + radius * sin(angle).toFloat()
-
-                    // Connection line
-                    val lineColor = if (server.status == ServerConnectionStatus.ONLINE) {
-                        server.color.copy(alpha = 0.5f)
-                    } else {
-                        Color(0xFF374151)
-                    }
-                    drawLine(
-                        color = lineColor,
-                        start = Offset(centerX, centerY),
-                        end = Offset(nodeX, nodeY),
-                        strokeWidth = 2.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-
-                    // Server node circle
-                    drawCircle(
-                        color = Color(0xFF111827),
-                        radius = nodeRadius,
-                        center = Offset(nodeX, nodeY)
-                    )
-                    drawCircle(
-                        color = server.color,
-                        radius = nodeRadius,
-                        center = Offset(nodeX, nodeY),
-                        style = Stroke(width = 2.dp.toPx())
-                    )
-
-                    // Status dot
-                    val statusDotOffset = Offset(
-                        nodeX + nodeRadius * 0.6f,
-                        nodeY - nodeRadius * 0.6f
-                    )
-                    drawCircle(
-                        color = server.status.color,
-                        radius = 4.dp.toPx(),
-                        center = statusDotOffset
-                    )
-                }
-
-                // Center AI Agent node
-                drawCircle(
-                    color = Color(0xFF1E3A5F),
-                    radius = centerNodeRadius,
-                    center = Offset(centerX, centerY)
-                )
-                drawCircle(
-                    color = Color(0xFF60A5FA),
-                    radius = centerNodeRadius,
-                    center = Offset(centerX, centerY),
-                    style = Stroke(width = 3.dp.toPx())
-                )
-            }
-
-            // Center label
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "AI",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF60A5FA)
-                )
-                Text(
-                    text = "Agent",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF93C5FD)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Server name labels below the topology
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            servers.forEach { server ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(56.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(server.color, RoundedCornerShape(4.dp))
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = server.name,
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF9CA3AF),
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
-                    )
                 }
             }
         }
@@ -1480,19 +1344,19 @@ private fun AIAgentServerRow(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = Color(0xFF111827)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Color indicator
+            // Server icon
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(32.dp)
                     .background(server.color.copy(alpha = 0.15f), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -1500,13 +1364,13 @@ private fun AIAgentServerRow(
                     Icons.Default.Dns,
                     contentDescription = null,
                     tint = server.color,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Server info
+            // Server name + type
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name,
@@ -1521,30 +1385,29 @@ private fun AIAgentServerRow(
                 )
             }
 
-            // Latency
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier.padding(end = 12.dp)
+            // Connection status
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = server.status.color.copy(alpha = 0.12f)
             ) {
-                Text(
-                    text = server.latency,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF60A5FA)
-                )
-                Text(
-                    text = "latency",
-                    fontSize = 9.sp,
-                    color = Color(0xFF6B7280)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(server.status.color, RoundedCornerShape(3.dp))
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = server.status.label,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = server.status.color
+                    )
+                }
             }
-
-            // Status dot
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(server.status.color, RoundedCornerShape(5.dp))
-            )
         }
     }
 }
